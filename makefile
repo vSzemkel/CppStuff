@@ -1,2 +1,2 @@
 #!/bash
-g++ test.cpp
+g++ -g test.cpp
