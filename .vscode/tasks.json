@@ -1,0 +1,56 @@
+{
+   "version": "0.1.0",
+    "windows": {
+        "command": "build.bat",
+        "isShellCommand": true,
+        "showOutput": "always"        
+    },
+    "linux": {
+        "command": "g++",
+        "args": [
+            "-Wall",
+            "helloWorld.cpp"
+        ],
+        "isShellCommand": true,
+        "showOutput": "always",
+        "problemMatcher": {
+            "owner": "cpp",
+            "fileLocation": [
+                "relative",
+                "${workspaceRoot}"
+            ],
+            "pattern": {
+                "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                "file": 1,
+                "line": 2,
+                "column": 3,
+                "severity": 4,
+                "message": 5
+            }
+        }
+    },    
+    "osx": {
+        "command": "clang++",
+        "args": [
+            "-g",
+            "test.cpp"
+        ],
+        "isShellCommand": true,
+        "showOutput": "always",
+        "problemMatcher": {
+            "owner": "cpp",
+            "fileLocation": [
+                "relative",
+                "${workspaceRoot}"
+            ],
+            "pattern": {
+                "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                "file": 1,
+                "line": 2,
+                "column": 3,
+                "severity": 4,
+                "message": 5
+            }
+        }
+    }
+}
