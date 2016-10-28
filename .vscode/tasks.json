@@ -32,7 +32,9 @@
     "osx": {
         "command": "clang++",
         "args": [
+            "-Wall",
             "-g",
+            "-v",
             "test.cpp"
         ],
         "isShellCommand": true,
