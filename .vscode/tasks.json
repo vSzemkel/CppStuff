@@ -35,6 +35,7 @@
             "-Wall",
             "-g",
             "-v",
+            "-std=c++14",
             "test.cpp"
         ],
         "isShellCommand": true,
