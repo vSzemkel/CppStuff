@@ -12,7 +12,9 @@ int main() {
 
     cout << "Hello GCC " << vs[0] << endl;
 
-    tuple<string, float> piwo("Okocim", 5.6);
-    cout << "Piwo " << get<string>(piwo) << " ma " << get<1>(piwo) << "% alkoholu" << endl;
+    float moc;
+    tuple<string, float, float> piwo("Okocim", 5.6, 2.65);
+    tie(ignore, moc, ignore) = piwo;
+    cout << "Piwo " << get<string>(piwo) << " ma " << moc << "% alkoholu i kosztuje " << get<2>(piwo) << "PLN" << endl;
     return 0;
 }
