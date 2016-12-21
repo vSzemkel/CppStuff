@@ -5,6 +5,9 @@
 
 using namespace std;
 
+/* Shift-Japko-B to build */
+/* INCLUDE brane z ustawień XCode: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1 */
+
 int main() {
     vector<int> vs(10);
     vs.push_back(36);
