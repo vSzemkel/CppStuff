@@ -9,7 +9,8 @@
         "command": "g++",
         "args": [
             "-Wall",
-            "helloWorld.cpp"
+            "-std=c++1y",
+            "test.cpp"
         ],
         "isShellCommand": true,
         "showOutput": "always",
