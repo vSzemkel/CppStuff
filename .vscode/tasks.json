@@ -1,15 +1,21 @@
 {
    "version": "0.1.0",
     "windows": {
-        "command": "build.bat",
+        "command": "bash",
+        "args": [
+            "-c",
+            "\"cd /mnt/d/GitHub/GCC-test;g++-6 -Wall -std=c++14 test.cpp\""
+        ],
+        "echoCommand": true,
         "isShellCommand": true,
-        "showOutput": "always"        
+        "showOutput": "always"
     },
     "linux": {
-        "command": "g++",
+        "command": "g++-6",
         "args": [
             "-Wall",
-            "helloWorld.cpp"
+            "-std=c++14",
+            "test.cpp"
         ],
         "isShellCommand": true,
         "showOutput": "always",
