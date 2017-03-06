@@ -11,7 +11,7 @@
         "showOutput": "always"
     },
     "linux": {
-        "command": "g++-6",
+        "command": "g++-5",
         "args": [
             "-Wall",
             "-std=c++14",
