@@ -11,7 +11,7 @@ using namespace std;
 
 int main()
 {
-    vector<int> vs(10) = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    vector<int> vs{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
     vs.push_back(36);
     vs[0] = 812;
 
