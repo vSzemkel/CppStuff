@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 #include <tuple>
 
 using namespace std;
@@ -21,5 +22,20 @@ int main()
     tuple<string, float, float> piwo("Okocim", 5.6, 2.65);
     tie(ignore, moc, ignore) = piwo;
     cout << "Piwo " << get<string>(piwo) << " ma " << moc << "% alkoholu i kosztuje " << get<2>(piwo) << "PLN" << endl;
+
+    list<int16_t> l;
+    l.push_back(10);
+    l.push_back(20);
+    l.push_back(30);
+    auto n = *std::next(begin(l), 1);
+
+    auto pos = std::find(begin(l), end(l), 30);
+    if (pos != end(l))
+        n = std::distance(begin(l), pos);
+
+    auto a = 5;
+    if (int b = a + 4; b > 1)
+        cout << "This variable is inline declared: " << b << endl;
+
     return 0;
 }
