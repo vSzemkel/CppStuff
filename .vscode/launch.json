@@ -18,7 +18,8 @@
                 "MIMode": "lldb"
             },
             "windows": {
-                "MIMode": "gdb"
+                "miDebuggerPath": "d:\\Program Files\\LLVM\\bin\\lldb.exe",
+                "miMode": "lldb"
             }
         },
         {

@@ -21,7 +21,7 @@ int main()
     float moc;
     tuple<string, float, float> piwo("Okocim", 5.6, 2.65);
     tie(ignore, moc, ignore) = piwo;
-    cout << "Piwo " << get<string>(piwo) << " ma " << moc << "% alkoholu i kosztuje " << get<2>(piwo) << "PLN" << endl;
+    cout << "Piwo " << get<string>(piwo).c_str() << " ma " << moc << "% alkoholu i kosztuje " << get<2>(piwo) << "PLN" << endl;
 
     list<int16_t> l;
     l.push_back(10);
@@ -29,7 +29,7 @@ int main()
     l.push_back(30);
     auto n = *std::next(begin(l), 1);
 
-    auto pos = std::find(begin(l), end(l), 30);
+    auto pos = std::find(l.begin(), l.end(), 30);
     if (pos != end(l))
         n = std::distance(begin(l), pos);
 
