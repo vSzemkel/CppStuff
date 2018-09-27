@@ -12,11 +12,13 @@ using namespace std;
 
 int main()
 {
-    vector<int> vs{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    vector<int> vs{1, 2, 3, 41, 5, 6, 7, 18, 9, 10};
     vs.push_back(36);
     vs[0] = 812;
 
-    cout << "Hello GCC " << vs[0] << endl;
+    std::sort(vs.begin(), vs.end());
+    auto p = lower_bound(vs.begin(), vs.end(), 8);
+    cout << "Hello GCC: with vs lower bound for 8 is " << *p <<  endl;
 
     float moc;
     tuple<string, float, float> piwo("Okocim", 5.6, 2.65);
@@ -31,7 +33,7 @@ int main()
 
     auto pos = std::find(l.begin(), l.end(), 30);
     if (pos != end(l))
-        n = std::distance(begin(l), pos);
+        n = std::distance(l.begin(), pos);
 
     auto a = 5;
     if (int b = a + 4; b > 1)
