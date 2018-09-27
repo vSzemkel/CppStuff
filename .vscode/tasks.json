@@ -1,66 +1,22 @@
 {
-    "version": "0.1.0",
-    "runner": "terminal",
-    "windows": {
-        "command": "bash",
-        "args": [
-            "-c",
-            "\"cd /mnt/d/GitHub/GCC-test;g++-6 -Wall -std=c++14 test.cpp\""
-        ],
-        "echoCommand": true,
-        "isShellCommand": true,
-        "showOutput": "always"
-    },
-    "linux": {
-        "command": "g++-5",
-        "args": [
-            "-Wall",
-            "-std=c++14",
-            "test.cpp"
-        ],
-        "isShellCommand": true,
-        "showOutput": "always",
-        "problemMatcher": {
-            "owner": "cpp",
-            "fileLocation": [
-                "relative",
-                "${workspaceRoot}"
-            ],
-            "pattern": {
-                "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                "file": 1,
-                "line": 2,
-                "column": 3,
-                "severity": 4,
-                "message": 5
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "osx": {
+                "command": "clang++ -Wall -g -std=c++17 test.cpp"
             }
         }
-    },    
-    "osx": {
-        "command": "clang++",
-        "args": [
-            "-Wall",
-            "-g",
-            "-v",
-            "-std=c++1z",
-            "test.cpp"
-        ],
-        "isShellCommand": true,
-        "showOutput": "always",
-        "problemMatcher": {
-            "owner": "cpp",
-            "fileLocation": [
-                "relative",
-                "${workspaceRoot}"
-            ],
-            "pattern": {
-                "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                "file": 1,
-                "line": 2,
-                "column": 3,
-                "severity": 4,
-                "message": 5
-            }
-        }
-    }
+    ]
 }

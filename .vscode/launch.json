@@ -26,7 +26,7 @@
             "type": "cppdbg",
             "request": "attach",
             "program": "${workspaceRoot}/a.out",
-            "processId": "${command.pickProcess}",
+            "processId": "${command:pickProcess}",
             "linux": {
                 "MIMode": "gdb"
             },
