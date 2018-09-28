@@ -18,8 +18,8 @@
                 "command": "clang++ -Wall -g -std=c++17 test.cpp"
             },
             "windows": {
-                "command": "\"d:\\Program Files\\LLVM\\bin\\clang++.exe\" -Wall -g -std=c++17 test.cpp"
-                // "command": "bash.exe -c 'g++-8 -Wall -g -std=c++17 test.cpp'"
+                // "command": "\"d:\\Program Files\\LLVM\\bin\\clang++.exe\" -Wall -g -std=c++17 test.cpp"
+                "command": "bash.exe -c 'g++-8 -Wall -g -std=c++17 test.cpp'"
             }
         }
     ]

@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <list>
@@ -17,7 +18,7 @@ int main()
     vs[0] = 812;
 
     std::sort(vs.begin(), vs.end());
-    auto p = lower_bound(vs.begin(), vs.end(), 8);
+    auto p = std::lower_bound(vs.begin(), vs.end(), 8);
     cout << "Hello GCC: with vs lower bound for 8 is " << *p <<  endl;
 
     float moc;
