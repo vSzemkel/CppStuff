@@ -1,3 +1,7 @@
+/*.exe
+/*.pdb
+/*.ilk
 /*.out
 *.dSYM/
+a.*
 
