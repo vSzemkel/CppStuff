@@ -51,7 +51,7 @@ int main()
     const char* path = "d:\\Code\\x\\IDA\\install.pass";
     auto slash = strrchr(path, '\\');
     std::string_view dir{path, static_cast<size_t>(slash - path)};
-    cout << "Path1: " << dir << '\n';
+    cout << "Path: " << dir << '\n';
 
     string ts[] = {"abc", "def", "ghi"};
 
