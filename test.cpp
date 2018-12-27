@@ -1,8 +1,10 @@
 
 #include <algorithm>
+#include <cstring>
 #include <charconv>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <list>
 #include <tuple>
@@ -45,6 +47,13 @@ int main()
     auto a = iconv;
     if (int b = a + 4; b > 1)
         cout << "This variable is inline declared: " << b << endl;
+
+    const char* path = "d:\\Code\\x\\IDA\\install.pass";
+    auto slash = strrchr(path, '\\');
+    std::string_view dir{path, static_cast<size_t>(slash - path)};
+    cout << "Path1: " << dir << '\n';
+
+    string ts[] = {"abc", "def", "ghi"};
 
     return 0;
 }
