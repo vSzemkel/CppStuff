@@ -17,6 +17,9 @@
             "osx": {
                 "command": "clang++ -Wall -g -std=c++17 test.cpp"
             },
+            "linux": {
+                "command": "./buid-g++-8.sh"
+            },
             "windows": {
                 //"command": "\"d:\\Program Files\\LLVM\\bin\\clang++.exe\" -Wall -g -std=c++17 test.cpp"
                 "command": "ubuntu run g++-8 -Wall -g -std=c++17 test.cpp"

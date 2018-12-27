@@ -19,8 +19,8 @@ int main()
 {
     vector<int> vs{1, 2, 3, 41, 5, 6, 7, 18, 9, 10};
     vs.push_back(36);
-    
-    int iconv;
+
+    int iconv = -91;
     const char sconv[] = "812";
     std::from_chars(sconv, sconv + sizeof(sconv), iconv);
     vs[0] = iconv;
