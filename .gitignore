@@ -5,3 +5,4 @@
 *.dSYM/
 a.*
 *.o
+.vscode/ipch/
