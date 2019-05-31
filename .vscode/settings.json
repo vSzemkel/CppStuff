@@ -4,4 +4,5 @@
         "**/*dSYM": true,
         "a.out": true
     },
+    "editor.renderWhitespace": "all"
 }
