@@ -3,5 +3,5 @@
     "files.exclude": {
         "**/*dSYM": true,
         "a.out": true
-    }
+    },
 }

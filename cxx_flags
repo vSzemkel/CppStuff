@@ -1,0 +1,4 @@
+-O0
+-Wall
+-ggdb3
+-std=c++17
