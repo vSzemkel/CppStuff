@@ -15,12 +15,12 @@ int main(int argc, char* argv[]) {
         file_path.concat(".cpp");
     }
 
-    if (!filesystem::exists(file_path) || !filesystem::is_regular_file(file_path)) {
+    if (!filesystem::is_regular_file(file_path)) {
         cout << file_path << " is not a regular file\n";
         return -1;
     }
 
-    map<char, uint> stats;
+    map<const char, uint> stats;
     cout << "Character statistics for: " << file_path << "\n";
     ifstream file;
     file.open(file_path);
@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
         const auto result = stats.emplace(c, 1);
         if (!result.second) {
             auto& stat = *result.first;
-            ++(stat.second);
+            ++stat.second;
         }
     } while (file.good());
 
