@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceRoot}/charstats",
-            "args": [],
+            "args": ["testfile.txt"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],

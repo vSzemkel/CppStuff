@@ -9,19 +9,31 @@
 
 using namespace std;
 
-struct diacritic {
+struct diacritic_t {
     string character;
     uint occurences;
-    uint8_t bytes[3];
-    uint8_t width;
 };
 
-array<diacritic,1> diacritics = {
-    {"ą", 0, {0xc4, 0x85, 0}, 2}
+array<diacritic_t,18> g_diacritics = {
+    diacritic_t{"ą", 0},
+    diacritic_t{"ć", 0},
+    diacritic_t{"ę", 0},
+    diacritic_t{"ł", 0},
+    diacritic_t{"ń", 0},
+    diacritic_t{"ó", 0},
+    diacritic_t{"ś", 0},
+    diacritic_t{"ź", 0},
+    diacritic_t{"ż", 0},
+    diacritic_t{"Ą", 0},
+    diacritic_t{"Ć", 0},
+    diacritic_t{"Ę", 0},
+    diacritic_t{"Ł", 0},
+    diacritic_t{"Ń", 0},
+    diacritic_t{"Ó", 0},
+    diacritic_t{"Ś", 0},
+    diacritic_t{"Ź", 0},
+    diacritic_t{"Ż", 0},
 };
-
-uint8_t g_diacritic_index = 0;
-diacritic* g_current_diacritic = nullptr;
 
 int main(int argc, char* argv[]) {
     filesystem::path file_path;
@@ -42,25 +54,27 @@ int main(int argc, char* argv[]) {
     ifstream file;
     file.open(file_path);
     do {
-        const uint8_t c = file.get();
-        if (g_current_diacritic != nullptr && c == g_current_diacritic->bytes[g_diacritic_index]) {
-            if (g_diacritic_index == g_current_diacritic->width - 1) {
-                g_current_diacritic->occurences++;
-                g_current_diacritic =  nullptr;
-            } else
-                g_diacritic_index++;
-
-            continue;
-        }
-
-        for (auto& d : diacritics)
-            if (d.bytes[0] == c) {
-                g_current_diacritic = &d;
-                g_diacritic_index = 1;
+        char c3 = '\0', c2 = '\0', c = file.get();
+        for (auto& d : g_diacritics)
+            if (d.character.c_str()[0] == c) {
+                if (c2 == '\0')
+                    c2 = file.get();
+                if (d.character.c_str()[1] != c2)
+                    continue;
+                if (d.character.size() == 2) {
+                    d.occurences++;
+                    c2 = '\0';
+                    break;
+                } else {
+                    if (c3 != '\0')
+                        c3 = file.get();
+                    if (d.character.c_str()[2] != c3)
+                        continue;
+                    d.occurences++;
+                    c2 = c3 = '\0';
+                    break;
+                }
             }
-
-        if (g_current_diacritic != nullptr)
-            continue;
 
         const auto result = stats.emplace(c, 1);
         if (!result.second) {
@@ -72,7 +86,7 @@ int main(int argc, char* argv[]) {
     for (const auto& s : stats)
         cout << "[" << setfill('0') << setw(3) << static_cast<int>(s.first) << "] " << s.first << ": " << s.second << "\n";
     cout << "Diacritics found:\n";
-    for (const auto& d : diacritics)
+    for (const auto& d : g_diacritics)
         if (d.occurences > 0)
             cout << d.character << ": " << d.occurences << "\n";
 }
