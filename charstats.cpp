@@ -1,9 +1,11 @@
 
 // On Windows set console to utf8 codepage: chcp 65001
+// g++-9 $(< cxx_flags) charstats.cpp -o charstats
 
 #include <filesystem>
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <chrono>
 #include <array>
