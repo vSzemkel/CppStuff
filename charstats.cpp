@@ -1,4 +1,6 @@
 
+// On Windows set console to utf8 codepage: chcp 65001
+
 #include <filesystem>
 #include <iostream>
 #include <fstream>
@@ -9,12 +11,13 @@
 
 using namespace std;
 
-struct diacritic_t {
+struct diacritic_t
+{
     string character;
-    uint occurences;
+    uint32_t occurences;
 };
 
-array<diacritic_t,18> g_diacritics = {
+array<diacritic_t, 18> g_diacritics = {
     diacritic_t{"ą", 0},
     diacritic_t{"ć", 0},
     diacritic_t{"ę", 0},
@@ -35,7 +38,8 @@ array<diacritic_t,18> g_diacritics = {
     diacritic_t{"Ż", 0},
 };
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     // check input
     filesystem::path file_path;
     if (argc > 1)
@@ -57,15 +61,17 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
 
     // compute statistics
-    map<const char, uint> stats;
+    char c;
+    map<const char, uint32_t> stats;
     auto start = chrono::steady_clock::now();
-    do {
-        char c3 = '\0', c2 = '\0', c = file.get();
-        for (auto& d : g_diacritics)
-            if (d.character.c_str()[0] == c) {
+    while (file.get(c)) {
+        char c3 = '\0', c2 = '\0';
+        for (auto& d : g_diacritics) {
+            auto bytes = d.character.c_str();
+            if (bytes[0] == c) {
                 if (c2 == '\0')
                     c2 = file.get();
-                if (d.character.c_str()[1] != c2)
+                if (bytes[1] != c2)
                     continue;
                 if (d.character.size() == 2) {
                     d.occurences++;
@@ -73,31 +79,29 @@ int main(int argc, char* argv[]) {
                 } else {
                     if (c3 != '\0')
                         c3 = file.get();
-                    if (d.character.c_str()[2] != c3)
+                    if (bytes[2] != c3)
                         continue;
                     d.occurences++;
                     break;
                 }
             }
-
-        if (c2 != '\0') {
-            c2 = c3 = '\0';
-            continue;
         }
-        
+
+        if (c2 != '\0')
+            continue;
+
         const auto result = stats.emplace(c, 1);
         if (!result.second) {
             auto& stat = *result.first;
             ++stat.second;
         }
-    } while (file.good());
+    }
+
+    file.close();
 
     // present results
     chrono::duration<double> duration = chrono::steady_clock::now() - start;
-    auto eof = stats.find((const char)-1);
-    if (eof != stats.end())
-        stats.erase(eof);
-    eof = stats.find((const char)10);
+    auto eof = stats.find((const char)10);
     if (eof != stats.end())
         stats.erase(eof);
     for (const auto& s : stats)
