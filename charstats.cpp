@@ -1,6 +1,6 @@
 
 // On Windows set console to utf8 codepage: chcp 65001
-// g++-9 $(< cxx_flags) charstats.cpp -o charstats
+// Compile: [g++-9 | clang++-9] $(< cxx_flags) charstats.cpp -o charstats
 
 #include <filesystem>
 #include <iostream>
@@ -68,26 +68,27 @@ int main(int argc, char* argv[])
     auto start = chrono::steady_clock::now();
     while (file.get(c)) {
         char c3 = '\0', c2 = '\0';
-        for (auto& d : g_diacritics) {
-            auto bytes = d.character.c_str();
-            if (bytes[0] == c) {
-                if (c2 == '\0')
-                    c2 = file.get();
-                if (bytes[1] != c2)
-                    continue;
-                if (d.character.size() == 2) {
-                    d.occurences++;
-                    break;
-                } else {
-                    if (c3 != '\0')
-                        c3 = file.get();
-                    if (bytes[2] != c3)
+        if ((c & 0xf0) == 0xc0)
+            for (auto& d : g_diacritics) {
+                auto bytes = d.character.c_str();
+                if (bytes[0] == c) {
+                    if (c2 == '\0')
+                        c2 = file.get();
+                    if (bytes[1] != c2)
                         continue;
-                    d.occurences++;
-                    break;
+                    if (d.character.size() == 2) {
+                        d.occurences++;
+                        break;
+                    } else {
+                        if (c3 != '\0')
+                            c3 = file.get();
+                        if (bytes[2] != c3)
+                            continue;
+                        d.occurences++;
+                        break;
+                    }
                 }
             }
-        }
 
         if (c2 != '\0')
             continue;
