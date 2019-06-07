@@ -17,10 +17,12 @@ int main()
     std::transform(std::begin(polish_sentence), std::end(polish_sentence), std::begin(upper), [](auto ch) { return towupper(ch); });
     std::wcout << upper << "\n";
 
-    auto old_loc = setlocale(LC_CTYPE, "pl_PL");
-    std::transform(std::begin(polish_sentence), std::end(polish_sentence), std::begin(upper), [](auto ch) { return towupper(ch); });
-    std::wcout << upper << "\n";
-    setlocale(LC_CTYPE, old_loc);
+    auto old_loc = setlocale(LC_CTYPE, nullptr);
+    if (setlocale(LC_CTYPE, "Polish_Poland.1250") != nullptr) {
+        std::transform(std::begin(polish_sentence), std::end(polish_sentence), std::begin(upper), [](auto ch) { return towupper(ch); });
+        std::wcout << upper << "\n";
+        setlocale(LC_CTYPE, old_loc);
+    }
 
     auto polish_locale = _create_locale(LC_CTYPE, "pl_PL");
     std::transform(std::begin(polish_sentence), std::end(polish_sentence), std::begin(upper), [polish_locale](auto ch) { return _towupper_l(ch, polish_locale); });
