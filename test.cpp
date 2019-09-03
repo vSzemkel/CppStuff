@@ -30,7 +30,7 @@ int main()
     cout << "Hello GCC: with vs lower bound for 8 is " << *p << endl;
 
     float moc;
-    tuple<string, float, float> piwo("Okocim", 5.6, 2.65);
+    tuple<string, float, float> piwo("Okocim", 5.6f, 2.65f);
     tie(ignore, moc, ignore) = piwo;
     cout << "Piwo " << get<string>(piwo) << " ma " << moc << "% alkoholu i kosztuje " << get<2>(piwo) << "PLN" << endl;
 
