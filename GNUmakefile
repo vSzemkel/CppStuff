@@ -10,3 +10,6 @@ all: test.exe charstats.exe locale-win.exe
 
 %.obj: %.cpp
 	$(CC) $(CFLAGS) /Fo:$@ $<
+
+clean:
+	cmd /c "del *.exe *.out *.o"
