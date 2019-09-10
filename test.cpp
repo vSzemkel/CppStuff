@@ -29,10 +29,11 @@ int main()
     auto p = std::lower_bound(vs.begin(), vs.end(), 8);
     cout << "Hello GCC: with vs lower bound for 8 is " << *p << endl;
 
-    float moc;
     tuple<string, float, float> piwo("Okocim", 5.6f, 2.65f);
+    float moc;
     tie(ignore, moc, ignore) = piwo;
-    cout << "Piwo " << get<string>(piwo) << " ma " << moc << "% alkoholu i kosztuje " << get<2>(piwo) << "PLN" << endl;
+    auto [_, moc2, ignore] = piwo; // structured binding
+    cout << "Piwo " << get<string>(piwo) << " ma " << moc2 << "% alkoholu i kosztuje " << get<2>(piwo) << "PLN" << endl;
 
     list<int16_t> l;
     l.push_back(10);

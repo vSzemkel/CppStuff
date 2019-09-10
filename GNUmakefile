@@ -3,7 +3,7 @@
 CC=cl.exe
 CFLAGS=/O2 /EHsc -std:c++17
 
-all: test.exe charstats.exe locale-win.exe
+all: any_of.exe test.exe charstats.exe locale-win.exe
 
 %.exe: %.obj
 	$(CC) /Fe:$@ $^ /link
