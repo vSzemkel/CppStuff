@@ -2,10 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "C++ Launch",
-            "type": "cppdbg",
+            "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/charstats",
+            "name": "LLDB launch",
+            "program": "${workspaceRoot}/test.exe",
+            "args": [],
+        },
+        {
+            "name": "C++ [LL|G]DB Launch",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/test.exe",
             "args": ["testfile.txt"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
@@ -18,8 +25,8 @@
                 "MIMode": "lldb"
             },
             "windows": {
-                "miDebuggerPath": "c:\\Program Files\\LLVM\\bin\\lldb.exe",
-                "miMode": "lldb"
+                "miDebuggerPath": "D:\\Program Files\\LLVM\\bin\\lldb.exe",
+                "MIMode": "lldb"
             }
         },
         {

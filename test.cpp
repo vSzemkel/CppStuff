@@ -8,6 +8,7 @@
 #include <vector>
 #include <list>
 #include <tuple>
+#include <numeric>
 
 using namespace std;
 
@@ -25,10 +26,11 @@ int main()
     std::from_chars(sconv, sconv + sizeof(sconv), iconv);
     vs[0] = iconv;
 
+    std::inclusive_scan(vs.begin(), vs.end(), vs.begin());
     std::make_heap(vs.begin(), vs.end());
     std::sort_heap(vs.begin(), vs.end());
-    auto p = std::lower_bound(vs.begin(), vs.end(), 8);
-    cout << "Hello GCC: with vs lower bound for 8 is " << *p << endl;
+    auto p = std::lower_bound(vs.begin(), vs.end(), 820);
+    cout << "Hello GCC: with vs lower bound for 820 is " << *p << endl;
 
     tuple<string, float, float> piwo("Okocim", 5.6F, 2.65F);
     float moc;
