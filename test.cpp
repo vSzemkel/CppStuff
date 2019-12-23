@@ -14,6 +14,7 @@ using namespace std;
 /* Shift-Japko-B to build */
 /* INCLUDE brane z ustawień XCode: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1 */
 /* Aby odpalić debuggowanie w GDB trzeba podpisać kod https://sourceware.org/gdb/wiki/BuildingOnDarwin */
+/* LLDB: settings set target.x86-disassembly-flavor intel */
 
 int main()
 {

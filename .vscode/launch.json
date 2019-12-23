@@ -2,10 +2,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "lldb",
+            "request": "launch",
+            "name": "LLDB",
+            "program": "${workspaceFolder}/workbook",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "C++ Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/charstats",
+            "program": "${workspaceRoot}/workbook",
             "args": ["testfile.txt"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
