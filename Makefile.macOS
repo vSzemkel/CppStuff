@@ -1,8 +1,8 @@
 
-# Ubuntu makefile
-# make -f Makefile
+# macOS makefile
+# make -f Makefile.macOS
 
-CC=clang++-9
+CC=clang++
 CFLAGS=-O3 -Wall -ggdb3 -std=c++17
 
 all: test.o locale-linux.o charstats.o any_of.o
