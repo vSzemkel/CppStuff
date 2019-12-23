@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
                         d.occurences++;
                         break;
                     } else {
-                        if (c3 != '\0')
+                        if (c3 == '\0')
                             c3 = file.get();
                         if (bytes[2] != c3)
                             continue;

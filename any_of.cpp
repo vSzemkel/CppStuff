@@ -15,7 +15,7 @@ std::array<Bucket, 3> g_buckets = {
 
 int main() {
     Bucket pattern;
-    std::cout << "Enter key: ";
+    std::cout << "Enter a single digit key: ";
     std::cin >> pattern.xx;
     std::cout << "Enter single letter code: ";
     std::cin >> pattern.code;
