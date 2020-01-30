@@ -9,7 +9,7 @@ int main()
     // edit with UTF-8
     // check-language-support -a
     // sudo apt-get -y install language-pack-pl
-    std::string polish_sentence = "zażółć gęślą jaźń";
+    std::string polish_sentence = u8"zażółć gęślą jaźń";
     std::cout << polish_sentence << "\n";
 
     std::string upper{polish_sentence};
