@@ -7,18 +7,18 @@
 
 // case definition
 constexpr int g_rows = 7;
-constexpr int g_cols = 12;
+constexpr int g_cols = 16;
+constexpr int g_show = 10;
 constexpr char g_pattern[] = 
-"aaaa---VVBBB"
-"aaa----VVBBB"
-"a------VVBBB"
-"aaa----VVBBB"
-"aaa-------BB"
-"aaa----VVBBB"
-"aaaa---VVBBB";
+"aaaa---VVBBBBB**"
+"aaa----VVBBB****"
+"a------VVBBB****"
+"aaa----VV*BB****"
+"aaa------*******"
+"aaa----V***B****"
+"aaaa---VVBBBBB**";
 
 // globals
-int g_region_id = 0;
 std::vector<int> g_adj(4);
 std::vector<uint8_t> g_visited(g_rows * g_cols, 0);
 std::vector<std::vector<int>> g_regions;
@@ -56,6 +56,7 @@ int main(int argc, char* argv[])
 {
     // check input data
     static_assert(sizeof(g_pattern) > 1);
+    static_assert(sizeof(g_pattern) > g_show);
     static_assert(sizeof(g_pattern) - 1 == g_rows * g_cols);
 
     // collect regions
@@ -63,7 +64,6 @@ int main(int argc, char* argv[])
         if (g_visited[i] == 0) {
             g_regions.push_back({});
             dfs(i);
-            ++g_region_id;
         }
 
     // select winner
@@ -73,11 +73,15 @@ int main(int argc, char* argv[])
         });
 
     // present result
-    printf("\nMaximum region of size %i is composed of symbol %c\n", max_region->size(), g_pattern[(*max_region)[0]]);
-    int i = 1;
-    std::sort(max_region->begin(), max_region->end());
-    for (const int pos : *max_region)
-        printf("%i: (%i, %i)\n", i++, pos % g_cols, pos / g_cols);
+    printf("\nMaximum region of size %lli is composed of symbol '%c'\n", max_region->size(), g_pattern[(*max_region)[0]]);
+    printf("First %i cells of region: (col, row)\n", g_show);
+    int i = 0;
+    std::make_heap(max_region->begin(), max_region->end(), std::greater<>{});
+    while (i < g_show) {
+        const auto pos = *max_region->begin();
+        std::pop_heap(max_region->begin(), max_region->end() - i, std::greater<>{});
+        printf("\t[#%02i:cell %02i]  (%i, %i)\n", ++i, pos, pos % g_cols, pos / g_cols);
+    }
 
     return 0;
 }
