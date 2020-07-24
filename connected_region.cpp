@@ -15,8 +15,8 @@ constexpr char g_pattern[] =
 "a------VVBBB****"
 "aaa----VV*BB****"
 "aaa------*******"
-"aaa----V***B****"
-"aaaa---VVBBBBB**";
+"aaa----4-**4****"
+"aaaa---4444444**";
 
 // globals
 std::vector<int> g_adj(4);
@@ -67,19 +67,22 @@ int main(int argc, char* argv[])
         }
 
     // select winner
-    const auto max_region = std::max_element(g_regions.begin(), g_regions.end(), 
+    auto& max_region = *std::max_element(g_regions.begin(), g_regions.end(), 
         [](const auto v1, const auto v2) {
             return v1.size() < v2.size();
         });
 
     // present result
-    printf("\nMaximum region of size %lli is composed of symbol '%c'\n", max_region->size(), g_pattern[(*max_region)[0]]);
+    printf("\nRecognized %llu connected regions of sizes:\n", g_regions.size());
+    for (const auto& v : g_regions)
+        printf("\t'%c': %llu\n", g_pattern[v[0]], v.size());
+    printf("\nMaximal region of size %llu is composed of symbol '%c'\n", max_region.size(), g_pattern[max_region[0]]);
     printf("First %i cells of region: (col, row)\n", g_show);
     int i = 0;
-    std::make_heap(max_region->begin(), max_region->end(), std::greater<>{});
+    std::make_heap(max_region.begin(), max_region.end(), std::greater<>{});
     while (i < g_show) {
-        const auto pos = *max_region->begin();
-        std::pop_heap(max_region->begin(), max_region->end() - i, std::greater<>{});
+        const auto pos = max_region.front();
+        std::pop_heap(max_region.begin(), max_region.end() - i, std::greater<>{});
         printf("\t[#%02i:cell %02i]  (%i, %i)\n", ++i, pos, pos % g_cols, pos / g_cols);
     }
 
