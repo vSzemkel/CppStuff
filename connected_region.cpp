@@ -3,7 +3,7 @@
 #include <vector>
 
 // find maximum connected region
-// two calls are connected when they have common edge
+// two cells are connected when they have common edge
 
 // case definition
 constexpr int g_rows = 7;
@@ -28,6 +28,7 @@ auto adjacents(int pos)
 {
     const int row = pos / g_cols;
     const int col = pos % g_cols;
+
     g_adj.clear();
     if (col > 0) 
         g_adj.push_back(pos - 1);
@@ -46,13 +47,14 @@ void dfs(int pos)
 {
     g_visited[pos] = 1;
     g_regions.back().push_back(pos);
-    for (int i : adjacents(pos))
+    for (const int i : adjacents(pos))
         if (g_visited[i] == 0 && g_pattern[pos] == g_pattern[i])
             dfs(i);
 }
 
 int main(int argc, char* argv[])
 {
+    // check input data
     static_assert(sizeof(g_pattern) > 1);
     static_assert(sizeof(g_pattern) - 1 == g_rows * g_cols);
 
@@ -65,7 +67,7 @@ int main(int argc, char* argv[])
         }
 
     // select winner
-    auto max_region = std::max_element(g_regions.begin(), g_regions.end(), 
+    const auto max_region = std::max_element(g_regions.begin(), g_regions.end(), 
         [](const auto v1, const auto v2) {
             return v1.size() < v2.size();
         });
@@ -74,7 +76,7 @@ int main(int argc, char* argv[])
     printf("\nMaximum region of size %i is composed of symbol %c\n", max_region->size(), g_pattern[(*max_region)[0]]);
     int i = 1;
     std::sort(max_region->begin(), max_region->end());
-    for (int pos : *max_region)
+    for (const int pos : *max_region)
         printf("%i: (%i, %i)\n", i++, pos % g_cols, pos / g_cols);
 
     return 0;
