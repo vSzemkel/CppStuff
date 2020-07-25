@@ -43,7 +43,7 @@ auto adjacents(const int pos)
 }
 
 // classic depth first search
-void dfs(int pos)
+void dfs(const int pos)
 {
     g_visited[pos] = 1;
     g_regions.back().push_back(pos);
@@ -56,8 +56,7 @@ void dfs(int pos)
 void dfs_nr(const int pos)
 {
     char symbol = g_pattern[pos];
-    std::vector<int> cache;
-    cache.push_back(pos);
+    std::vector<int> cache{pos};
     g_visited[pos] = 1;
 
     while (!cache.empty()) {
