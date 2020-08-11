@@ -5,7 +5,7 @@
 CC=clang++-9
 CFLAGS=-O3 -Wall -ggdb3 -std=c++17
 
-all: test.o locale-linux.o charstats.o any_of.o
+all: test.o connected_region.o convex_hull.o locale-linux.o charstats.o any_of.o
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) $^ -o $@
