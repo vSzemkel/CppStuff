@@ -11,20 +11,20 @@
 // case definition
 constexpr int g_points_count = 100;
 
-// polar angle increasing priority
 using point_t = std::pair<int,int>;
 using hull_t = std::vector<point_t>;
-auto comp = [](const point_t& p1, const point_t& p2) { 
-    const auto polar1 = atan2(p1.second, p1.first);
-    const auto polar2 = atan2(p2.second, p2.first);
-    return polar1 > polar2 || (polar1 == polar2 && sqrt(p1.first*p1.first + p1.second*p1.second) > sqrt(p2.first*p2.first + p2.second*p2.second));
-};
-
-using queue_t = std::priority_queue<point_t, hull_t, decltype(comp)>;
+using comp_t = bool(*)(const point_t&, const point_t&);
+using queue_t = std::priority_queue<point_t, hull_t, comp_t>;
 queue_t init_pq() 
 {
     std::random_device rd;
     std::uniform_int_distribution<int> dist(-100, 100);
+    // polar angle increasing priority
+    auto comp = [](const point_t& p1, const point_t& p2) { 
+        const auto polar1 = atan2(p1.second, p1.first);
+        const auto polar2 = atan2(p2.second, p2.first);
+        return polar1 > polar2 || (polar1 == polar2 && sqrt(p1.first*p1.first + p1.second*p1.second) > sqrt(p2.first*p2.first + p2.second*p2.second));
+    };
 
     hull_t tmp;
     tmp.reserve(g_points_count);
@@ -32,7 +32,7 @@ queue_t init_pq()
     for (int n = 1; n < g_points_count; ++n)
         tmp.push_back({dist(rd), dist(rd) + 101});
 
-    return {std::move(comp), std::move(tmp)}; // linear make_heap undern
+    return {std::move(comp), std::move(tmp)}; // linear make_heap underneath
 }
 
 // globals
