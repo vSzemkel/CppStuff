@@ -107,3 +107,31 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
+/*    clang++.exe -Wall -g -std=c++17 connected_region.cpp -o connected_region.exe
+
+Output:
+
+Recognized 8 connected regions of sizes:
+        'a': 21
+        '-': 31
+        'V': 8
+        'B': 13
+        '*': 30
+        'k': 6
+        'r': 22
+        '4': 9
+
+Maximal region of size 31 is composed of symbol '-'
+First 10 cells of that region: (col, row)
+        [#01:cell 04]  (4, 0)
+        [#02:cell 05]  (5, 0)
+        [#03:cell 06]  (6, 0)
+        [#04:cell 23]  (3, 1)
+        [#05:cell 24]  (4, 1)
+        [#06:cell 25]  (5, 1)
+        [#07:cell 26]  (6, 1)
+        [#08:cell 41]  (1, 2)
+        [#09:cell 42]  (2, 2)
+        [#10:cell 43]  (3, 2)
+*/

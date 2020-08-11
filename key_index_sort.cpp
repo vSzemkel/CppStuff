@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <numeric>
 #include <stdio.h>
 #include <vector>
@@ -5,7 +6,8 @@
 // sort sequence of objects by a key from a finite set
 // simplification: object == key == decimal digit
 
-// case definition - 301st Fibonacci number
+// case definition - 301st Fibonacci number, a digits sequence
+constexpr int g_distinct_keys = 10;
 constexpr char g_pattern[] = 
 "5357543035931336604742125245300009052807024058527"
 "6680372187519418517552556246806124659918940784792"
@@ -16,7 +18,7 @@ constexpr char g_pattern[] =
 "4034688";
 
 // globals
-std::vector<uint16_t> g_stats(11, 0);
+std::vector<uint16_t> g_stats(g_distinct_keys + 1, 0);
 
 int main(int argc, char* argv[])
 {
@@ -39,6 +41,7 @@ int main(int argc, char* argv[])
     printf("\n\nSorted digits:\n");
     for (const auto d : output)
         printf("%c", d);
+    printf("\n");
 
     return 0;
 }
