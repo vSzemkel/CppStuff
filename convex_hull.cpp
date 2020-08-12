@@ -11,25 +11,26 @@
 // case definition
 constexpr int g_points_count = 100;
 
-using point_t = std::pair<int,int>;
+using point_t = std::pair<int, int>;
 using hull_t = std::vector<point_t>;
 using comp_t = bool(*)(const point_t&, const point_t&);
 using queue_t = std::priority_queue<point_t, hull_t, comp_t>;
 queue_t init_pq() 
 {
-    // polar angle comparer
+    // polar angles comparer
     auto comp = [](const point_t& p1, const point_t& p2) { 
         const auto polar1 = atan2(p1.second, p1.first);
         const auto polar2 = atan2(p2.second, p2.first);
         return polar1 > polar2 || (polar1 == polar2 && sqrt(p1.first*p1.first + p1.second*p1.second) > sqrt(p2.first*p2.first + p2.second*p2.second));
     };
     // container with coordinates origin and random points
-    hull_t tmp{{0, 0}};
+    hull_t tmp;
     tmp.reserve(g_points_count);
+    tmp.emplace_back(0, 0);
     std::random_device rd;
     std::uniform_int_distribution<int> dist(-100, 100);
     for (int n = 1; n < g_points_count; ++n)
-        tmp.push_back({dist(rd), dist(rd) + 101});
+        tmp.emplace_back(dist(rd), dist(rd) + 101);
 
     return {std::move(comp), std::move(tmp)}; // linear make_heap underneath
 }
