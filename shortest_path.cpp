@@ -5,6 +5,7 @@
 
 // for a given graph with positive length edges find
 // the shortest path between two arbitrary vertexes
+// special case: minimal spanning tree on input
 
 
 // case definition
@@ -16,7 +17,7 @@ graph_t g_graph;
 std::vector<char> g_paths;
 std::vector<int> g_lengths;
 
-void add_edge(const char n1, const char n2, int len)
+void add_edge(const char n1, const char n2, const int len)
 {
     g_graph[n1 - 'A'].emplace_back(n2, len);
     g_graph[n2 - 'A'].emplace_back(n1, len);
@@ -52,7 +53,7 @@ void init_graph()
     }
 }
 
-void find_shortest_path(char start, char stop)
+void find_shortest_path(const char start, const char stop)
 {
     g_lengths[start - 'A'] = 0;
     std::deque<char> cache{start};
