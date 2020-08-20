@@ -47,7 +47,7 @@ class Magazine
         while (_size < 1)
             _cv.wait(ul);
 
-        T item = _storage[_start];
+        T item = std::move(_storage[_start]);
         _start = (_start + 1) % N;
         --_size;
         ++_tick;
@@ -78,11 +78,11 @@ void produce(int order)
 {
     int id = 0;
     while (order--) {
+        char buf[100];
+        sprintf_s(buf, 100, "[%03u-%llu] Produced: [%u, %i]", g_line++, __rdtsc(), *(unsigned int*)&std::this_thread::get_id(), id);
         g_magazine.put(Item{std::this_thread::get_id(), ++id});
         {
-            char buf[100];
             std::lock_guard lg{g_printf_mx};
-            sprintf_s(buf, 100, "[%03u-%llu] Produced: [%u, %i]", g_line++, __rdtsc(), *(unsigned int*)&std::this_thread::get_id(), id);
             g_log.push_back(buf);
         }
     }
@@ -92,10 +92,10 @@ void consume(int order)
 {
     while (order--) {
         const auto& item = g_magazine.get();
+        char buf[100];
+        sprintf_s(buf, 100, "[%03u-%llu] Consumed by: %u [%u, %i]", g_line++, __rdtsc(), *(unsigned int*)&std::this_thread::get_id(), *(unsigned int*)&item.producer_id, item.item_id);
         {
-            char buf[100];
             std::lock_guard lg{g_printf_mx};
-            sprintf_s(buf, 100, "[%03u-%llu] Consumed by: %u [%u, %i]", g_line++, __rdtsc(), *(unsigned int*)&std::this_thread::get_id(), *(unsigned int*)&item.producer_id, item.item_id);
             g_log.push_back(buf);
         }
     }
