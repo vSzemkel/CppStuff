@@ -46,7 +46,7 @@ void get(std::wstring uri, std::function<void(const std::string&)> callback)
                 if (resp.status_code() == web::http::status_codes::OK) {
                     return resp.body().read_to_end(buf);
                 } else {
-                    printf("Couldn't get from %S\n", uri.c_str());
+                    // printf("Couldn't get from %S\n", uri.c_str());
                     return Concurrency::task_from_result<size_t>(0);
                 }
             }).then([=](size_t len) {
@@ -90,17 +90,16 @@ void consume(const std::string& s)
 int main()
 {
     init();
-    for (const auto uri : g_uris)
+    for (const auto& uri : g_uris)
         get(uri, consume);
 
-    // with wait() at line 42 this join is not nessesery
     std::unique_lock<std::mutex> ul{g_mutex};
     g_cv_finished.wait(ul, []{ return g_finished == true; });
 
     return 0;
 }
 
-/*
+/* clang++.exe -O0 -Wall -g -std=c++17 -Ic:\GitHub\vcpkg\installed\x64-windows\include\ -lc:\GitHub\vcpkg\installed\x64-windows\lib\cpprest_2_10.lib currency_rate_avarege.cpp -o currency_rate_avarege.exe
 
 Output:
 
