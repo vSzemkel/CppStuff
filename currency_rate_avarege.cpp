@@ -71,13 +71,12 @@ void consume_all()
 
 void consume(const std::string& s)
 {
-    auto ws = std::make_unique<wchar_t[]>(s.size() + 1);
-    mbstowcs_s(nullptr, ws.get(), s.size() + 1, s.c_str(), s.size());
+    // auto ws = std::make_unique<wchar_t[]>(s.size() + 1);
+    // mbstowcs_s(nullptr, ws.get(), s.size() + 1, s.c_str(), s.size());
 
-    utility::stringstream_t ss;
-    ss << ws;
-    web::json::value v = web::json::value::parse(ss);
-    auto rate = v[L"rates"][0][L"mid"].as_number().to_double();
+    std::error_code ec;
+    auto json = web::json::value::parse(s, ec);
+    auto rate = json[L"rates"][0][L"mid"].as_number().to_double();
 
     { // critical section
         std::lock_guard<std::mutex> lock{g_mutex};
