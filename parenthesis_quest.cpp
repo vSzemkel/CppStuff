@@ -18,10 +18,9 @@ std::vector<std::string> parse()
 
     for (int i = 0; i < len; ++i) {
         const char c = g_patern[i];
-        if (c == '{') {
+        if (c == '{')
             inBrace = true;
-            tok_in_paren.clear();
-        } else if (c == '}') {
+        else if (c == '}') {
             inBrace = false;
             std::vector<std::string> tmp;
             for (const auto& s : res)
@@ -40,6 +39,7 @@ std::vector<std::string> parse()
                 tok_in_paren.emplace_back(strtok_s(nullptr, delim, &beg));
 
             *end = '}';
+            tok_in_paren.clear();
             i = end - g_patern - 1;
         }
     }
