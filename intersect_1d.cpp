@@ -17,11 +17,10 @@ std::optional<section_t> find_intersection(section_t s1, section_t s2, bool norm
             std::swap(s2.first, s2.second);
     }
 
-    std::optional<section_t> ret;
     if (s1.second >= s2.first)
-        ret = {std::max(s1.first, s2.first), std::min(s1.second, s2.second)};    
+        return {{std::max(s1.first, s2.first), std::min(s1.second, s2.second)}};
 
-    return ret;
+    return std::nullopt;
 }
 
 std::string print_section(const section_t& s)
@@ -33,18 +32,16 @@ std::string print_section(const section_t& s)
 
 void print_intersection(const section_t& s1, const section_t& s2)
 {
-    std::string ss1 = print_section(s1);
-    std::string ss2 = print_section(s2);
-    auto inter = find_intersection(s1, s2);
-    if (inter) {
+    std::cout << print_section(s1) << " and " << print_section(s2);
+    if (auto inter = find_intersection(s1, s2)) {
         const auto& val = inter.value();
         if (val.first == val.second)
-            std::cout << ss1 << " and " << ss2 << " are connected in " << val.first;
+            std::cout << " are connected in " << val.first;
         else
-            std::cout << ss1 << " and " << ss2 << " overlap in " << print_section(val);
+            std::cout << " overlap in " << print_section(val);
+        std::cout << "\n";
     } else
-        std::cout << ss1 << " and " << ss2 << " do not intersect";
-    std::cout << "\n";
+        std::cout << " do not intersect\n";
 }
 
 int main(int argc, char* argv[])
