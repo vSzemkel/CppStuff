@@ -4,7 +4,7 @@
 #include <string>
 
 // find intersection between two sections
-using section_t = std::pair<int,int>;
+using section_t = std::pair<int, int>;
 
 std::optional<section_t> find_intersection(section_t s1, section_t s2, bool normalize = true)
 {
