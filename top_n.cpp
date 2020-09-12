@@ -8,7 +8,7 @@
 // find n-th lowest element
 
 
-// case definition - words collection
+// case definition - size of iota initialized and shuffled array
 constexpr int g_size = 2000000;
 std::array<int, g_size> g_coll;
 
@@ -21,7 +21,7 @@ void init()
     std::shuffle(g_coll.begin(), g_coll.end(), g);
 }
 
-int with_heap(int n) 
+int with_heap(const int n) 
 {
     const auto& order = std::greater<>{};
     std::make_heap(g_coll.begin(), g_coll.end(), order);

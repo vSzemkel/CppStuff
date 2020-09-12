@@ -11,7 +11,7 @@ constexpr int g_cols = 20;
 constexpr int g_show = 10;
 constexpr char g_pattern[] = 
 "aaaa---VVBBBBB**kkkk"
-"aaa----VVBBB****kkrr"
+"aaa----VVBBB****kkkk"
 "a------VVBBB****rrrr"
 "aaa----VV*BB***rrrrr"
 "aaa------*********rr"
@@ -71,6 +71,29 @@ void dfs_nr(const int pos)
     }
 }
 
+bool is_rectangular(const std::vector<int>& region)
+{
+    const auto column_comparer = [](const int pos1, const int pos2){
+        return pos1 % g_cols < pos2 % g_cols || (pos1 % g_cols == pos2 % g_cols && pos1 < pos2);
+    };
+    const auto tl = std::min_element(region.begin(), region.end());
+    const auto br1 = std::max_element(region.begin(), region.end());
+    const auto br2 = std::max_element(region.begin(), region.end(), column_comparer);
+    if (*br1 != *br2)   // XXXX
+        return false;   // XXX0
+
+    const int lc = *tl % g_cols;
+    const int rc = *br1 % g_cols;
+    const int tr = *tl / g_cols;
+    const int br = *br1 / g_cols;
+    for (int r = tr; r <= br; ++r)
+        for (int c = lc; c <= rc; ++c)
+            if (std::find(region.begin(), region.end(), r * g_cols + c) == region.end())
+                return false;
+
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
     // check input data
@@ -92,9 +115,14 @@ int main(int argc, char* argv[])
         });
 
     // present result
+    char* const rect_msg = "RECTANGULAR";
     printf("\nRecognized %llu connected regions of sizes:\n", g_regions.size());
-    for (const auto& v : g_regions)
-        printf("\t'%c': %llu\n", g_pattern[v[0]], v.size());
+    for (const auto& v : g_regions) {
+        char* r = "";
+        if (is_rectangular(v))
+            r = rect_msg;
+        printf("    '%c': %llu %s\n", g_pattern[v[0]], v.size(), r);
+    }
     printf("\nMaximal region of size %llu is composed of symbol '%c'\n", max_region.size(), g_pattern[max_region[0]]);
     printf("First %i cells of that region: (col, row)\n", g_show);
     int i = 0;
@@ -102,7 +130,7 @@ int main(int argc, char* argv[])
     while (i < g_show) {
         const auto pos = max_region.front();
         std::pop_heap(max_region.begin(), max_region.end() - i, std::greater<>{});
-        printf("\t[#%02i:cell %02i]  (%i, %i)\n", ++i, pos, pos % g_cols, pos / g_cols);
+        printf("    [#%02i:cell %02i]  (%i, %i)\n", ++i, pos, pos % g_cols, pos / g_cols);
     }
 
     return 0;
@@ -113,14 +141,14 @@ int main(int argc, char* argv[])
 Output:
 
 Recognized 8 connected regions of sizes:
-        'a': 21
-        '-': 31
-        'V': 8
-        'B': 13
-        '*': 30
-        'k': 6
-        'r': 22
-        '4': 9
+    'a': 21 
+    '-': 31 
+    'V': 8 RECTANGULAR
+    'B': 13 
+    '*': 30 
+    'k': 8 RECTANGULAR
+    'r': 20 
+    '4': 9
 
 Maximal region of size 31 is composed of symbol '-'
 First 10 cells of that region: (col, row)
