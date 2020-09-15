@@ -18,16 +18,18 @@ int main(int argc, char* argv[])
         for (int s = f; s <= g_bound; ++s)
             g_pairs.emplace(f*f + s*s, std::make_pair(f, s));
 
-    int last_sum = 0;
-    for (const auto& sum : g_pairs)
-        if (sum.first != last_sum && g_pairs.count(sum.first) > 1) {
-            const auto& pairs = g_pairs.equal_range(sum.first);
-            printf("%i:", sum.first);
-            for (auto it = pairs.first; it != pairs.second; ++it)
+    for (auto it = g_pairs.begin(); it != g_pairs.end(); ) {
+        const int sum = it->first;
+        if (g_pairs.count(sum) > 1) {
+            printf("%i:", sum);
+            while (it->first == sum) {
                 printf(" [%i, %i]", it->second.first, it->second.second);
+                ++it;
+            }
             printf("\n");
-            last_sum = sum.first;
-        }
+        } else
+            ++it;
+    }
 
     return 0;
 }
