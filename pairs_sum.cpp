@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     find_pairs();
 
     // present result
-    printf("\nRecognized %llu pairs of required sum %i:\n", g_found.size(), g_expected);
+    printf("\nRecognized %zu pairs of required sum %i:\n", g_found.size(), g_expected);
     for (const auto& f : g_found) {
         const auto partial = f.second.first;
         printf("\tarr[%i] + arr[%i] = %i + %i = %i\n", f.first, f.second.second, g_expected - partial, partial, g_expected);

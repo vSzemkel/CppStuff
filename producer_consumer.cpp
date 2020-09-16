@@ -79,7 +79,7 @@ void produce(int order)
     int id = 0;
     while (order--) {
         char buf[100];
-        sprintf_s(buf, sizeof(buf), "[%03u-%llu] Produced: [%u, %i]", g_line++, __rdtsc(), *(unsigned int*)&std::this_thread::get_id(), id);
+        sprintf_s(buf, sizeof(buf), "[%03u-%zu] Produced: [%u, %i]", g_line++, __rdtsc(), *(unsigned int*)&std::this_thread::get_id(), id);
         g_magazine.put(Item{std::this_thread::get_id(), ++id});
         {
             std::lock_guard lg{g_printf_mx};
@@ -93,7 +93,7 @@ void consume(int order)
     while (order--) {
         const auto item = g_magazine.get();
         char buf[100];
-        sprintf_s(buf, sizeof(buf), "[%03u-%llu] Consumed by: %u [%u, %i]", g_line++, __rdtsc(), *(unsigned int*)&std::this_thread::get_id(), *(unsigned int*)&item.producer_id, item.item_id);
+        sprintf_s(buf, sizeof(buf), "[%03u-%zu] Consumed by: %u [%u, %i]", g_line++, __rdtsc(), *(unsigned int*)&std::this_thread::get_id(), *(unsigned int*)&item.producer_id, item.item_id);
         {
             std::lock_guard lg{g_printf_mx};
             g_log.push_back(buf);

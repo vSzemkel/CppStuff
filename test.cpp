@@ -49,7 +49,7 @@ int main()
     if (pos != end(l))
         n = std::distance(l.begin(), pos);
 
-    auto a = iconv;
+    auto a = iconv + n;
     if (int b = a + 4; b > 1)
         cout << "This variable is inline declared: " << b << endl;
 

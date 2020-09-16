@@ -50,12 +50,12 @@ void get(std::wstring uri, std::function<void(const std::string&)> callback)
                     return Concurrency::task_from_result<size_t>(0);
                 }
             }).then([=](size_t len) {
-                if (len <= 0)
+                if (len < 1)
                     --g_valid_uris;
                 else
                     callback(buf.collection());
                 }); // no wait() here, go unobserved
-    } catch (web::http::http_exception he) {
+    } catch (const web::http::http_exception& he) {
         --g_valid_uris;
         printf("Error for uri %S: %s\n", uri.c_str(), he.what());
     }
@@ -64,7 +64,7 @@ void get(std::wstring uri, std::function<void(const std::string&)> callback)
 void consume_all()
 {
     const auto avg_rate = std::accumulate(g_rates.begin(), g_rates.end(), double{});
-    printf("Avarage rate from last %llu days is %f\n", g_valid_uris, avg_rate / g_valid_uris);
+    printf("Avarage rate from last %zu days is %f\n", g_valid_uris, avg_rate / g_valid_uris);
     g_finished = true;
     g_cv_finished.notify_one();
 }

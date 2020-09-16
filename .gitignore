@@ -6,3 +6,5 @@
 a.*
 *.o
 .vscode/ipch/
+*cppcheck-build*
+

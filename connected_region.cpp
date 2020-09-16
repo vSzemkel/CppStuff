@@ -115,15 +115,15 @@ int main(int argc, char* argv[])
         });
 
     // present result
-    char* const rect_msg = "RECTANGULAR";
-    printf("\nRecognized %llu connected regions of sizes:\n", g_regions.size());
+    const char* rect_msg = "RECTANGULAR";
+    printf("\nRecognized %zu connected regions of sizes:\n", g_regions.size());
     for (const auto& v : g_regions) {
-        char* r = "";
+        const char* r = "";
         if (is_rectangular(v))
             r = rect_msg;
-        printf("    '%c': %llu %s\n", g_pattern[v[0]], v.size(), r);
+        printf("    '%c': %zu %s\n", g_pattern[v[0]], v.size(), r);
     }
-    printf("\nMaximal region of size %llu is composed of symbol '%c'\n", max_region.size(), g_pattern[max_region[0]]);
+    printf("\nMaximal region of size %zu is composed of symbol '%c'\n", max_region.size(), g_pattern[max_region[0]]);
     printf("First %i cells of that region: (col, row)\n", g_show);
     int i = 0;
     std::make_heap(max_region.begin(), max_region.end(), std::greater<>{});

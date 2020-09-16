@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     }
 
     // present result
-    printf("\nRecognized convex hull of size %llu from %i points:\n", g_cvhull.size(), g_points_count);
+    printf("\nRecognized convex hull of size %zu from %i points:\n", g_cvhull.size(), g_points_count);
     for (const auto& v : g_cvhull)
         printf("\t[%i, %i]\n", v.first, v.second);
 }
