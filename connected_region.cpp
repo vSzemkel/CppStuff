@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <vector>
 
-// find maximum connected region
+// find maximum connected region, mark rectangular ones
 // two cells are connected when they have common edge
 
 // case definition

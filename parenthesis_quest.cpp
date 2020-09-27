@@ -32,14 +32,14 @@ std::vector<std::string> parse()
                 s += c;
         } else { /* inBrace==true */
             const char delim[] = ",}";
-            char* beg = &g_patern[i];
+            char* beg = g_patern + i;
             char* end = strchr(beg, '}');
+            tok_in_paren.clear();
             tok_in_paren.emplace_back(strtok_s(beg, delim, &beg));
             while (beg < end)
                 tok_in_paren.emplace_back(strtok_s(nullptr, delim, &beg));
 
             *end = '}';
-            tok_in_paren.clear();
             i = end - g_patern - 1;
         }
     }
@@ -50,7 +50,7 @@ std::vector<std::string> parse()
 int main(int argc, char* argv[])
 {
     for (const auto& s : parse())
-        std::cout << s << "\n";
+        std::cout << s << '\n';
 
     return 0;
 }
