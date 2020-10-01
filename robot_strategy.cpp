@@ -86,4 +86,39 @@ int main(int argc, char* argv[])
     }
 }
 
-// clang++.exe -Wall -g -std=c++17 robot_strategy.cpp -o robot_strategy.exe
+/* clang++.exe -Wall -g -std=c++17 robot_strategy.cpp -o robot_strategy.exe
+
+Input:
+
+5
+3
+RR
+PRS
+PSRP
+2
+RS
+PR
+1
+RS
+3
+R
+P
+S
+7
+RS
+RS
+RS
+RS
+RS
+RS
+RS
+
+Output:
+
+Case #1: PRRP
+Case #2: PR
+Case #3: P
+Case #4: IMPOSSIBLE
+Case #5: P
+
+*/
