@@ -1,12 +1,14 @@
 
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 #include <unordered_set>
 #include <vector>
 
 // Robot Programming Strategy
 // https://codingcompetitions.withgoogle.com/codejam/round/00000000000516b9/0000000000134c90
 
+constexpr int g_maxlen = 500;
 std::vector<std::vector<std::string>> g_cases;
 
 char trump(const char move) {
@@ -32,14 +34,11 @@ int main(int argc, char* argv[])
 
     // padding
     for (auto& game : g_cases) {
-        auto mm = std::minmax_element(game.begin(), game.end(), [](const auto& s1, const auto& s2) { return s1.size() < s2.size(); });
-        if (mm.first != mm.second) {
-            const int size = mm.second->size();
-            for (auto& program : game) {
-                const int short_size = program.size();
-                for (int i = 0; program.size() < size; ++i)
-                    program.push_back(program[i % short_size]);
-            }
+        const int lcm = std::min(g_maxlen, std::accumulate(game.begin(), game.end(), 1, [](const int i, const auto& s){ return std::lcm(i, s.size()); }));
+        for (auto& program : game) {
+            const int short_size = program.size();
+            for (int i = 0; program.size() < lcm; ++i)
+                program.push_back(program[i % short_size]);
         }
     }
 
@@ -115,7 +114,7 @@ RS
 
 Output:
 
-Case #1: PRRP
+Case #1: IMPOSSIBLE
 Case #2: PR
 Case #3: P
 Case #4: IMPOSSIBLE
