@@ -11,12 +11,27 @@
 constexpr int g_maxlen = 500;
 std::vector<std::vector<std::string>> g_cases;
 
-char trump(const char move) {
+constexpr char trump(const char move)
+{
     if (move == 'P') return 'S';
     if (move == 'S') return 'R';
     if (move == 'R') return 'P';
     return move;
 }
+
+// for those who are still stuck on C++14
+/*int lcm(int l1, int l2)
+{
+    if (l1 > l2)
+        std::swap(l1, l2);
+
+    int lcm = l2;
+    while (true) {
+        if (lcm % l1 == 0)
+            return lcm;
+        lcm += l2;
+    }
+}*/
 
 int main(int argc, char* argv[])
 {
@@ -24,72 +39,66 @@ int main(int argc, char* argv[])
     int no_of_cases, no_of_players;
     std::cin >> no_of_cases;
     g_cases.resize(no_of_cases);
-    for (int c = 0; c < no_of_cases; ++c) {
+    for (auto& game : g_cases) {
         std::cin >> no_of_players;
-        auto& game = g_cases[c];
         game.resize(no_of_players);
         while (--no_of_players >= 0)
             std::cin >> game[no_of_players];
     }
 
-    // padding
-    for (auto& game : g_cases) {
-        const int lcm = std::min(g_maxlen, std::accumulate(game.begin(), game.end(), 1, [](const int i, const auto& s){ return std::lcm(i, s.size()); }));
+    // padding not needed, but I like std::accumulate application with std::lcm
+    /*for (auto& game : g_cases) {
+        const int dest = std::min(g_maxlen, std::accumulate(game.begin(), game.end(), 1, [](const int i, const auto& s) { return std::lcm(i, s.size()); }));
         for (auto& program : game) {
             const int short_size = program.size();
-            for (int i = 0; program.size() < lcm; ++i)
+            for (int i = 0; program.size() < dest; ++i)
                 program.push_back(program[i % short_size]);
         }
-    }
+    }*/
 
     // solution
     for (int c = 0; c < no_of_cases; ++c) {
-        char next_move;
-        int distinct_moves;
-        bool tie{false};
-        bool impossible{false};
         std::string solution;
         std::unordered_set<char> moves;
-        const auto& game = g_cases[c];
-        const auto len = game[0].size();
-        for (int i = 0; i < len; ++i) {
-            tie = false;
+        auto& game = g_cases[c];
+        for (int i = 0; i < g_maxlen; ++i) {
+            char next_move;
             moves.clear();
             for (auto& program : game) {
-                const char opponent = program[i];
+                const char opponent = program[i % program.size()];
                 moves.insert(opponent);
-                distinct_moves = moves.size();
+                int distinct_moves = moves.size();
+                if (distinct_moves == 3)
+                    goto impossible;
                 next_move = trump(opponent);
-                if (distinct_moves == 3) {
-                    std::cout << "Case #" << (c + 1) << ": IMPOSSIBLE\n";
-                    impossible = true;
-                    i = len;
-                    break;
-                } else if (distinct_moves == 2) { // tie move
-                    tie = true;
+                if (distinct_moves == 2) { // tie move
                     if (moves.count(next_move) == 0)
                         next_move = opponent;
                 }
             }
-        
+
             solution.push_back(next_move);
 
-            if (!impossible && !tie) {
-                std::cout << "Case #" << (c + 1) << ": " << solution << "\n";
-                break;
-            }
+            // eliminate defeated
+            const auto it = std::remove_if(game.begin(), game.end(), [i, next_move](const auto& s) { return trump(s[i]) == next_move; });
+            game.erase(it, game.end());
+            if (game.empty()) break;
         }
 
-        if (!impossible && tie)
+    impossible:
+        if (game.empty() && solution.size() <= g_maxlen)
             std::cout << "Case #" << (c + 1) << ": " << solution << "\n";
+        else
+            std::cout << "Case #" << (c + 1) << ": IMPOSSIBLE\n";
     }
 }
 
 /* clang++.exe -Wall -g -std=c++17 robot_strategy.cpp -o robot_strategy.exe
+robot_strategy.exe < robot_strategy.in
 
 Input:
 
-5
+6
 3
 RR
 PRS
@@ -111,11 +120,14 @@ RS
 RS
 RS
 RS
+2
+RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+PPPPPPPPPPPPPPPPPPPPPPPPPPPP
 
 Output:
 
-Case #1: IMPOSSIBLE
-Case #2: PR
+Case #1: PRR
+Case #2: PP
 Case #3: P
 Case #4: IMPOSSIBLE
 Case #5: P
