@@ -68,8 +68,8 @@ int main(int argc, char* argv[])
                 const char opponent = program[i % program.size()];
                 moves.insert(opponent);
                 int distinct_moves = moves.size();
-                if (distinct_moves == 3)
-                    goto impossible;
+                if (distinct_moves == 3) // impossible
+                    goto solved;
                 next_move = trump(opponent);
                 if (distinct_moves == 2) { // tie move
                     if (moves.count(next_move) == 0)
@@ -80,12 +80,12 @@ int main(int argc, char* argv[])
             solution.push_back(next_move);
 
             // eliminate defeated
-            const auto it = std::remove_if(game.begin(), game.end(), [i, next_move](const auto& s) { return trump(s[i]) == next_move; });
+            const auto it = std::remove_if(game.begin(), game.end(), [i, next_move](const auto& s) { return trump(s[i % s.size()]) == next_move; });
             game.erase(it, game.end());
             if (game.empty()) break;
         }
 
-    impossible:
+    solved:
         if (game.empty() && solution.size() <= g_maxlen)
             std::cout << "Case #" << (c + 1) << ": " << solution << "\n";
         else
@@ -93,16 +93,19 @@ int main(int argc, char* argv[])
     }
 }
 
-/* clang++.exe -Wall -g -std=c++17 robot_strategy.cpp -o robot_strategy.exe
+/* clang++.exe -Wall -g -O0 -std=c++17 robot_strategy.cpp -o robot_strategy.exe
 robot_strategy.exe < robot_strategy.in
 
 Input:
 
 6
-3
+6
+PRPPPP
+PR
+PS
+RS
+RS
 RR
-PRS
-PSRP
 2
 RS
 PR
@@ -126,10 +129,11 @@ PPPPPPPPPPPPPPPPPPPPPPPPPPPP
 
 Output:
 
-Case #1: PRR
+Case #1: PRS
 Case #2: PP
 Case #3: P
 Case #4: IMPOSSIBLE
 Case #5: P
+Case #6: PS
 
 */
