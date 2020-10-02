@@ -23,11 +23,14 @@ std::vector<int> g_adj(4);
 std::vector<uint8_t> g_visited(g_rows * g_cols, 0);
 std::vector<std::vector<int>> g_regions;
 
+constexpr auto fn_col = [](const int cell){ return cell % g_cols; };
+constexpr auto fn_row = [](const int cell){ return cell / g_cols; };
+
 // collect 2 to 4 adjacent cells to pos
 auto adjacents(const int pos)
 {
-    const int row = pos / g_cols;
-    const int col = pos % g_cols;
+    const int row = fn_row(pos);
+    const int col = fn_col(pos);
 
     g_adj.clear();
     if (col > 0) 
@@ -73,25 +76,10 @@ void dfs_nr(const int pos)
 
 bool is_rectangular(const std::vector<int>& region)
 {
-    const auto column_comparer = [](const int pos1, const int pos2){
-        return pos1 % g_cols < pos2 % g_cols || (pos1 % g_cols == pos2 % g_cols && pos1 < pos2);
-    };
-    const auto tl = std::min_element(region.begin(), region.end());
-    const auto br1 = std::max_element(region.begin(), region.end());
-    const auto br2 = std::max_element(region.begin(), region.end(), column_comparer);
-    if (*br1 != *br2)   // XXXX
-        return false;   // XXX0
-
-    const int lc = *tl % g_cols;
-    const int rc = *br1 % g_cols;
-    const int tr = *tl / g_cols;
-    const int br = *br1 / g_cols;
-    for (int r = tr; r <= br; ++r)
-        for (int c = lc; c <= rc; ++c)
-            if (std::find(region.begin(), region.end(), r * g_cols + c) == region.end())
-                return false;
-
-    return true;
+    const auto col_span = std::minmax_element(region.begin(), region.end(), [](const int cell1, const int cell2){ return cell1 % g_cols < cell2 % g_cols; });
+    const auto row_span = std::minmax_element(region.begin(), region.end(), [](const int cell1, const int cell2){ return cell1 / g_cols < cell2 / g_cols; });
+    return (fn_col(*col_span.second) - fn_col(*col_span.first) + 1) 
+         * (fn_row(*row_span.second) - fn_row(*row_span.first) + 1) == region.size();
 }
 
 int main(int argc, char* argv[])
@@ -130,7 +118,7 @@ int main(int argc, char* argv[])
     while (i < g_show) {
         const auto pos = max_region.front();
         std::pop_heap(max_region.begin(), max_region.end() - i, std::greater<>{});
-        printf("    [#%02i:cell %02i]  (%i, %i)\n", ++i, pos, pos % g_cols, pos / g_cols);
+        printf("    [#%02i:cell %02i]  (%i, %i)\n", ++i, pos, fn_col(pos), fn_row(pos));
     }
 
     return 0;
