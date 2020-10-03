@@ -78,8 +78,7 @@ bool is_rectangular(const std::vector<int>& region)
 {
     const auto col_span = std::minmax_element(region.begin(), region.end(), [](const int cell1, const int cell2){ return cell1 % g_cols < cell2 % g_cols; });
     const auto row_span = std::minmax_element(region.begin(), region.end(), [](const int cell1, const int cell2){ return cell1 / g_cols < cell2 / g_cols; });
-    return (fn_col(*col_span.second) - fn_col(*col_span.first) + 1) 
-         * (fn_row(*row_span.second) - fn_row(*row_span.first) + 1) == region.size();
+    return (fn_col(*col_span.second - *col_span.first) + 1) * (fn_row(*row_span.second - *row_span.first) + 1) == region.size();
 }
 
 int main(int argc, char* argv[])
