@@ -79,11 +79,6 @@ Jabacki 32 64
 
 Output:
 
-1 warning generated.
-
-C:\GitHub\GCC-test>clang++.exe -Wall -g -std=c++17 overlap_swipe.cpp -o overlap_swipe.exe
-
-C:\GitHub\GCC-test>overlap_swipe.exe < overlap_swipe.in 
     [0, 2] Dabacki, 
     [2, 4] Dabacki, Ibacki,
     [4, 21] Babacki, Dabacki, Ibacki,
