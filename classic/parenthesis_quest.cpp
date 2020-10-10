@@ -10,11 +10,31 @@
 
 char g_patern[] = "ab{1,2,3}c{mn,op}d";
 
+bool check(const int max_depth = 1)
+{
+    int level{0};
+    for (const char c : g_patern) {
+        if (c == '{')
+            ++level;
+        else if (c == '}')
+            --level;
+        if (level < 0 || level > max_depth)
+            return false;
+    }
+
+    return level == 0;
+}
+
 std::vector<std::string> parse()
 {
     bool inBrace{false};
     int len = strlen(g_patern);
     std::vector<std::string> res = {""}, tok_in_paren;
+
+    if (!check()) {
+        std::cout << "Input string parenthesis not balanced\n";
+        return {};
+    }
 
     for (int i = 0; i < len; ++i) {
         const char c = g_patern[i];
@@ -50,7 +70,7 @@ std::vector<std::string> parse()
 int main(int argc, char* argv[])
 {
     for (const auto& s : parse())
-        std::cout << s << '\n';
+        std::cout << s << 'aaa\n';
 
     return 0;
 }
