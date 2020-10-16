@@ -16,7 +16,7 @@ enum class cell_t : char {
 class game_t {
   public:
     game_t(int r, int c);
-    void set(const int cell_no, const cell_t status);
+    void set(const int cell, const cell_t status);
     int mark_h(const int cell);
     int mark_v(const int cell);
     void shrink_h();
@@ -25,21 +25,17 @@ class game_t {
     int size() const { return rows * cols; };
     cell_t get(const int c) const { return cells[c]; };
     bool is_empty(const int c) const { return cells[c] == cell_t::empty; };
-    bool row_safe(const int c) const { return poison_rows[fn_row(c)] == cell_t::empty; };
-    bool col_safe(const int c) const { return poison_cols[fn_col(c)] == cell_t::empty; };
 
   private:
     int rows;
     int cols;
     std::vector<cell_t> cells;
-    std::vector<cell_t> poison_rows;
-    std::vector<cell_t> poison_cols;
+    bool can_cut_off(const int row, const int col) const;
     int fn_col(const int cell) const { return cell % cols; };
     int fn_row(const int cell) const { return cell / cols; };
 };
 
-game_t::game_t(int r, int c) : rows(r), cols(c), cells(r * c),
-    poison_rows(r, cell_t::empty), poison_cols(c, cell_t::empty)
+game_t::game_t(int r, int c) : rows(r), cols(c), cells(r * c)
 {
 }
 
@@ -48,14 +44,18 @@ int game_t::mark_h(const int cell)
     int ret{0};
     auto row = fn_row(cell); // no poisoned cells
     for (int c = cell; fn_row(c) == row; ++c) {
-        if (cells[c] == cell_t::taken) break;
-        cells[c] = cell_t::taken;
+        auto& state = cells[c];
+        if (state == cell_t::poisoned) return false;
+        if (state == cell_t::taken) break;
+        state = cell_t::taken;
         ++ret;
     }
 
     for (int c = cell - 1; c >= 0 && fn_row(c) == row; --c) {
-        if (cells[c] == cell_t::taken) break;
-        cells[c] = cell_t::taken;
+        auto& state = cells[c];
+        if (state == cell_t::poisoned) return false;
+        if (state == cell_t::taken) break;
+        state = cell_t::taken;
         ++ret;
     }
 
@@ -66,82 +66,84 @@ int game_t::mark_v(const int cell)
 {
     int ret{0};
     for (int c = cell; c < cells.size(); c += cols) {
-        if (cells[c] == cell_t::taken) break;
-        cells[c] = cell_t::taken;
+        auto& state = cells[c];
+        if (state == cell_t::poisoned) return false;
+        if (state == cell_t::taken) break;
+        state = cell_t::taken;
         ++ret;
     }
         
     for (int c = cell - cols; c >= 0; c -= cols) {
-        if (cells[c] == cell_t::taken) break;
-        cells[c] = cell_t::taken;
+        auto& state = cells[c];
+        if (state == cell_t::poisoned) return false;
+        if (state == cell_t::taken) break;
+        state = cell_t::taken;
         ++ret;
     }
 
     return ret;
 }
 
+bool game_t::can_cut_off(const int row, const int col) const
+{
+    const auto cell = row * cols + col;
+    const auto state = cells[cell];
+    if (state == cell_t::empty) return false;
+
+    return (col == 0 || cells[cell - 1] != cell_t::empty)
+        && (col == cols - 1 || cells[cell + 1] != cell_t::empty)
+        && (row == 0 || cells[cell - cols] != cell_t::empty)
+        && (row == rows - 1 || cells[cell + cols] != cell_t::empty);
+}
+
 void game_t::shrink_v()
 {
-    while (rows > 0 && std::all_of(cells.begin(), cells.begin() + cols, [](const auto status){ return status == cell_t::taken; })) {
-        cells = std::vector<cell_t>(cells.begin() + cols, cells.end());
-        poison_rows = std::vector<cell_t>(poison_rows.begin() + 1, poison_rows.end());
-        --rows;
+    int c;
+    std::vector<int> cut_offs;
+    for (int r = 0; r < rows; ++r) {
+        for (c = 0; c < cols; ++c)
+            if (!can_cut_off(r, c))
+                break;
+
+        if (c == cols) 
+            cut_offs.push_back(r);
     }
 
-    while (rows > 0 && std::all_of(cells.begin() + (rows - 1) * cols, cells.end(), [](const auto status){ return status == cell_t::taken; })) {
-        cells = std::vector<cell_t>(cells.begin(), cells.end() - cols);
-        poison_rows = std::vector<cell_t>(poison_rows.begin(), poison_rows.end() - 1);
-        --rows;
+    if (!cut_offs.empty()) {
+        for (auto it = cut_offs.rbegin(); it != cut_offs.rend(); ++it)
+            cells.erase(cells.begin() + *it * cols, cells.begin() + (*it + 1) * cols);
+        rows -= cut_offs.size();
     }
 }
 
 void game_t::shrink_h()
 {
-    bool effective{false};
+    int r;
+    std::vector<int> cut_offs;
+    for (int c = 0; c < cols; ++c) {
+       for (r = 0; r < rows; ++r)
+            if (!can_cut_off(r, c))
+                break;
 
-    while (cols > 0) { // first column
-        for (int r = 0; r < rows; ++r)
-            if (cells[r * cols] != cell_t::taken) 
-                goto try_last;
-
-        std::vector<cell_t> tmp;
-        for (int r = 0; r < rows; ++r)
-            tmp.insert(tmp.end(), cells.begin() + r * cols + 1, cells.begin() + (r + 1) * cols);
-        cells = tmp;
-        poison_cols = std::vector<cell_t>(poison_cols.begin() + 1, poison_cols.end());
-        effective = true;
-        --cols;
+        if (r == rows)
+            cut_offs.push_back(c);
     }
 
-try_last:
-    while (cols > 0) { // last column
-        for (int r = 0; r < rows; ++r)
-            if (cells[cols * (r + 1) - 1] != cell_t::taken) 
-                return;
-
-        std::vector<cell_t> tmp;
-        for (int r = 0; r < rows; ++r)
-            tmp.insert(tmp.end(), cells.begin() + r * cols, cells.begin() + cols * (r  + 1) - 1);
-        cells = tmp;
-        poison_cols = std::vector<cell_t>(poison_cols.begin(), poison_cols.end() - 1);
-        effective = true;
-        --cols;
+    if (!cut_offs.empty()) {
+        for (auto it = cut_offs.rbegin(); it != cut_offs.rend(); ++it) {
+            for (r = rows - 1; r >= 0; --r)
+                cells.erase(cells.begin() + r * cols + *it, cells.begin() + r * cols + *it + 1);
+            --cols;
+        }
     }
-
-    if (effective)
-        shrink_h();
 }
 
-void game_t::set(const int cell_no, const cell_t status)
+void game_t::set(const int cell, const cell_t status)
 {
-    if (status == cell_t::poisoned) {
-        poison_rows[fn_row(cell_no)] = status;
-        poison_cols[fn_col(cell_no)] = status;
-    }
-    cells[cell_no] = status;
+    cells[cell] = status;
 }
 
-int play(const game_t& board, bool initial)
+int play(const game_t& board, const bool initial)
 {
     int won{0};
     auto checked_h = board;
@@ -151,7 +153,7 @@ int play(const game_t& board, bool initial)
             continue;
 
         // try H colony
-        if (board.row_safe(c) && checked_h.is_empty(c)) {
+        if (checked_h.is_empty(c)) {
             const auto marked = checked_h.mark_h(c);
             if (marked > 0) {
                 auto copy = board;
@@ -165,7 +167,7 @@ int play(const game_t& board, bool initial)
             }
         }
         // try V colony
-        if (board.col_safe(c) && checked_v.is_empty(c)) {
+        if (checked_v.is_empty(c)) {
             const auto marked = checked_v.mark_v(c);
             if (marked > 0) {
                 auto copy = board;
@@ -185,12 +187,6 @@ int play(const game_t& board, bool initial)
 
 int main(int argc, char* argv[])
 {
-    /*game_t test{1, 3};
-    test.set(0, cell_t::empty);
-    test.set(1, cell_t::taken);
-    test.set(2, cell_t::taken);
-    test.shrink_h();*/
-
     // parse console input
     int no_of_cases;
     std::cin >> no_of_cases;
