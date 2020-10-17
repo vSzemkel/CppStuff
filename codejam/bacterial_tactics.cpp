@@ -20,8 +20,7 @@ class game_t {
     void set(const int cell, const cell_t status);
     int mark_h(const int cell);
     int mark_v(const int cell);
-    void shrink_h();
-    void shrink_v();
+    void shrink();
 
     uint64_t hash() const;
     int size() const { return rows * cols; };
@@ -34,6 +33,7 @@ class game_t {
     std::vector<cell_t> cells;
     bool can_cut_row(const int row) const;
     bool can_cut_col(const int col) const;
+    bool is_accessible(const int cell) const;
     int fn_col(const int cell) const { return cell % cols; };
     int fn_row(const int cell) const { return cell / cols; };
 };
@@ -105,12 +105,28 @@ int game_t::mark_v(const int cell)
     return ret;
 }
 
+bool game_t::is_accessible(const int cell) const {
+    if (cells[cell] != cell_t::empty) return false;
+    const auto row = fn_row(cell);
+    const auto col = fn_col(cell);
+    int mulr{1};
+    if (col > 0) mulr *= (int)cells[cell - 1];
+    if (col < cols - 1) mulr *= (int)cells[cell + 1];
+    bool row_poisoned = mulr % (int)cell_t::poisoned == 0;
+    int mulc{1};
+    if (row > 0) mulc *= (int)cells[cell - cols];
+    if (row < rows - 1) mulc *= (int)cells[cell + cols];
+    bool col_poisoned = mulc % (int)cell_t::poisoned == 0;
+    if (!col_poisoned || !row_poisoned) return true;
+    return (mulr % (int)cell_t::empty) == 0 || (mulc % (int)cell_t::empty) == 0;
+}
+
 bool game_t::can_cut_row(const int row) const {
     const auto begin = row * cols;
     const auto end = begin + cols;
     for (int c = begin; c < end; ++c) {
         const auto state = cells[c];
-        if (state == cell_t::empty)
+        if (is_accessible(c))
             return false;
         if (rows <= 1)
             continue;
@@ -119,13 +135,12 @@ bool game_t::can_cut_row(const int row) const {
              && ((row > 0 && cells[c - cols] == cell_t::empty)
              || (row < rows - 1 && cells[c + cols] == cell_t::empty)))
             return false;
-        else // state == cell_t::taken
-            if (row > 0 && row < rows - 1) {
-                const auto mul = (int)cells[c - cols] * (int)cells[c + cols];
-                if (mul == (int)cell_t::empty * (int)cell_t::poisoned
-                 || mul == (int)cell_t::empty * (int)cell_t::empty)
-                return false;
-            } 
+        else if (state == cell_t::taken && row > 0 && row < rows - 1) {
+            const auto mul = (int)cells[c - cols] * (int)cells[c + cols];
+            if (mul == (int)cell_t::empty * (int)cell_t::poisoned
+             || mul == (int)cell_t::empty * (int)cell_t::empty)
+            return false;
+        }
     }
 
     return true;
@@ -135,7 +150,7 @@ bool game_t::can_cut_col(const int col) const {
     const auto end = rows * cols;
     for (int c = col; c < end; c += cols) {
         const auto state = cells[c];
-        if (state == cell_t::empty)
+        if (is_accessible(c))
             return false;
         if (cols <= 1)
             continue;
@@ -144,46 +159,31 @@ bool game_t::can_cut_col(const int col) const {
              && ((col > 0 && cells[c - 1] == cell_t::empty)
              || (col < cols - 1 && cells[c + 1] == cell_t::empty)))
             return false;
-        else // state == cell_t::taken
-            if (col > 0 && col < cols - 1) {
-                const auto mul = (int)cells[c - 1] * (int)cells[c + 1];
-                if (mul == (int)cell_t::empty * (int)cell_t::poisoned
-                 || mul == (int)cell_t::empty * (int)cell_t::empty)
-                return false;
-            } 
+        else if (state == cell_t::taken && col > 0 && col < cols - 1) {
+            const auto mul = (int)cells[c - 1] * (int)cells[c + 1];
+            if (mul == (int)cell_t::empty * (int)cell_t::poisoned
+             || mul == (int)cell_t::empty * (int)cell_t::empty)
+            return false;
+        }
     }
 
     return true;
 }
 
-void game_t::shrink_v()
+void game_t::shrink()
 {
-    std::vector<int> cut_offs;
-    for (int r = 0; r < rows; ++r)
-        if (can_cut_row(r))
-            cut_offs.push_back(r);
-
-    if (!cut_offs.empty()) {
-        for (auto it = cut_offs.rbegin(); it != cut_offs.rend(); ++it)
-            cells.erase(cells.begin() + *it * cols, cells.begin() + (*it + 1) * cols);
-        rows -= cut_offs.size();
-    }
-}
-
-void game_t::shrink_h()
-{
-    std::vector<int> cut_offs;
-    for (int c = 0; c < cols; ++c)
-        if (can_cut_col(c))
-            cut_offs.push_back(c);
-
-    if (!cut_offs.empty()) {
-        for (auto it = cut_offs.rbegin(); it != cut_offs.rend(); ++it) {
+    for (int c = cols - 1; c >= 0; --c)
+        if (can_cut_col(c)) {
             for (int r = rows - 1; r >= 0; --r)
-                cells.erase(cells.begin() + r * cols + *it, cells.begin() + r * cols + *it + 1);
+                cells.erase(cells.begin() + r * cols + c, cells.begin() + r * cols + c + 1);
             --cols;
         }
-    }
+
+    for (int r = rows - 1; r >= 0; --r)
+        if (can_cut_row(r)) {
+            cells.erase(cells.begin() + r * cols, cells.begin() + (r + 1) * cols);
+            --rows;
+        }
 }
 
 void game_t::set(const int cell, const cell_t status)
@@ -213,8 +213,7 @@ int play(const game_t& board, const bool initial)
             if (marked > 0) {
                 auto copy = board;
                 copy.mark_h(c);
-                copy.shrink_h();
-                copy.shrink_v();
+                copy.shrink();
                 if (!play(copy, false)) {
                     if (hash != 0)
                         g_game_cache[hash] = marked;
@@ -229,8 +228,7 @@ int play(const game_t& board, const bool initial)
             if (marked > 0) {
                 auto copy = board;
                 copy.mark_v(c);
-                copy.shrink_h();
-                copy.shrink_v();
+                copy.shrink();
                 if (!play(copy, false)) {
                     if (hash != 0)
                         g_game_cache[hash] = marked;
