@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <map>
 #include <vector>
 
 // Bacterial Tactics
@@ -22,6 +23,7 @@ class game_t {
     void shrink_h();
     void shrink_v();
 
+    uint64_t hash() const;
     int size() const { return rows * cols; };
     cell_t get(const int c) const { return cells[c]; };
     bool is_empty(const int c) const { return cells[c] == cell_t::empty; };
@@ -30,13 +32,32 @@ class game_t {
     int rows;
     int cols;
     std::vector<cell_t> cells;
-    bool can_cut_off(const int row, const int col) const;
+    bool can_cut_row(const int row) const;
+    bool can_cut_col(const int col) const;
     int fn_col(const int cell) const { return cell % cols; };
     int fn_row(const int cell) const { return cell / cols; };
 };
 
 game_t::game_t(int r, int c) : rows(r), cols(c), cells(r * c)
 {
+}
+
+uint64_t game_t::hash() const
+{
+    const auto mapper = [](cell_t status) {
+        if (status == cell_t::empty) return 0;
+        if (status == cell_t::taken) return 1;
+        return 2;
+    };
+
+    if (cells.size() > 28)
+        return 0;
+
+    uint64_t dim = ((rows & 0x0f) << 4) + (cols & 0x0f);
+    for (const auto s : cells)
+        dim = (dim << 2) + mapper(s);
+
+    return dim;
 }
 
 int game_t::mark_h(const int cell)
@@ -84,30 +105,63 @@ int game_t::mark_v(const int cell)
     return ret;
 }
 
-bool game_t::can_cut_off(const int row, const int col) const
-{
-    const auto cell = row * cols + col;
-    const auto state = cells[cell];
-    if (state == cell_t::empty) return false;
+bool game_t::can_cut_row(const int row) const {
+    const auto begin = row * cols;
+    const auto end = begin + cols;
+    for (int c = begin; c < end; ++c) {
+        const auto state = cells[c];
+        if (state == cell_t::empty)
+            return false;
+        if (rows <= 1)
+            continue;
 
-    return (col == 0 || cells[cell - 1] != cell_t::empty)
-        && (col == cols - 1 || cells[cell + 1] != cell_t::empty)
-        && (row == 0 || cells[cell - cols] != cell_t::empty)
-        && (row == rows - 1 || cells[cell + cols] != cell_t::empty);
+        if (state == cell_t::poisoned
+             && ((row > 0 && cells[c - cols] == cell_t::empty)
+             || (row < rows - 1 && cells[c + cols] == cell_t::empty)))
+            return false;
+        else // state == cell_t::taken
+            if (row > 0 && row < rows - 1) {
+                const auto mul = (int)cells[c - cols] * (int)cells[c + cols];
+                if (mul == (int)cell_t::empty * (int)cell_t::poisoned
+                 || mul == (int)cell_t::empty * (int)cell_t::empty)
+                return false;
+            } 
+    }
+
+    return true;
+}
+
+bool game_t::can_cut_col(const int col) const {
+    const auto end = rows * cols;
+    for (int c = col; c < end; c += cols) {
+        const auto state = cells[c];
+        if (state == cell_t::empty)
+            return false;
+        if (cols <= 1)
+            continue;
+
+        if (state == cell_t::poisoned
+             && ((col > 0 && cells[c - 1] == cell_t::empty)
+             || (col < cols - 1 && cells[c + 1] == cell_t::empty)))
+            return false;
+        else // state == cell_t::taken
+            if (col > 0 && col < cols - 1) {
+                const auto mul = (int)cells[c - 1] * (int)cells[c + 1];
+                if (mul == (int)cell_t::empty * (int)cell_t::poisoned
+                 || mul == (int)cell_t::empty * (int)cell_t::empty)
+                return false;
+            } 
+    }
+
+    return true;
 }
 
 void game_t::shrink_v()
 {
-    int c;
     std::vector<int> cut_offs;
-    for (int r = 0; r < rows; ++r) {
-        for (c = 0; c < cols; ++c)
-            if (!can_cut_off(r, c))
-                break;
-
-        if (c == cols) 
+    for (int r = 0; r < rows; ++r)
+        if (can_cut_row(r))
             cut_offs.push_back(r);
-    }
 
     if (!cut_offs.empty()) {
         for (auto it = cut_offs.rbegin(); it != cut_offs.rend(); ++it)
@@ -118,20 +172,14 @@ void game_t::shrink_v()
 
 void game_t::shrink_h()
 {
-    int r;
     std::vector<int> cut_offs;
-    for (int c = 0; c < cols; ++c) {
-       for (r = 0; r < rows; ++r)
-            if (!can_cut_off(r, c))
-                break;
-
-        if (r == rows)
+    for (int c = 0; c < cols; ++c)
+        if (can_cut_col(c))
             cut_offs.push_back(c);
-    }
 
     if (!cut_offs.empty()) {
         for (auto it = cut_offs.rbegin(); it != cut_offs.rend(); ++it) {
-            for (r = rows - 1; r >= 0; --r)
+            for (int r = rows - 1; r >= 0; --r)
                 cells.erase(cells.begin() + r * cols + *it, cells.begin() + r * cols + *it + 1);
             --cols;
         }
@@ -143,8 +191,15 @@ void game_t::set(const int cell, const cell_t status)
     cells[cell] = status;
 }
 
+std::map<uint64_t, uint8_t> g_game_cache;
+
 int play(const game_t& board, const bool initial)
 {
+    auto hash = board.hash();
+    auto cached = g_game_cache.find(hash);
+    if (cached != g_game_cache.end()) 
+        return cached->second;
+
     int won{0};
     auto checked_h = board;
     auto checked_v = board;
@@ -161,6 +216,8 @@ int play(const game_t& board, const bool initial)
                 copy.shrink_h();
                 copy.shrink_v();
                 if (!play(copy, false)) {
+                    if (hash != 0)
+                        g_game_cache[hash] = marked;
                     if (!initial) return 1;
                     won += marked;
                 }
@@ -175,12 +232,17 @@ int play(const game_t& board, const bool initial)
                 copy.shrink_h();
                 copy.shrink_v();
                 if (!play(copy, false)) {
+                    if (hash != 0)
+                        g_game_cache[hash] = marked;
                     if (!initial) return 1;
                     won += marked;
                 }
             }
         }
     }
+
+    if (hash != 0)
+        g_game_cache[hash] = (won > 0) ? 1 : 0;
 
     return won;
 }
@@ -203,6 +265,7 @@ int main(int argc, char* argv[])
             }
 
         // solve
+        g_game_cache.clear();
         std::cout << "Case #" << g << ": " << play(game, true) << "\n";
     }
 }
