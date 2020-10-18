@@ -1,7 +1,8 @@
 
 #include <algorithm>
 #include <iostream>
-#include <map>
+#include <unordered_map>
+#include <string>
 #include <vector>
 
 // Bacterial Tactics
@@ -22,7 +23,7 @@ class game_t {
     int mark_v(const int cell);
     void shrink();
 
-    uint64_t hash() const;
+    std::string hash() const;
     int size() const { return rows * cols; };
     cell_t get(const int c) const { return cells[c]; };
     bool is_empty(const int c) const { return cells[c] == cell_t::empty; };
@@ -42,22 +43,31 @@ game_t::game_t(int r, int c) : rows(r), cols(c), cells(r * c)
 {
 }
 
-uint64_t game_t::hash() const
+std::string game_t::hash() const
 {
-    const auto mapper = [](cell_t status) {
+    constexpr auto mapper = [](const cell_t status) {
         if (status == cell_t::empty) return 0;
         if (status == cell_t::taken) return 1;
         return 2;
     };
 
-    if (cells.size() > 28)
-        return 0;
+    // if (rows * cols > 56) return {};
 
-    uint64_t dim = ((rows & 0x0f) << 4) + (cols & 0x0f);
-    for (const auto s : cells)
-        dim = (dim << 2) + mapper(s);
+    std::vector<char> buf = {(char)(((rows & 0x0f) << 4) + (cols & 0x0f))};
 
-    return dim;
+    int pos{0}, chunk{0};
+    for (const auto s : cells) {
+        chunk = (chunk << 2) + mapper(s);
+        if (++pos % 4 == 0) {
+            buf.push_back(chunk);
+            chunk = 0;
+        }
+    }
+
+    if (chunk > 0)
+        buf.push_back(chunk);
+
+    return std::string(buf.begin(), buf.end());
 }
 
 int game_t::mark_h(const int cell)
@@ -191,7 +201,7 @@ void game_t::set(const int cell, const cell_t status)
     cells[cell] = status;
 }
 
-std::map<uint64_t, uint8_t> g_game_cache;
+std::unordered_map<std::string, uint8_t> g_game_cache;
 
 int play(const game_t& board, const bool initial)
 {
@@ -215,7 +225,7 @@ int play(const game_t& board, const bool initial)
                 copy.mark_h(c);
                 copy.shrink();
                 if (!play(copy, false)) {
-                    if (hash != 0)
+                    if (!hash.empty())
                         g_game_cache[hash] = marked;
                     if (!initial) return 1;
                     won += marked;
@@ -230,7 +240,7 @@ int play(const game_t& board, const bool initial)
                 copy.mark_v(c);
                 copy.shrink();
                 if (!play(copy, false)) {
-                    if (hash != 0)
+                    if (!hash.empty())
                         g_game_cache[hash] = marked;
                     if (!initial) return 1;
                     won += marked;
@@ -239,7 +249,7 @@ int play(const game_t& board, const bool initial)
         }
     }
 
-    if (hash != 0)
+    if (!hash.empty())
         g_game_cache[hash] = (won > 0) ? 1 : 0;
 
     return won;
