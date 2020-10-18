@@ -18,7 +18,7 @@ enum class cell_t : char {
 class game_t {
   public:
     game_t(int r, int c);
-    void set(const int cell, const cell_t status);
+    cell_t& operator[](const int cell) { return cells[cell]; };
     int mark_h(const int cell);
     int mark_v(const int cell);
     void shrink();
@@ -196,11 +196,6 @@ void game_t::shrink()
         }
 }
 
-void game_t::set(const int cell, const cell_t status)
-{
-    cells[cell] = status;
-}
-
 std::unordered_map<std::string, uint8_t> g_game_cache;
 
 int play(const game_t& board, const bool initial)
@@ -262,15 +257,12 @@ int main(int argc, char* argv[])
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
         // read next game board, remember poisoned rows and cols
-        cell_t cell;
-        int rows, cols, cell_no{0};
+        int rows, cols;
         std::cin >> rows >> cols;
         game_t game{rows, cols};
-        for (int r = 0; r < rows; ++r)
-            for (int c = 0; c < cols; ++c) {
-                std::cin >> (char&)cell;
-                game.set(cell_no++, cell);
-            }
+        const auto size = rows * cols;
+        for (int cell_no = 0; cell_no < size; ++cell_no)
+            std::cin >> (char&)game[cell_no];
 
         // solve
         g_game_cache.clear();
