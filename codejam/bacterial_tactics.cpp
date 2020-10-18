@@ -17,7 +17,7 @@ enum class cell_t : char {
 
 class game_t {
   public:
-    game_t(int r, int c);
+    game_t(int r, int c) : rows(r), cols(c), cells(r * c) {};
     cell_t& operator[](const int cell) { return cells[cell]; };
     int mark_h(const int cell);
     int mark_v(const int cell);
@@ -39,10 +39,6 @@ class game_t {
     int fn_row(const int cell) const { return cell / cols; };
 };
 
-game_t::game_t(int r, int c) : rows(r), cols(c), cells(r * c)
-{
-}
-
 std::string game_t::hash() const
 {
     constexpr auto mapper = [](const cell_t status) {
@@ -51,7 +47,7 @@ std::string game_t::hash() const
         return 2;
     };
 
-    // if (rows * cols > 56) return {};
+    //if (rows * cols > 30) return {};
 
     std::vector<char> buf = {(char)(((rows & 0x0f) << 4) + (cols & 0x0f))};
 
@@ -142,8 +138,8 @@ bool game_t::can_cut_row(const int row) const {
             continue;
 
         if (state == cell_t::poisoned
-             && ((row > 0 && cells[c - cols] == cell_t::empty)
-             || (row < rows - 1 && cells[c + cols] == cell_t::empty)))
+             && ((row > 0 && is_empty(c - cols))
+             || (row < rows - 1 && is_empty(c + cols))))
             return false;
         else if (state == cell_t::taken && row > 0 && row < rows - 1) {
             const auto mul = (int)cells[c - cols] * (int)cells[c + cols];
@@ -166,8 +162,8 @@ bool game_t::can_cut_col(const int col) const {
             continue;
 
         if (state == cell_t::poisoned
-             && ((col > 0 && cells[c - 1] == cell_t::empty)
-             || (col < cols - 1 && cells[c + 1] == cell_t::empty)))
+             && ((col > 0 && is_empty(c - 1))
+             || (col < cols - 1 && is_empty(c + 1))))
             return false;
         else if (state == cell_t::taken && col > 0 && col < cols - 1) {
             const auto mul = (int)cells[c - 1] * (int)cells[c + 1];
@@ -182,18 +178,26 @@ bool game_t::can_cut_col(const int col) const {
 
 void game_t::shrink()
 {
+    bool try_rows{true}, try_cols{false};
+
     for (int c = cols - 1; c >= 0; --c)
         if (can_cut_col(c)) {
             for (int r = rows - 1; r >= 0; --r)
                 cells.erase(cells.begin() + r * cols + c, cells.begin() + r * cols + c + 1);
             --cols;
+            try_rows = true;
         }
+        
+    if (!try_rows) return;
 
     for (int r = rows - 1; r >= 0; --r)
         if (can_cut_row(r)) {
             cells.erase(cells.begin() + r * cols, cells.begin() + (r + 1) * cols);
             --rows;
+            try_cols = true;
         }
+
+    if (try_cols) shrink();
 }
 
 std::unordered_map<std::string, uint8_t> g_game_cache;
