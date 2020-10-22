@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <unordered_map>
 #include <numeric>
 #include <vector>
 
@@ -10,6 +11,7 @@
 
 std::vector<int64_t> g_input;
 std::vector<int64_t> g_partial;
+std::unordered_map<int, double> g_cache;
 
 int64_t partial_sum(const int i, const int j)
 {
@@ -56,10 +58,11 @@ void merge_cards(const std::vector<int64_t>& input, double* accu)
 double merge_cards2(const int i, const int j)
 {
     const auto size = j - i;
-    if (size == 1)
-        return 0;
-    if (size == 2) 
-        return g_input[i] + g_input[i + 1];
+    if (size == 1) return 0;
+
+    const auto cache_index = (i << 16) + j;
+    const auto cache_it = g_cache.find(cache_index);
+    if (cache_it != g_cache.end()) return cache_it->second;
 
     double acc{0.0};
     for (int k = i + 1; k < j; ++k) {
@@ -67,7 +70,9 @@ double merge_cards2(const int i, const int j)
         acc += merge_cards2(k, j);
     }
 
-    return (double)partial_sum(i, j - 1) + (acc / (size - 1));
+    const auto ret = (double)partial_sum(i, j - 1) + (acc / (size - 1));
+    g_cache[cache_index] = ret;
+    return ret;
 }
 
 int main(int argc, char* argv[])
@@ -87,6 +92,7 @@ int main(int argc, char* argv[])
         //std::cout << "Case #" << g << ": " << std::setprecision(15) << accu << "\n";
         // Set2
         g_partial = {0};
+        g_cache.clear();
         std::inclusive_scan(g_input.begin(), g_input.end(), std::back_inserter(g_partial));
         std::cout << "Case #" << g << ": " << std::setprecision(15) << merge_cards2(0, size) << "\n";
     }
