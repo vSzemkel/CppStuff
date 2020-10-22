@@ -8,6 +8,14 @@
 // Merge Cards
 // https://codingcompetitions.withgoogle.com/kickstart/round/00000000001a0069/0000000000415054
 
+std::vector<int64_t> g_input;
+std::vector<int64_t> g_partial;
+
+int64_t partial_sum(const int i, const int j)
+{
+    return g_partial[j + 1] - g_partial[i];
+}
+
 double brute_force(const std::vector<int64_t>& input)
 {
     const auto size = input.size();
@@ -45,24 +53,45 @@ void merge_cards(const std::vector<int64_t>& input, double* accu)
     *accu += (double)partial + (ac / (size - 1));
 }
 
+double merge_cards2(const int i, const int j)
+{
+    const auto size = j - i;
+    if (size == 1)
+        return 0;
+    if (size == 2) 
+        return g_input[i] + g_input[i + 1];
+
+    double acc{0.0};
+    for (int k = i + 1; k < j; ++k) {
+        acc += merge_cards2(i, k);
+        acc += merge_cards2(k, j);
+    }
+
+    return (double)partial_sum(i, j - 1) + (acc / (size - 1));
+}
+
 int main(int argc, char* argv[])
 {
     // parse console input
     int no_of_cases, size;
-    std::vector<int64_t> input;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
         std::cin >> size;
-        input.resize(size);
-        for (auto& c : input) std::cin >> (int&)c;
+        g_input.resize(size);
+        for (auto& c : g_input) std::cin >> c;
+        // Brute Force
+        //std::cout << "Case #" << g << ": " << std::setprecision(15) << brute_force(g_input) << "\n";
         // Set1
-        // std::cout << "Case #" << g << ": " << std::setprecision(15) << brute_force(input) << "\n";
+        //double accu{0.0};
+        //merge_cards(g_input, &accu);
+        //std::cout << "Case #" << g << ": " << std::setprecision(15) << accu << "\n";
         // Set2
-        double accu{0.0};
-        merge_cards(input, &accu);
-        std::cout << "Case #" << g << ": " << std::setprecision(15) << accu << "\n";
+        g_partial = {0};
+        std::inclusive_scan(g_input.begin(), g_input.end(), std::back_inserter(g_partial));
+        std::cout << "Case #" << g << ": " << std::setprecision(15) << merge_cards2(0, size) << "\n";
     }
 }
+
 
 /* clang++.exe -Wall -ggdb3 -O0 -std=c++17 merge_cards.cpp -o merge_cards.exe
 merge_cards.exe < merge_cards.in

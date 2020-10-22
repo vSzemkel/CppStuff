@@ -26,12 +26,11 @@ bool crossing(const int wheel, const int target)
 
 int64_t combination_locks(std::vector<int64_t>& input) // O(WlogW)
 {
-    std::vector<int64_t> partial;
+    std::vector<int64_t> partial = { 0 };
     std::sort(input.begin(), input.end());
     std::inclusive_scan(input.begin(), input.end(), std::back_inserter(partial));
-    const auto weight = [&partial](const int64_t a, const int64_t b) -> int64_t { 
-        const auto x = a > 0 ? partial[a - 1] : 0;
-        return partial[b] - x;
+    const auto weight = [&partial](const int64_t i, const int64_t j) -> int64_t { 
+        return partial[j + 1] - partial[i];
     };
 
     const auto size = input.size();
@@ -114,7 +113,7 @@ int main(int argc, char* argv[])
     for (int g = 1; g <= no_of_cases; ++g) {
         std::cin >> wheels >> g_N;
         input.resize(wheels);
-        for (auto& c : input) std::cin >> (int&)c;
+        for (auto& c : input) std::cin >> c;
         std::cout << "Case #" << g << ": " << combination_locks(input) << "\n";
     }
 }
