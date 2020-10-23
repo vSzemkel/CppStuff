@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <numeric>
+#include <queue>
 #include <random>
 #include <string>
 #include <unordered_set>
@@ -24,7 +25,7 @@ bool crossing(const int wheel, const int target)
     return g_N - c < c;
 }
 
-int64_t combination_locks(std::vector<int64_t>& input) // O(WlogW)
+int64_t combination_locks(std::vector<int64_t>& input) // O(WlogW) for cyborgs
 {
     std::vector<int64_t> partial = { 0 };
     std::sort(input.begin(), input.end());
@@ -118,8 +119,8 @@ int main(int argc, char* argv[])
     }
 }
 
-/* clang++.exe -Wall -ggdb3 -O0 -std=c++17 combination_locks.cpp -o combination_locks.exe
-combination_locks.exe < combination_locks.in
+/* clang++.exe -Wall -ggdb3 -O0 -std=c++17 combination_lock.cpp -o combination_lock.exe
+combination_lock.exe < combination_lock.in
 
 Input:
 
