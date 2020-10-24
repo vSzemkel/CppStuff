@@ -25,7 +25,34 @@ bool crossing(const int wheel, const int target)
     return g_N - c < c;
 }
 
-int64_t combination_locks(std::vector<int64_t>& input) // O(WlogW) for cyborgs
+int64_t set_all_to(const std::vector<int64_t>& input, const int target)
+{
+    int64_t ret{0};
+    for (const auto& w : input)
+        ret += distance(w, target);
+    return ret;
+}
+
+int64_t combination_lock(const std::vector<int64_t>& input) // O(WlogW) for nerds
+{
+    auto uniq_input = input;
+    std::sort(uniq_input.begin(), uniq_input.end());
+    uniq_input.erase(std::unique(uniq_input.begin(), uniq_input.end()), uniq_input.end());
+
+    int64_t ret{1LL << 62};
+    for (const auto& w : uniq_input) {
+        const auto ind = std::lower_bound(uniq_input.begin() + 1, uniq_input.end(), 0,
+            [w](const auto& n, auto) {
+                const auto pred = &n - 1;
+                return distance(w, *pred) >= distance(w, n);
+            }) - 1;
+        ret = std::min(ret, set_all_to(input, *ind));
+    }
+
+    return ret;
+}
+
+int64_t combination_lock2(std::vector<int64_t>& input) // O(WlogW) for cyborgs
 {
     std::vector<int64_t> partial = { 0 };
     std::sort(input.begin(), input.end());
@@ -60,42 +87,36 @@ int64_t combination_locks(std::vector<int64_t>& input) // O(WlogW) for cyborgs
             tmp += left + right;
         }
 
-        if (tmp < ret)
-            ret = tmp;
+        ret = std::min(ret, tmp);
     }
 
     return ret;
 }
 
-int64_t combination_locks2(const std::vector<int64_t>& input) // O(W2)
+int64_t combination_lock3(const std::vector<int64_t>& input) // O(W2)
 {
     int64_t ret = input.size() * g_N;
     std::unordered_set<int64_t> targets(input.begin(), input.end());
-    for (const auto target : targets) {
-        int64_t tmp{0};
-        for (const auto& w : input)
-            tmp += distance(w, target);
-        if (tmp < ret)
-            ret = tmp;
-    }
+    for (const auto target : targets)
+        ret = std::min(ret, set_all_to(input, target));
 
     return ret;
 }
 
 void fuze()
 {
-    const int size = 100;
-    auto minfail = 1'000'000'000'000'000'000;
+    const int size = 500'000;
+    auto minfail = 1LL << 62;
     std::random_device rd;
-    std::uniform_int_distribution<int> dist(1, 1'000'000'000);
+    std::uniform_int_distribution<int> dist(1, 1 << 30);
     for (int n = 0; n < size; ++n) {
         g_N = dist(rd);
-        std::vector<int64_t> input(1000);
+        std::vector<int64_t> input(20);
         std::uniform_int_distribution<int> wdist(1, g_N);
         for (auto& w : input) w = wdist(rd);
 
-        const auto fast = combination_locks(input);
-        const auto slow = combination_locks2(input);
+        const auto fast = combination_lock(input);
+        const auto slow = combination_lock2(input);
         if (fast != slow && input.size() < minfail) {
             minfail = input.size();
             std::cout << minfail << " " << g_N << "\n";
@@ -107,6 +128,7 @@ void fuze()
 
 int main(int argc, char* argv[])
 {
+    //fuze(); //return 0;
     // parse console input
     int no_of_cases, wheels;
     std::vector<int64_t> input;
@@ -115,7 +137,7 @@ int main(int argc, char* argv[])
         std::cin >> wheels >> g_N;
         input.resize(wheels);
         for (auto& c : input) std::cin >> c;
-        std::cout << "Case #" << g << ": " << combination_locks(input) << "\n";
+        std::cout << "Case #" << g << ": " << combination_lock(input) << "\n";
     }
 }
 
