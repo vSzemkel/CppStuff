@@ -9,6 +9,7 @@
 #include <queue>
 #include <random>
 #include <set>
+#include <stdlib.h>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>

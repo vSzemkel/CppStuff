@@ -5,6 +5,7 @@
 #include <numeric>
 #include <queue>
 #include <random>
+#include <stdlib.h>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -34,7 +35,42 @@ int64_t set_all_to(const std::vector<int64_t>& input, const int target)
     return ret;
 }
 
-int64_t combination_lock(std::vector<int64_t>& input) // O(WlogW) for cyborgs
+int64_t combination_lock(std::vector<int64_t>& input) // O(WlogW) for geniuses
+{
+    int64_t switch_pos{0}, prev{0}, cur{0};
+    std::sort(input.begin(), input.end());
+    for (const auto w : input) {
+        cur += distance(w, g_N);
+        if (2 * w < g_N) ++switch_pos;
+    }
+
+    int64_t ret = cur;
+    const auto size = input.size();
+    for (int pos = 0; pos < size; ++pos) { // set all to input[pos]
+        const auto target = input[pos];
+        const auto delta = target - prev;
+        if (delta > 0) {
+            // advance down
+            cur -= (switch_pos - pos) * delta;
+            // transit
+            while (switch_pos < input.size() && 2 * ((g_N + input[switch_pos] - target) % g_N) < g_N) {
+                cur -= distance(input[switch_pos], prev);
+                cur += distance(input[switch_pos], target);
+                ++switch_pos;
+            }
+            // advance up
+            cur += (input.size() - switch_pos) * delta;
+        }
+
+        prev = target;
+        input.push_back(target);
+        ret = std::min(ret, cur);
+    }
+
+    return ret;
+}
+
+int64_t combination_lock2(std::vector<int64_t>& input) // O(WlogW) for cyborgs
 {
     std::vector<int64_t> partial = { 0 };
     std::sort(input.begin(), input.end());
@@ -75,8 +111,18 @@ int64_t combination_lock(std::vector<int64_t>& input) // O(WlogW) for cyborgs
     return ret;
 }
 
+int64_t combination_lock3(const std::vector<int64_t>& input) // O(W2)
+{
+    int64_t ret = input.size() * g_N;
+    std::unordered_set<int64_t> targets(input.begin(), input.end());
+    for (const auto target : targets)
+        ret = std::min(ret, set_all_to(input, target));
+
+    return ret;
+}
+
 // [3 4 8 9 11 14] -> [21 21 19 19 21 21] logn_min_elem fails
-int64_t combination_lock2(const std::vector<int64_t>& input) // O(WlogW) for nerds
+int64_t combination_lock4(const std::vector<int64_t>& input) // O(WlogW) for nerds
 {
     // auto debug = input;
     // std::transform(input.begin(), input.end(), debug.begin(), [&input](auto w){ return set_all_to(input, w);});
@@ -105,16 +151,6 @@ int64_t combination_lock2(const std::vector<int64_t>& input) // O(WlogW) for ner
     return std::min(ret, set_all_to(input, input.back()));
 }
 
-int64_t combination_lock3(const std::vector<int64_t>& input) // O(W2)
-{
-    int64_t ret = input.size() * g_N;
-    std::unordered_set<int64_t> targets(input.begin(), input.end());
-    for (const auto target : targets)
-        ret = std::min(ret, set_all_to(input, target));
-
-    return ret;
-}
-
 void fuze()
 {
     const int size = 500'000;
@@ -127,11 +163,11 @@ void fuze()
         std::uniform_int_distribution<int> wdist(1, g_N);
         for (auto& w : input) w = wdist(rd);
 
-        const auto fast = combination_lock(input);
         const auto slow = combination_lock2(input);
+        const auto fast = combination_lock(input);
         if (fast != slow && input.size() < minfail) {
             minfail = input.size();
-            std::cout << minfail << " " << g_N << "\n";
+            std::cout << minfail << " " << g_N << " [" << fast << ", " << slow << "]\n";
             for (auto w : input) std::cout << w << " ";
             std::cout << "\n";
         }
