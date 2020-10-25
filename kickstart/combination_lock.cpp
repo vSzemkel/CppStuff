@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <queue>
 #include <random>
@@ -33,26 +34,7 @@ int64_t set_all_to(const std::vector<int64_t>& input, const int target)
     return ret;
 }
 
-int64_t combination_lock(const std::vector<int64_t>& input) // O(WlogW) for nerds
-{
-    auto uniq_input = input;
-    std::sort(uniq_input.begin(), uniq_input.end());
-    uniq_input.erase(std::unique(uniq_input.begin(), uniq_input.end()), uniq_input.end());
-
-    int64_t ret{1LL << 62};
-    for (const auto& w : uniq_input) {
-        const auto ind = std::lower_bound(uniq_input.begin() + 1, uniq_input.end(), 0,
-            [w](const auto& n, auto) {
-                const auto pred = &n - 1;
-                return distance(w, *pred) >= distance(w, n);
-            }) - 1;
-        ret = std::min(ret, set_all_to(input, *ind));
-    }
-
-    return ret;
-}
-
-int64_t combination_lock2(std::vector<int64_t>& input) // O(WlogW) for cyborgs
+int64_t combination_lock(std::vector<int64_t>& input) // O(WlogW) for cyborgs
 {
     std::vector<int64_t> partial = { 0 };
     std::sort(input.begin(), input.end());
@@ -93,6 +75,36 @@ int64_t combination_lock2(std::vector<int64_t>& input) // O(WlogW) for cyborgs
     return ret;
 }
 
+// [3 4 8 9 11 14] -> [21 21 19 19 21 21] logn_min_elem fails
+int64_t combination_lock2(const std::vector<int64_t>& input) // O(WlogW) for nerds
+{
+    // auto debug = input;
+    // std::transform(input.begin(), input.end(), debug.begin(), [&input](auto w){ return set_all_to(input, w);});
+
+    auto uniq_input = input;
+    std::sort(uniq_input.begin(), uniq_input.end());
+    const auto uniq_end = std::unique(uniq_input.begin(), uniq_input.end());
+    if (uniq_input.size() < 2) return 0;
+
+    auto pocz = uniq_input.begin();
+    auto ret = set_all_to(input, uniq_input[0]);
+    if (ret < set_all_to(input, uniq_input[1])) {
+        pocz = std::lower_bound(pocz + 1, uniq_end, 0,
+        [&input](const auto& n, auto) {
+            const auto pred = &n - 1;
+            return set_all_to(input, *pred) <= set_all_to(input, n);
+        }) - 1;
+    }
+    const auto ind = std::lower_bound(pocz + 1, uniq_end, 0,
+        [&input](const auto& n, auto) {
+            const auto pred = &n - 1;
+            return set_all_to(input, *pred) >= set_all_to(input, n);
+        }) - 1;
+
+    ret = std::min(ret, set_all_to(input, *ind));
+    return std::min(ret, set_all_to(input, input.back()));
+}
+
 int64_t combination_lock3(const std::vector<int64_t>& input) // O(W2)
 {
     int64_t ret = input.size() * g_N;
@@ -106,12 +118,12 @@ int64_t combination_lock3(const std::vector<int64_t>& input) // O(W2)
 void fuze()
 {
     const int size = 500'000;
-    auto minfail = 1LL << 62;
+    auto minfail = std::numeric_limits<int64_t>::max();
     std::random_device rd;
-    std::uniform_int_distribution<int> dist(1, 1 << 30);
+    std::uniform_int_distribution<int> dist(1, 1 << 4);
     for (int n = 0; n < size; ++n) {
         g_N = dist(rd);
-        std::vector<int64_t> input(20);
+        std::vector<int64_t> input(6);
         std::uniform_int_distribution<int> wdist(1, g_N);
         for (auto& w : input) w = wdist(rd);
 
@@ -128,7 +140,7 @@ void fuze()
 
 int main(int argc, char* argv[])
 {
-    //fuze(); //return 0;
+    //fuze();
     // parse console input
     int no_of_cases, wheels;
     std::vector<int64_t> input;
@@ -137,6 +149,7 @@ int main(int argc, char* argv[])
         std::cin >> wheels >> g_N;
         input.resize(wheels);
         for (auto& c : input) std::cin >> c;
+        std::cout << "Case #" << g << ": " << combination_lock2(input) << "\n";
         std::cout << "Case #" << g << ": " << combination_lock(input) << "\n";
     }
 }

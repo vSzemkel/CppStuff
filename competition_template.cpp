@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 #include <fstream>
+#include <limits>
 #include <map>
 #include <numeric>
 #include <queue>
@@ -16,8 +17,11 @@
 using intvec = std::vector<int64_t>;
 intvec g_input, g_partial;
 
+const auto big64 = std::numeric_limits<int64_t>::max();
 int64_t partial_sum(const int i, const int j) { return g_partial[j + 1] - g_partial[i]; }
 void incl_scan(const intvec& src, intvec& dst) {int64_t s{0}; dst = {0}; for (const auto& n : src) { s += n; dst.push_back(s); };}
+ptrdiff_t next_max(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred <= n; }) - g_input.begin() - 1;}
+ptrdiff_t next_min(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred >= n; }) - g_input.begin() - 1;}
 
 int64_t solve() {
     return 0;
