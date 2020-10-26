@@ -37,13 +37,12 @@ void process_file(int i)
     char filename[20], line[256];
     sprintf_s(filename, sizeof(filename), "data%03i.txt", i);
     std::ifstream f{filename};
-    std::string str;
     while (f.getline(line, sizeof(line))) {
         tm t{0};
         int ignore, vol;
         char curr[4], stock[5];
         float rate;
-        sscanf_s(line, "%04u%02u%02u %02u:%02u:%02u.%06u %s %f %d %s", &t.tm_year, &t.tm_mon, &t.tm_mday, &t.tm_hour, &t.tm_min, &t.tm_sec, &ignore, curr, sizeof(curr), &rate, &vol, stock, sizeof(stock));
+        sscanf_s(line, "%04u%02u%02u %02u:%02u:%02u.%06i %s %f %d %s", &t.tm_year, &t.tm_mon, &t.tm_mday, &t.tm_hour, &t.tm_min, &t.tm_sec, &ignore, curr, sizeof(curr), &rate, &vol, stock, sizeof(stock));
         t.tm_year -= 1900;
         if (strcmp(curr, "BTC") == 0)
             collect_line(Trade{_mktime64(&t), rate, vol, stock}, t.tm_hour);

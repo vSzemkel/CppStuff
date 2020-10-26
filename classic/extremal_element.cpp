@@ -24,10 +24,10 @@ ptrdiff_t next_min(const int offset) {
 }
 
 void solve() {
-    int nm, offset = next_max(0);
+    int offset = next_max(0);
     do {
         std::cout << "[" << offset << "]=" << g_input[offset] << " ";
-        nm = next_min(offset + 1);
+        auto nm = next_min(offset + 1);
         if (nm + 1 == g_input.size()) break;
         offset = next_max(++nm);
         if (nm == offset) break;
