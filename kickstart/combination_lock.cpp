@@ -49,7 +49,7 @@ int64_t combination_lock(std::vector<int64_t>& input) // O(WlogW) for geniuses
     for (int pos = 0; pos < size; ++pos) { // set all to input[pos]
         const auto target = input[pos];
         const auto delta = target - prev;
-        if (delta > 0) {
+        if (delta > 0) { // this if is critical, can not ++switch_pos prematurely
             // advance down
             cur -= (switch_pos - pos) * delta;
             // transit
