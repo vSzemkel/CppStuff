@@ -16,17 +16,21 @@
 #include <unordered_set>
 #include <vector>
 
-using intvec = std::vector<int64_t>;
-intvec g_input, g_partial;
-
 const auto big64 = std::numeric_limits<int64_t>::max();
+template <typename T> using vec = std::vector<T>;
+template <typename T> using vec2 = std::vector<std::vector<T>>;
+vec<int64_t> g_input, g_partial;
+
+template <typename T> void fill(T& cont, const int size){ cont.resize(size), std::copy_n(std::istream_iterator<typename T::value_type>{std::cin}, size, cont.begin()); };
+template <typename T> int fill(T& cont){ int size; std::cin >> size; fill(cont, size); return size; };
+template <typename T> int fill2(T& cont){ int rows, cols, size; std::cin >> rows >> cols; size = rows * cols;  cont.resize(rows); for (auto& r : cont) fill(r, cols); return size; };
+template <typename T> void incl_scan(const T& src, T& dst) {T::value_type s{}; dst = {}; for (const auto& n : src) { s += n; dst.push_back(s); };}
 int64_t partial_sum(const int i, const int j) { return g_partial[j + 1] - g_partial[i]; }
-void incl_scan(const intvec& src, intvec& dst) {int64_t s{0}; dst = {0}; for (const auto& n : src) { s += n; dst.push_back(s); };}
 ptrdiff_t next_max(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred <= n; }) - g_input.begin() - 1;}
 ptrdiff_t next_min(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred >= n; }) - g_input.begin() - 1;}
 
 int64_t solve() {
-    return 0;
+    return big64;
 }
 
 int main(int argc, char* argv[])
@@ -38,9 +42,7 @@ int main(int argc, char* argv[])
     int no_of_cases, size;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cin >> size;
-        g_input.resize(size);
-        for (auto& c : g_input) std::cin >> c;
+        size = fill(g_input);
         // Set 1
         std::cout << "Case #" << g << ": " << std::setprecision(15) << solve() << "\n";
     }
