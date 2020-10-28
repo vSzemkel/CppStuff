@@ -24,6 +24,7 @@ vec<int64_t> g_input, g_partial;
 template <typename T> void fill(T& cont, const int size){ cont.resize(size), std::copy_n(std::istream_iterator<typename T::value_type>{std::cin}, size, cont.begin()); };
 template <typename T> int fill(T& cont){ int size; std::cin >> size; fill(cont, size); return size; };
 template <typename T> int fill2(T& cont){ int rows, cols, size; std::cin >> rows >> cols; size = rows * cols;  cont.resize(rows); for (auto& r : cont) fill(r, cols); return size; };
+template <typename T> T init2(const int rows, const int cols){ T cont(rows, typename T::value_type(cols)); return cont; };
 template <typename T> void incl_scan(const T& src, T& dst) {T::value_type s{}; dst = {}; for (const auto& n : src) { s += n; dst.push_back(s); };}
 int64_t partial_sum(const int i, const int j) { return g_partial[j + 1] - g_partial[i]; }
 ptrdiff_t next_max(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred <= n; }) - g_input.begin() - 1;}
