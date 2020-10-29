@@ -82,27 +82,25 @@ int64_t combination_lock2(std::vector<int64_t>& input) // O(WlogW) for cyborgs
     const auto size = input.size();
     int64_t ret = size * g_N;
     for (int pos = 0; pos < size; ++pos) {
-        const int64_t wheel = input[pos];
-        int64_t left{0}, right{0}, tmp{0};
-        if (pos > 0) {
-            int ind = std::lower_bound(input.begin(), input.begin() + pos, 0, [wheel](const int a, int){ return crossing(a, wheel); }) - input.begin();
-            if (ind > 0) // crossing
-                left = ind * (g_N - wheel) + weight(0, ind - 1);
-            if (ind < pos)
-                right = (pos - ind) * wheel - weight(ind, pos - 1);
+        while (pos + 1 < size && input[pos] == input[pos + 1])
+            ++pos;
 
-            tmp = left + right;
+        int64_t tmp{0};
+        const int64_t wheel = input[pos];
+        if (pos > 0) {
+            const auto ind = std::partition_point(input.begin(), input.begin() + pos, [wheel](const auto a){ return crossing(a, wheel); }) - input.begin();
+            if (ind > 0) // crossing
+                tmp += ind * (g_N - wheel) + weight(0, ind - 1);
+            if (ind < pos)
+                tmp += (pos - ind) * wheel - weight(ind, pos - 1);
         }
 
         if (pos < size - 1) {
-            left = right = 0;
-            int ind = std::lower_bound(input.begin() + pos + 1, input.end(), 0, [wheel](const int a, int){ return !crossing(a, wheel); }) - input.begin();
+            const auto ind = std::partition_point(input.begin() + pos + 1, input.end(), [wheel](const auto a){ return !crossing(a, wheel); }) - input.begin();
             if (ind > pos + 1)
-                left = weight(pos + 1, ind - 1) - (ind - pos - 1) * wheel;
+                tmp += weight(pos + 1, ind - 1) - (ind - pos - 1) * wheel;
             if (ind < size) // crossing
-                right = (size - ind) * (g_N + wheel) - weight(ind, size - 1);
-
-            tmp += left + right;
+                tmp += (size - ind) * (g_N + wheel) - weight(ind, size - 1);
         }
 
         ret = std::min(ret, tmp);
@@ -159,7 +157,7 @@ void fuze()
     std::uniform_int_distribution<int> dist(1, 1 << 4);
     for (int n = 0; n < size; ++n) {
         g_N = dist(rd);
-        std::vector<int64_t> input(6);
+        std::vector<int64_t> input(15);
         std::uniform_int_distribution<int> wdist(1, g_N);
         for (auto& w : input) w = wdist(rd);
 
@@ -176,7 +174,7 @@ void fuze()
 
 int main(int argc, char* argv[])
 {
-    //fuze();
+    fuze(); return 1;
     // parse console input
     int no_of_cases, wheels;
     std::vector<int64_t> input;
