@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <fstream>
 #include <limits>
 #include <map>
@@ -14,6 +15,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 const auto big64 = std::numeric_limits<int64_t>::max();
