@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
-#include <queue>
 #include <utility>
 #include <vector>
 
@@ -40,11 +39,9 @@ void solution()
     for (int i = 1; i <= g_size; ++i)
         que.emplace_back((g_max_amount + g_input[i - 1] - 1) / g_max_amount, i);
 
-    std::priority_queue<pair_t, cont_t, std::greater<pair_t>> pq{std::greater<pair_t>{}, que};
-    while (!pq.empty()) {
-        std::cout << pq.top().second << " ";
-        pq.pop();
-    }
+    std::sort(que.begin(), que.end());
+    for (const auto& p : que)
+        std::cout << p.second << " ";
 }
 
 int main(int argc, char* argv[])

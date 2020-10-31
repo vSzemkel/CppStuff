@@ -15,6 +15,13 @@
 
 int g_N;
 
+const auto rand_in_range = [](const int ubound) {
+    std::random_device seed;
+    std::mt19937 gen{seed()};
+    std::uniform_int_distribution<int> dist(0, ubound - 1);
+    return dist(gen);
+};
+
 int distance(const int a, const int b)
 {
     const int c = abs(a - b);
@@ -153,13 +160,10 @@ void fuze()
 {
     const int size = 500'000;
     auto minfail = std::numeric_limits<int64_t>::max();
-    std::random_device rd;
-    std::uniform_int_distribution<int> dist(1, 1 << 4);
     for (int n = 0; n < size; ++n) {
-        g_N = dist(rd);
-        std::vector<int64_t> input(15);
-        std::uniform_int_distribution<int> wdist(1, g_N);
-        for (auto& w : input) w = wdist(rd);
+        g_N = 10;
+        std::vector<int64_t> input(10);
+        for (auto& w : input) w = 1 + rand_in_range(g_N);
 
         const auto slow = combination_lock2(input);
         const auto fast = combination_lock(input);

@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -28,6 +29,7 @@ template <typename T> int fill(T& cont){ int size; std::cin >> size; fill(cont, 
 template <typename T> int fill2(T& cont){ int rows, cols, size; std::cin >> rows >> cols; size = rows * cols;  cont.resize(rows); for (auto& r : cont) fill(r, cols); return size; };
 template <typename T> T init2(const int rows, const int cols){ T cont(rows, typename T::value_type(cols)); return cont; };
 template <typename T> void incl_scan(const T& src, T& dst) {T::value_type s{}; dst = {}; for (const auto& n : src) { s += n; dst.push_back(s); };}
+const auto rand_in_range = [](const int ubound){ std::random_device seed; std::mt19937 gen{seed()}; std::uniform_int_distribution<int> dist(0, ubound - 1); return dist(gen); };
 int64_t partial_sum(const int i, const int j) { return g_partial[j + 1] - g_partial[i]; }
 ptrdiff_t next_max(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred <= n; }) - g_input.begin() - 1;}
 ptrdiff_t next_min(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred >= n; }) - g_input.begin() - 1;}
