@@ -1,7 +1,9 @@
 
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <fstream>
 #include <limits>
 #include <map>
@@ -14,19 +16,26 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
-using intvec = std::vector<int64_t>;
-intvec g_input, g_partial;
-
 const auto big64 = std::numeric_limits<int64_t>::max();
+template <typename T> using vec = std::vector<T>;
+template <typename T> using vec2 = std::vector<std::vector<T>>;
+vec<int64_t> g_size, g_input, g_partial;
+
+template <typename T> std::vector<T> fill(const int size){ std::vector<T> cont(size); std::copy_n(std::istream_iterator<typename T::value_type>{std::cin}, size, cont.begin()); return cont; };
+template <typename T> std::vector<std::vector<T>> fill2(T& cont){ int rows, cols; std::cin >> rows >> cols; cont.resize(rows); for (auto& r : cont) r = fill<T>(cols); return cont; };
+template <typename K, typename V> std::map<K, V> fillmap(int size){ std::map<K, V> cont; for (int i = 0; i < size; ++i) { int k, v; std::cin >> k >> v; cont[k] = v;} return cont; };
+template <typename T> T init2(const int rows, const int cols){ T cont(rows, typename T::value_type(cols)); return cont; };
+template <typename T> void incl_scan(const T& src, T& dst) {typename T::value_type s{}; dst = {}; for (const auto& n : src) { s += n; dst.push_back(s); };}
+const auto rand_in_range = [](const int ubound){ std::random_device seed; std::mt19937 gen{seed()}; std::uniform_int_distribution<int> dist(0, ubound - 1); return dist(gen); };
 int64_t partial_sum(const int i, const int j) { return g_partial[j + 1] - g_partial[i]; }
-void incl_scan(const intvec& src, intvec& dst) {int64_t s{0}; dst = {0}; for (const auto& n : src) { s += n; dst.push_back(s); };}
-ptrdiff_t next_max(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred <= n; }) - g_input.begin() - 1;}
-ptrdiff_t next_min(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred >= n; }) - g_input.begin() - 1;}
+size_t next_max(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred <= n; }) - g_input.begin() - 1;}
+size_t next_min(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred >= n; }) - g_input.begin() - 1;}
 
 int64_t solve() {
-    return 0;
+    return big64;
 }
 
 int main(int argc, char* argv[])
@@ -35,12 +44,9 @@ int main(int argc, char* argv[])
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
     // parse console input
-    int no_of_cases, size;
+    int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cin >> size;
-        g_input.resize(size);
-        for (auto& c : g_input) std::cin >> c;
         // Set 1
         std::cout << "Case #" << g << ": " << std::setprecision(15) << solve() << "\n";
     }

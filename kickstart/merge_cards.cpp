@@ -75,6 +75,23 @@ double merge_cards2(const int i, const int j)
     return ret;
 }
 
+double merge_cards3(const std::vector<int64_t>& input)
+{
+    const auto size = input.size();
+    std::vector<std::vector<double>> dp(size, std::vector<double>(size, 0.0));
+    std::vector<double> pref(size, 0.0), suff(size, 0.0);
+    for (int len = 2; len <= size; ++len)
+        for (int i = 0, j = i + len - 1; j < size; ++i, ++j) {
+            double& chunk = dp[i][j];
+            chunk += (pref[i] + suff[j]) / (len - 1); 
+            chunk += partial_sum(i, j);
+            pref[i] += chunk;
+            suff[j] += chunk;
+        }
+
+    return dp[0][size - 1];
+}
+
 int main(int argc, char* argv[])
 {
     // parse console input
@@ -94,7 +111,9 @@ int main(int argc, char* argv[])
         g_partial = {0};
         g_cache.clear();
         std::inclusive_scan(g_input.begin(), g_input.end(), std::back_inserter(g_partial));
-        std::cout << "Case #" << g << ": " << std::setprecision(15) << merge_cards2(0, size) << "\n";
+        //std::cout << "Case #" << g << ": " << std::setprecision(15) << merge_cards2(0, size) << "\n";
+        // Set3
+        std::cout << "Case #" << g << ": " << std::setprecision(15) << merge_cards3(g_input) << "\n";
     }
 }
 
