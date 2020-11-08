@@ -1,24 +1,9 @@
 
-#include <algorithm>
 #include <array>
 #include <assert.h>
-#include <cmath>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <fstream>
 #include <limits>
-#include <map>
-#include <memory>
 #include <numeric>
-#include <queue>
-#include <random>
-#include <set>
-#include <stdlib.h>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
 #include <vector>
 
 // Painter's Duel
@@ -36,7 +21,7 @@ enum class cell_t : int8_t {
 struct game_state_t {
     std::vector<cell_t> board;
     uint8_t last_a, last_b;
-    cell_t next_player = cell_t::alice;
+    cell_t player = cell_t::alice;
 };
 
 class game_t {
@@ -48,7 +33,9 @@ class game_t {
     static int8_t result(const game_state_t& state);
     static cell_t oponent(cell_t player);
     static int8_t worst_result(cell_t player);
-    bool _finishing;
+
+    bool _finishing{false};
+
   private:
     uint8_t coord_to_ind(uint8_t row, uint8_t pos) const;
 
@@ -57,7 +44,7 @@ class game_t {
     std::array<uint8_t, g_max_size + 1> _triangle_size;
 };
 
-game_t::game_t(const uint8_t size) : _finishing(false), _size(size)
+game_t::game_t(const uint8_t size) : _size(size)
 {
     assert(size <= g_max_size);
     _triangle_size[0] = 0;
@@ -105,9 +92,8 @@ int8_t game_t::result(const game_state_t& state)
 {
     const auto& b = state.board;
     return std::accumulate(b.begin(), b.end(), 0, [](const auto acu, const auto val) {
-        const auto v = (int)val;
-        return v <= 1 ? acu + v : acu; }
-    );
+        return val != cell_t::locked ? acu + (int)val : acu; 
+    });
 }
 
 cell_t game_t::oponent(cell_t player)
@@ -122,36 +108,36 @@ int8_t game_t::worst_result(cell_t player) {
 
 game_t g_game;
 
-int solve(const game_state_t& state) {
-    int ret = game_t::worst_result(state.next_player);
-    const int last_position = state.next_player == cell_t::alice ? state.last_a : state.last_b;
+int duel(const game_state_t& state) {
+    int ret = game_t::worst_result(state.player);
+    const int last_position = state.player == cell_t::alice ? state.last_a : state.last_b;
 
     for (const auto pos : g_game.adjacent(last_position)) 
         if (state.board[pos] == cell_t::free) {
             g_game._finishing = false;
             game_state_t next_move{state};
-            next_move.board[pos] = state.next_player;
-            if (state.next_player == cell_t::alice) {
+            next_move.board[pos] = state.player;
+            if (state.player == cell_t::alice) {
                 next_move.last_a = pos;
-                next_move.next_player = cell_t::bob;
+                next_move.player = cell_t::bob;
             } else {
                 next_move.last_b = pos;
-                next_move.next_player = cell_t::alice;
+                next_move.player = cell_t::alice;
             }
 
-            auto next_result = solve(next_move);
-            if (next_result != game_t::worst_result(next_move.next_player))
-                ret = state.next_player == cell_t::alice
+            auto next_result = duel(next_move);
+            if (next_result != game_t::worst_result(next_move.player))
+                ret = state.player == cell_t::alice
                     ? std::max(ret, next_result)
                     : std::min(ret, next_result);
         };
 
-    if (ret == game_t::worst_result(state.next_player) && !g_game._finishing) { // try repeat
+    if (ret == game_t::worst_result(state.player) && !g_game._finishing) { // try repeat
         game_state_t next_move{state};
-        next_move.next_player = game_t::oponent(next_move.next_player);
+        next_move.player = game_t::oponent(next_move.player);
         g_game._finishing = true;
-        ret = solve(next_move);
-        if (ret == game_t::worst_result(next_move.next_player))
+        ret = duel(next_move);
+        if (ret == game_t::worst_result(next_move.player))
             return game_t::result(next_move);
     }
 
@@ -176,8 +162,8 @@ int main(int argc, char* argv[])
             std::cin >> ra >> pa;
             g_game.mark(ra, pa, cell_t::locked);
         }
-        // Set 1
-        std::cout << "Case #" << g << ": " << solve(g_game.get_state()) << "\n";
+
+        std::cout << "Case #" << g << ": " << duel(g_game.get_state()) << "\n";
     }
 }
 
