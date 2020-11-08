@@ -18,6 +18,7 @@ struct database_t {
     struct vote_t votes[];
 };
 
+int g_database_bytesize = 0;
 struct database_t* g_database = NULL;
 
 void save(const char* filename)
@@ -42,8 +43,8 @@ void save(const char* filename)
 
 void initmem(const short locked, const short size)
 {
-    const int bytes = sizeof(struct database_t) + size * sizeof(struct vote_t);
-    g_database = malloc(bytes);
+    g_database_bytesize = sizeof(struct database_t) + size * sizeof(struct vote_t);
+    g_database = malloc(g_database_bytesize);
     g_database->locked = locked;
     g_database->size = size;
 }
@@ -136,8 +137,8 @@ void vote(const int argc, char** const argv)
             puts("Can't extend locked database\n");
         else {
             // realloc
-            const int old_size = sizeof(struct database_t) + g_database->size * sizeof(struct vote_t);
-            g_database = realloc(g_database, old_size + sizeof(struct vote_t));
+            g_database_bytesize += sizeof(struct vote_t);
+            g_database = realloc(g_database, g_database_bytesize);
             // add
             int len = strlen(argv[argp]);
             if (len > MAX_LENGTH) len = MAX_LENGTH;

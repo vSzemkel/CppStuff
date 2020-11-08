@@ -3,6 +3,9 @@
 #include <map>
 #include <vector>
 
+// Metal Harvest
+// https://codingcompetitions.withgoogle.com/kickstart/round/000000000019ff48/00000000003f4b8b
+
 template <typename K, typename V> std::map<K, V> fillmap(int size){ std::map<K, V> cont; for (int i = 0; i < size; ++i) { int k, v; std::cin >> k >> v; cont[k] = v;} return cont; };
 
 int g_robot_limit, g_size;

@@ -1,5 +1,7 @@
 
 #include <algorithm>
+#include <array>
+#include <assert.h>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -19,10 +21,15 @@
 #include <utility>
 #include <vector>
 
+// $TASKNAME$
+// https://
+
 const auto big64 = std::numeric_limits<int64_t>::max();
 template <typename T> using vec = std::vector<T>;
 template <typename T> using vec2 = std::vector<std::vector<T>>;
-vec<int64_t> g_size, g_input, g_partial;
+vec<int64_t> g_input, g_partial;
+vec<bool> g_marked;
+size_t g_size;
 
 template <typename T> std::vector<T> fill(const int size){ std::vector<T> cont(size); std::copy_n(std::istream_iterator<typename T::value_type>{std::cin}, size, cont.begin()); return cont; };
 template <typename T> std::vector<std::vector<T>> fill2(T& cont){ int rows, cols; std::cin >> rows >> cols; cont.resize(rows); for (auto& r : cont) r = fill<T>(cols); return cont; };
