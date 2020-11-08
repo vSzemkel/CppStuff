@@ -89,7 +89,7 @@ uint8_t game_t::coord_to_ind(const uint8_t row, const uint8_t pos) const
 std::vector<uint8_t> game_t::adjacent(const uint8_t ind) const
 {
     uint8_t row{1};
-    while (_triangle_size[row] < ind)
+    while (_triangle_size[row] <= ind)
         ++row;
     uint8_t pos = ind - _triangle_size[row - 1] + 1;
 
@@ -187,8 +187,30 @@ painters_duel.exe < painters_duel.in
 
 Input:
 
+7
+2 1 1 2 1 0
+2 2 2 1 1 2
+2 1
+2 3
+3 3 4 2 1 2
+2 3
+3 1
+3 3 2 2 3 2
+2 1
+3 1
+2 1 1 2 2 0
+2 2 2 1 1 0
+2 2 1 2 3 1
+1 1
 
 Output:
 
+Case #1: 2
+Case #2: 0
+Case #3: 0
+Case #4: -1
+Case #5: -1
+Case #6: 1
+Case #7: 1
 
 */
