@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <string>
 
@@ -21,12 +22,14 @@ int main(int argc, char* argv[])
     }
 
     std::string filename{argv[1]};
-    std::ofstream testdata{(filename + ".in").c_str()};
-    testdata << "\n";
-    testdata.close();
+    filename += ".cpp";
+    if (std::filesystem::exists(filename)) {
+        std::cout << "Specializattion for: " << g_seedname << " already exists\n";
+        return 3;
+    }
 
     std::string line;
-    std::ofstream dst{(filename + ".cpp").c_str()};
+    std::ofstream dst{(filename).c_str(), std::ios::app};
     while (std::getline(src, line)) {
         size_t pos{0};
         while (true) {
@@ -39,6 +42,10 @@ int main(int argc, char* argv[])
     }
     dst.close();
     src.close();
+
+    std::ofstream testdata{filename.replace(filename.size() - 3, filename.size(), "in")};
+    testdata << "\n";
+    testdata.close();
 }
 
 /*
