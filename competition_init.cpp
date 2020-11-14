@@ -21,21 +21,21 @@ int main(int argc, char* argv[])
         return 2;
     }
 
-    std::string filename{argv[1]};
-    filename += ".cpp";
+    std::string replace_with{argv[1]};
+    std::string filename = replace_with + ".cpp";
     if (std::filesystem::exists(filename)) {
         std::cout << "Specializattion for: " << g_seedname << " already exists\n";
         return 3;
     }
 
     std::string line;
-    std::ofstream dst{(filename).c_str(), std::ios::app};
+    std::ofstream dst{filename};
     while (std::getline(src, line)) {
         size_t pos{0};
         while (true) {
             pos = line.find(g_replace_pattern, pos);
             if (pos == std::string::npos) break;
-            line.replace(pos, g_replace_size, filename);
+            line.replace(pos, g_replace_size, replace_with);
             pos += g_replace_size;
         }
         dst << line << "\n";
