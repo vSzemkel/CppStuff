@@ -71,8 +71,6 @@ int64_t smart()
     };
 
     int64_t ret{0};
-    ret = std::numeric_limits<double>::max();
-    ret = pow(10,18);
     int64_t a = boring_ceil(g_a);
     int64_t b = boring_floor(g_b);
     const int digits_a = 1 + log10(a);

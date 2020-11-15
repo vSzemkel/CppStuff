@@ -2,49 +2,42 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(Windows) Launch",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_cards.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "symbolSearchPath": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false
+        },
+        {
+            "name": "(Windows) Launch with Args",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/boring_numbers.exe",
+            "args": ["<", "${workspaceFolder}/boring_numbers.in"],
+            "stopAtEntry": false,
+            "symbolSearchPath": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false
+        },
+        {
             "type": "lldb",
             "request": "launch",
             "name": "LLDB",
-            "program": "${workspaceFolder}/workbook",
-            "args": [],
+            "program": "${workspaceFolder}/bacterial_tactics.exe",
+            "args": ["<", "${workspaceFolder}/bacterial_tactics.in"],
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "C++ Launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceRoot}/workbook",
-            "args": ["testfile.txt"],
-            "stopAtEntry": false,
-            "cwd": "${workspaceRoot}",
-            "environment": [],
-            "externalConsole": false,
-            "linux": {
-                "MIMode": "gdb"
-            },
-            "osx": {
-                "MIMode": "lldb"
-            },
-            "windows": {
-                "miDebuggerPath": "D:\\Program Files\\LLVM\\bin\\lldb.exe",
-                "MIMode": "lldb"
-            }
-        },
-        {
-            "name": "C++ Attach",
-            "type": "cppdbg",
+            "name": "(Windows) Attach",
+            "type": "cppvsdbg",
             "request": "attach",
-            "program": "${workspaceRoot}/a.out",
-            "processId": "${command:pickProcess}",
-            "linux": {
-                "MIMode": "gdb"
-            },
-            "osx": {
-                "MIMode": "lldb"
-            },
-            "windows": {
-                "MIMode": "gdb"
-            }
-        }
+            "processId": "${command:pickProcess}"
+        },
     ]
 }

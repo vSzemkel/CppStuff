@@ -21,7 +21,7 @@
                 "command": "./build-g++-9.sh"
             },
             "windows": {
-                "command": "\"d:\\Program Files\\LLVM\\bin\\clang++.exe\" -Wall -g -std=c++17 test.cpp -o test.exe"
+                "command": "clang++.exe -Wall -g -std=c++17 parenthesis_quest.cpp -o parenthesis_quest.exe"
                 //"command": "ubuntu run g++-8 -Wall -g -std=c++17 test.cpp"
             }
         }
