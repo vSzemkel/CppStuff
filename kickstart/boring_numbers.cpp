@@ -68,22 +68,21 @@ int64_t smart()
         return ret;
     };
 
-    int64_t ret{0};
+    int64_t rng, ret{0};
     int64_t a = boring_ceil(g_a);
     int64_t b = boring_floor(g_b);
-    const int64_t b_copy{b};
     const int digits_a = 1 + (int)log10(a);
     const int digits_b = 1 + (int)log10(b);
     for (int i = digits_a; i < digits_b; ++i) {
-        b = std::atoll(g_max_boring.substr(0, i).c_str()) - a;
-        if (b >= 0)
-            ret += boring_ordinal(b) + 1;
+        rng = std::atoll(g_max_boring.substr(0, i).c_str()) - a;
+        if (rng >= 0)
+            ret += boring_ordinal(rng) + 1;
         a = std::atoll(g_min_boring.substr(0, i + 1).c_str());
     }
 
-    b = b_copy - a;
-    if (b >= 0)
-        ret += boring_ordinal(b) + 1;
+    rng = b - a;
+    if (rng >= 0)
+        ret += boring_ordinal(rng) + 1;
 
     return ret;
 }
