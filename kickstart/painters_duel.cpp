@@ -40,7 +40,7 @@ class game_t {
     uint8_t coord_to_ind(uint8_t row, uint8_t pos) const;
 
     uint8_t _size;
-    game_state_t _state;
+    game_state_t _state{};
     std::array<uint8_t, g_max_size + 1> _triangle_size;
 };
 

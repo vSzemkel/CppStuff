@@ -34,7 +34,7 @@ void save(const char* filename)
         struct vote_t* vote = &g_database->votes[i];
         fprintf(fd, "%hd ", vote->len);
         fwrite(vote->option, vote->len, 1, fd);
-        fprintf(fd, " %d\n", vote->count);
+        fprintf(fd, " %hu\n", vote->count);
     }
 
     fclose(fd);
@@ -64,7 +64,7 @@ void load(const char* filename)
         struct vote_t* vote = &g_database->votes[i];
         fscanf(fd, "%hd ", &vote->len);
         fread(vote->option, vote->len, 1, fd);
-        fscanf(fd, " %hd\n", &vote->count);
+        fscanf(fd, " %hu\n", &vote->count);
     }
 
     fclose(fd);
@@ -105,7 +105,7 @@ void show(const int argc, char** const argv)
     printf("Database is %s\n", g_database->locked == 0 ? "unlocked" : "locked");
 }
 
-void vote(const int argc, char** const argv)
+void poll(const int argc, char** const argv)
 {
     short argp = 2;
     short decr = 0;
@@ -138,15 +138,19 @@ void vote(const int argc, char** const argv)
         else {
             // realloc
             g_database_bytesize += sizeof(struct vote_t);
-            g_database = realloc(g_database, g_database_bytesize);
-            // add
-            int len = strlen(argv[argp]);
-            if (len > MAX_LENGTH) len = MAX_LENGTH;
-            struct vote_t* vote = &g_database->votes[g_database->size];
-            strncpy(vote->option, argv[argp], len);
-            vote->count = 1;
-            vote->len = len;
-            ++g_database->size;
+            struct database_t* new_mem = realloc(g_database, g_database_bytesize);
+            if (new_mem != NULL) {
+                g_database = new_mem;
+                // add
+                int len = strlen(argv[argp]);
+                if (len > MAX_LENGTH) len = MAX_LENGTH;
+                struct vote_t* vote = &g_database->votes[g_database->size];
+                strncpy(vote->option, argv[argp], len);
+                vote->count = 1;
+                vote->len = len;
+                ++g_database->size;
+            } else
+                puts("Can't extend database. Out of memory.\n");
         }
     }
 
@@ -162,7 +166,7 @@ int main(int argc, char** argv)
 
     if (strcmp(argv[1], "create") == 0) create(argc, argv);
     if (strcmp(argv[1], "show") == 0) show(argc, argv);
-    if (strcmp(argv[1], "vote") == 0) vote(argc, argv);
+    if (strcmp(argv[1], "vote") == 0) poll(argc, argv);
 }
 
 /*

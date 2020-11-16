@@ -36,8 +36,8 @@ void solve(int a, int b, const int c) {
     if (reverse)
         std::reverse(g_input.begin(), g_input.end());
 
-    for (auto& b : g_input)
-        std::cout << b << " ";
+    for (auto& h : g_input)
+        std::cout << h << " ";
 }
 
 int main(int argc, char* argv[])
