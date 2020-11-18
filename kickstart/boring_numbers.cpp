@@ -24,8 +24,7 @@ int64_t boring_ceil(int64_t n)
     const int digits = 1 + (int)log10(n);
     for (int pos = 1; pos <= digits; ++pos) {
         const int64_t p10 = pow(10, pos - 1);
-        const int d = (n / p10) % 10;
-        if (((digits - pos) % 2) == (d % 2)) {
+        if ((digits - pos) % 2 == (n / p10) % 2) {
             n = ((n + p10) / p10) * p10;
             n += std::atoll(g_min_boring.substr(digits - pos + 1, pos - 1).c_str());
         }
@@ -42,8 +41,7 @@ int64_t boring_floor(int64_t n)
     const int digits = 1 + (int)log10(n);
     for (int pos = 1; pos <= digits; ++pos) {
         const int64_t p10 = pow(10, pos - 1);
-        const int d = (n / p10) % 10;
-        if (((digits - pos) % 2) == (d % 2)) {
+        if ((digits - pos) % 2 == (n / p10) % 2) {
             n = ((n - p10) / p10) * p10;
             n += std::atoll(g_max_boring.substr(digits - pos + 1, pos - 1).c_str());
         }
