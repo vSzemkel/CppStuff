@@ -8,16 +8,16 @@ constexpr char g_seedname[] = "competition_template.cpp";
 const std::string g_replace_pattern{"$TASKNAME$"};
 const int g_replace_size = g_replace_pattern.size();
 
-bool init_input(std::string& filename)
+bool init_input(const std::string& filename)
 {
-    std::ifstream src{filename};
-    std::string inputfile = filename.replace(filename.size() - 3, filename.size(), "in");
-    if (std::filesystem::exists(inputfile))
+    std::string inputfile = filename;
+    if (std::filesystem::exists(inputfile.replace(filename.size() - 3, filename.size(), "in")))
         return false;
 
     std::string line;
-    bool rewrite{false}, found{false};
+    std::ifstream src{filename};
     std::ofstream testdata{inputfile};
+    bool rewrite{false}, found{false};
     while (std::getline(src, line)) {
         if (line == "Input:")
             rewrite = true;
@@ -53,9 +53,9 @@ int main(int argc, char* argv[])
     std::string filename = replace_with + ".cpp";
     if (std::filesystem::exists(filename)) {
         if (!init_input(filename))
-            std::cout << "Specialization for: " << replace_with << " already exists\n";
+            std::cout << "Specialization for " << replace_with << " already exists\n";
         else
-            std::cout << "Input data for: " << replace_with << " restored\n";
+            std::cout << "Input data for " << replace_with << " restored\n";
         return 3;
     }
 

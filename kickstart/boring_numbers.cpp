@@ -10,23 +10,25 @@ int64_t g_a, g_b;
 const std::string g_min_boring = "10101010101010101010";
 const std::string g_max_boring = "98989898989898989898";
 
-bool is_boring(const int64_t n)
+bool is_boring(int64_t n)
 {
-    bool ret{true};
-    auto s = std::to_string(n);
-    for (int i = 0; ret && i < s.size(); ++i)
-        ret &= ((i + 1) % 2) == ((s[i] - '0') % 2);
-    return ret;
+    bool boring = n % 2;
+    while (n > 0) {
+        if (n % 2 != boring) return false;
+        boring = !boring;
+        n /= 10;
+    }
+    return !boring;
 }
 
 int64_t boring_ceil(int64_t n)
 {
     const int digits = 1 + (int)log10(n);
-    for (int pos = 1; pos <= digits; ++pos) {
-        const int64_t p10 = pow(10, pos - 1);
-        if ((digits - pos) % 2 == (n / p10) % 2) {
+    for (int pos = 0; pos < digits; ++pos) {
+        const int64_t p10 = pow(10, pos);
+        if ((digits - pos) % 2 != (n / p10) % 2) {
             n = ((n + p10) / p10) * p10;
-            n += std::atoll(g_min_boring.substr(digits - pos + 1, pos - 1).c_str());
+            n += std::atoll(g_min_boring.substr(digits - pos, pos).c_str());
         }
     }
 
@@ -39,11 +41,11 @@ int64_t boring_ceil(int64_t n)
 int64_t boring_floor(int64_t n)
 {
     const int digits = 1 + (int)log10(n);
-    for (int pos = 1; pos <= digits; ++pos) {
-        const int64_t p10 = pow(10, pos - 1);
-        if ((digits - pos) % 2 == (n / p10) % 2) {
+    for (int pos = 0; pos < digits; ++pos) {
+        const int64_t p10 = pow(10, pos);
+        if ((digits - pos) % 2 != (n / p10) % 2) {
             n = ((n - p10) / p10) * p10;
-            n += std::atoll(g_max_boring.substr(digits - pos + 1, pos - 1).c_str());
+            n += std::atoll(g_max_boring.substr(digits - pos, pos).c_str());
         }
     }
 
