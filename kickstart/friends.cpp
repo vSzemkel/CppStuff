@@ -4,20 +4,16 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
 // Friends
 // https://codingcompetitions.withgoogle.com/kickstart/round/000000000019ff49/000000000043aee7#analysis
 
-class node_t
+struct node_t
 {
-  public:
     node_t(const std::string& name);
-    bool is_friend(const node_t& other) const { return _letters & other._letters; };
-    bool _visited{false};
-  private:
+    int32_t _id;
     uint32_t _letters{0};
 };
 
@@ -30,93 +26,82 @@ node_t::node_t(const std::string& name)
 class graph_t {
   public:
     void init();
-    void reset();
     void solve();
   private:
-    int bfs(uint32_t depth);
-    int64_t hash(uint32_t n, uint32_t m);
-    std::vector<uint32_t> mark_friends(uint32_t n);
+    int bfs();
+    uint32_t hash(uint16_t m, uint16_t n);
 
-    uint32_t _v, _p, _target;
     std::vector<node_t> _nodes;
-    std::vector<uint32_t> _bfs_cache;
-    std::unordered_map<int64_t, int> _cache;
+    uint16_t _v, _p, _start, _target;
+    std::unordered_map<uint32_t, uint8_t> _cache;
 };
 
-int64_t graph_t::hash(uint32_t n, uint32_t m)
+uint32_t graph_t::hash(uint16_t m, uint16_t n)
 {
-    if (n > m) std::swap(n, m);
-    return ((int64_t)n << 32) + m;
-}
-
-void graph_t::reset()
-{
-    _bfs_cache.clear();
-    for (auto& n : _nodes)
-        n._visited = false;
+    if (m > n) std::swap(m, n);
+    return ((int16_t)m << 16) + n;
 }
 
 void graph_t::init()
 {
-    std::string name;
     std::cin >> _v >> _p;
     assert(_v > 1);
 
     _cache.clear();
     _nodes.clear();
+    std::string name;
     for (int i = 0; i < _v; ++i) {
         std::cin >> name;
-        _nodes.emplace_back(name);
+        _nodes.emplace_back(name)._id = i;
     }
 }
 
-std::vector<uint32_t> graph_t::mark_friends(uint32_t n) {
-    std::vector<uint32_t> ret;
-    const auto& current = _nodes[n];
-    for (int i = 0; i < _nodes.size(); ++i) {
-        auto& node = _nodes[i];
-        if (node._visited == false && node.is_friend(current)) {
-            node._visited = true;
-            ret.push_back(i);
-        }
-    }
-    return ret;
-}
-
-int graph_t::bfs(const uint32_t depth)
+int graph_t::bfs()
 {
-    std::vector<uint32_t> next_level;
-    for (const auto current : _bfs_cache) {
-        if (current == _target)
-            return depth;
+    auto v = _v;
+    auto nodes = _nodes;
 
-        for (const auto n : mark_friends(current))
-            next_level.push_back(n);
+    auto& start = nodes[_start];
+    uint16_t depth{2};
+    uint32_t hull{start._letters};
+    start._letters = 0;
+    while (true) {
+        const auto pp = std::partition(nodes.begin(), nodes.begin() + v, [](const node_t& n){ return n._letters > 0; });
+        v = pp - nodes.begin();
+
+        uint32_t next_hull{0};
+        for (int i = 0; i < v; ++i) {
+            auto& n = nodes[i];
+            if (n._letters & hull) {
+                if (depth <= std::numeric_limits<uint8_t>::max())
+                    _cache[hash(_start, n._id)] = depth;
+
+                if (n._id == _target)
+                    return depth;
+
+                next_hull |= n._letters;
+                n._letters = 0;
+            }
+        }
+
+        if (next_hull == 0)
+            return -1;
+
+        hull = next_hull;
+        ++depth;
     }
 
-    if (next_level.empty())
-        return -1;
-
-    _bfs_cache = next_level;
-    return bfs(depth + 1);
+    return depth;
 }
 
 void graph_t::solve() {
-    int64_t start, ret;
     for (int i = 0; i < _p; ++i) {
-        reset();
-        std::cin >> start >> _target;
-        --start; --_target;
-        const int64_t h = hash(start, _target);
-        auto cached = _cache.find(h);
-        if (cached == _cache.end()) {
-            _nodes[start]._visited = true;
-            _bfs_cache.push_back(start);
-            ret = bfs(1);
-            _cache[h] = ret;
-        } else
-            ret = cached->second;
+        std::cin >> _start >> _target;
+        --_start; --_target;
 
+        const int64_t h = hash(_start, _target);
+        auto cached = _cache.find(h);
+        const auto ret = (cached == _cache.end()) ? bfs() : cached->second;
         std::cout << ret << " ";
     }
 }
@@ -145,7 +130,7 @@ friends.exe < friends.in
 
 Input:
 
-2
+3
 5 2
 LIZZIE KEVIN BOHDAN LALIT RUOYU
 1 2
@@ -154,17 +139,16 @@ LIZZIE KEVIN BOHDAN LALIT RUOYU
 KICK START
 1 2
 1 2
+16 3
+AB BC CD DE EF AG AH AI AJ CJ BX YS KT OP FU CW
+1 5
+5 1
+2 4
 
 Output:
 
-2
-5 2
-LIZZIE KEVIN BOHDAN LALIT RUOYU
-1 2
-1 3
-2 2
-KICK START
-1 2
-1 2
+Case #1: 2 3 
+Case #2: -1 -1
+Case #3: 5 5 3
 
 */
