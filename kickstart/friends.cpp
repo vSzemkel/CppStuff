@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 // Friends
@@ -36,13 +35,11 @@ class graph_t {
     std::vector<node_t> _nodes;
     uint16_t _v, _p, _start, _target;
     std::unordered_map<uint32_t, int8_t> _cache;
-    static constexpr int8_t max_cached_path = 5;
 };
 
-uint32_t graph_t::hash(uint16_t m, uint16_t n) const
+uint32_t graph_t::hash(const uint16_t m, const uint16_t n) const
 {
-    if (m > n) std::swap(m, n);
-    return ((int16_t)m << 16) + n;
+    return _nodes[m]._letters ^ _nodes[n]._letters;
 }
 
 void graph_t::group()
@@ -77,7 +74,7 @@ void graph_t::init()
     _cache.clear();
     _nodes.clear();
     std::string name;
-    for (int i = 0; i < _v; ++i) {
+    for (uint16_t i = 0; i < _v; ++i) {
         std::cin >> name;
         _nodes.emplace_back(name)._id = i;
     }
@@ -97,8 +94,9 @@ int graph_t::bfs()
     if (cached != _cache.end())
         return cached->second;
 
-    auto nodes = _nodes;
-    auto v = std::partition(nodes.begin(), nodes.end(), [g = _nodes[_start]._group](const node_t& n){ return n._group == g; }) - nodes.begin();
+    std::vector<node_t> nodes;
+    std::copy_if(_nodes.begin(), _nodes.end(), std::back_inserter(nodes), [g = _nodes[_start]._group](const node_t& n){ return n._group == g; });
+    uint16_t v = nodes.size();
 
     auto& start = *std::find_if(nodes.begin(), nodes.begin() + v, [s = _start](const node_t& n){ return n._id == s; });
     int8_t depth{2};
@@ -110,10 +108,10 @@ int graph_t::bfs()
         v = pp - nodes.begin();
 
         uint32_t next_hull{0};
-        for (int i = 0; i < v; ++i) {
+        for (uint16_t i = 0; i < v; ++i) {
             auto& n = nodes[i];
             if (n._letters & hull) {
-                if (2 < depth && depth <= graph_t::max_cached_path) {
+                if (depth > 2) {
                     const auto node_hash = hash(_start, n._id);
                     const auto cached = _cache.find(node_hash);
                     if (cached == _cache.end())
@@ -128,18 +126,13 @@ int graph_t::bfs()
             }
         }
 
-        if (next_hull == 0) {
-            assert(false); // impossible
-            return -1;
-        }
-
         hull = next_hull;
         ++depth;
     }
 }
 
 void graph_t::solve() {
-    for (int i = 0; i < _p; ++i) {
+    for (uint16_t i = 0; i < _p; ++i) {
         std::cin >> _start >> _target;
         --_start; --_target;
         std::cout << bfs() << " ";
@@ -165,7 +158,7 @@ int main(int argc, char* argv[])
 
 /*
 clang++.exe -Wall -ggdb3 -O0 -std=c++17 friends.cpp -o friends.exe
-g++ -Wall -ggdb3 -O0 -std=c++14 friends.cpp -o friends.o
+g++ -Wall -ggdb3 -O0 -std=c++17 friends.cpp -o friends.o
 friends.exe < friends.in
 
 Input:
