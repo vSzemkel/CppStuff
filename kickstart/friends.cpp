@@ -13,8 +13,9 @@
 struct node_t
 {
     node_t(const std::string& name);
-    int32_t _id;
-    uint32_t _letters{0};
+    int32_t _letters{0};
+    int32_t _group{0};
+    uint16_t _id;
 };
 
 node_t::node_t(const std::string& name)
@@ -29,17 +30,43 @@ class graph_t {
     void solve();
   private:
     int bfs();
-    uint32_t hash(uint16_t m, uint16_t n);
+    void group();
+    uint32_t hash(uint16_t m, uint16_t n) const;
 
     std::vector<node_t> _nodes;
     uint16_t _v, _p, _start, _target;
-    std::unordered_map<uint32_t, uint8_t> _cache;
+    std::unordered_map<uint32_t, int8_t> _cache;
+    static constexpr int8_t max_cached_path = 5;
 };
 
-uint32_t graph_t::hash(uint16_t m, uint16_t n)
+uint32_t graph_t::hash(uint16_t m, uint16_t n) const
 {
     if (m > n) std::swap(m, n);
     return ((int16_t)m << 16) + n;
+}
+
+void graph_t::group()
+{
+    for (auto& n : _nodes)
+        if (n._group == 0) {
+            n._group = -1;
+            int32_t group_total = n._letters;
+            std::vector<int32_t> group_dfs = { n._id };
+            std::vector<int32_t> group_members = { n._id };
+            while (!group_dfs.empty()) {
+                group_dfs.pop_back();
+                for (auto& n2 : _nodes) {
+                    if (n2._group == 0 && (n2._letters & group_total)) {
+                        group_total |= n2._letters;
+                        n2._group = -1;
+                        group_dfs.push_back(n2._id);
+                        group_members.push_back(n2._id);
+                    }
+                }
+            }
+            for (auto& m : group_members)
+                _nodes[m]._group = group_total;
+        }
 }
 
 void graph_t::init()
@@ -54,17 +81,30 @@ void graph_t::init()
         std::cin >> name;
         _nodes.emplace_back(name)._id = i;
     }
+
+    group();
 }
 
 int graph_t::bfs()
 {
-    auto v = _v;
-    auto nodes = _nodes;
+    if (_nodes[_start]._group != _nodes[_target]._group)
+        return -1;
+    if (_nodes[_start]._letters & _nodes[_target]._letters)
+        return 2;
 
-    auto& start = nodes[_start];
-    uint16_t depth{2};
-    uint32_t hull{start._letters};
+    const auto search_hash = hash(_start, _target);
+    const auto cached = _cache.find(search_hash);
+    if (cached != _cache.end())
+        return cached->second;
+
+    auto nodes = _nodes;
+    auto v = std::partition(nodes.begin(), nodes.end(), [g = _nodes[_start]._group](const node_t& n){ return n._group == g; }) - nodes.begin();
+
+    auto& start = *std::find_if(nodes.begin(), nodes.begin() + v, [s = _start](const node_t& n){ return n._id == s; });
+    int8_t depth{2};
+    int32_t hull{start._letters};
     start._letters = 0;
+
     while (true) {
         const auto pp = std::partition(nodes.begin(), nodes.begin() + v, [](const node_t& n){ return n._letters > 0; });
         v = pp - nodes.begin();
@@ -73,8 +113,12 @@ int graph_t::bfs()
         for (int i = 0; i < v; ++i) {
             auto& n = nodes[i];
             if (n._letters & hull) {
-                if (depth <= std::numeric_limits<uint8_t>::max())
-                    _cache[hash(_start, n._id)] = depth;
+                if (2 < depth && depth <= graph_t::max_cached_path) {
+                    const auto node_hash = hash(_start, n._id);
+                    const auto cached = _cache.find(node_hash);
+                    if (cached == _cache.end())
+                        _cache[node_hash] = depth;
+                }
 
                 if (n._id == _target)
                     return depth;
@@ -84,25 +128,21 @@ int graph_t::bfs()
             }
         }
 
-        if (next_hull == 0)
+        if (next_hull == 0) {
+            assert(false); // impossible
             return -1;
+        }
 
         hull = next_hull;
         ++depth;
     }
-
-    return depth;
 }
 
 void graph_t::solve() {
     for (int i = 0; i < _p; ++i) {
         std::cin >> _start >> _target;
         --_start; --_target;
-
-        const int64_t h = hash(_start, _target);
-        auto cached = _cache.find(h);
-        const auto ret = (cached == _cache.end()) ? bfs() : cached->second;
-        std::cout << ret << " ";
+        std::cout << bfs() << " ";
     }
 }
 
@@ -139,16 +179,17 @@ LIZZIE KEVIN BOHDAN LALIT RUOYU
 KICK START
 1 2
 1 2
-16 3
-AB BC CD DE EF AG AH AI AJ CJ BX YS KT OP FU CW
+18 4
+AB BC CD DE EF AG AH AI AJ CJ BX YS KT OP FU CW VY VZ
 1 5
 5 1
 2 4
+12 18
 
 Output:
 
 Case #1: 2 3 
-Case #2: -1 -1
-Case #3: 5 5 3
+Case #2: -1 -1 
+Case #3: 5 5 3 3 
 
 */
