@@ -78,8 +78,6 @@ void graph_t::init()
         std::cin >> name;
         _nodes.emplace_back(name)._id = i;
     }
-
-    group();
 }
 
 int graph_t::bfs()
@@ -132,10 +130,50 @@ int graph_t::bfs()
 }
 
 void graph_t::solve() {
+    init();  // read data, build graph
+    group(); // identify connected regions
+
     for (uint16_t i = 0; i < _p; ++i) {
         std::cin >> _start >> _target;
         --_start; --_target;
-        std::cout << bfs() << " ";
+        std::cout << " " << bfs();
+    }
+}
+
+void smart() {
+    using vec = std::vector<int>;
+    constexpr size_t letters = 26;
+    constexpr int bad = letters + 1;
+    std::vector<vec> costs(letters, vec(letters, bad));
+
+    uint16_t v, p, start, target;
+    std::cin >> v >> p;
+    std::string name;
+    std::vector<std::string> names(v);
+    for (auto& name : names) {
+        std::cin >> name;
+        for (int j = 0; j < name.size() - 1; ++j)
+            for (int k = j + 1; k < name.size(); ++k)
+                costs[name[j] - 'A'][name[k] - 'A'] = costs[name[k] - 'A'][name[j] - 'A'] = 1;
+    }
+
+    for (int i = 0; i < letters ; ++i)
+        costs[i][i] = 0;
+
+    for (int k = 0; k < letters; ++k)
+        for (int i = 0; i < letters - 1; ++i)
+            for (int j = i + 1; j < letters; ++j)
+                costs[i][j] = costs[j][i] = std::min(costs[i][j], costs[i][k] + costs[k][j]);
+
+    for (int i = 0; i < p; ++i) {
+        std::cin >> start >> target;
+        --start; --target;
+        int ca{bad};
+        for (const char s : names[start])
+            for (const char t : names[target])
+                ca = std::min(ca, costs[s - 'A'][t - 'A']);
+        ca = ca < bad ? ca + 2 : -1;
+        std::cout << " " << (int)ca;
     }
 }
 
@@ -149,10 +187,8 @@ int main(int argc, char* argv[])
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        graph.init();
-        std::cout << "Case #" << g << ": ";
-        graph.solve();
-        std::cout << "\n";
+        //std::cout << "Case #" << g << ":"; graph.solve(); std::cout << "\n";
+        std::cout << "Case #" << g << ":"; smart(); std::cout << "\n";
     }
 }
 

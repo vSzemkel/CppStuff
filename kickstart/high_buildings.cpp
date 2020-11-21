@@ -29,7 +29,7 @@ void solve(int a, int b, const int c) {
     else if (pos + diff == g_size && c > 1)
         std::swap(g_input[pos - 1], g_input[g_size - 1]);
     else if (diff != 0) {
-        std::cout << "IMPOSSIBLE";
+        std::cout << " IMPOSSIBLE";
         return;
     }
 
@@ -37,7 +37,7 @@ void solve(int a, int b, const int c) {
         std::reverse(g_input.begin(), g_input.end());
 
     for (auto& h : g_input)
-        std::cout << h << " ";
+        std::cout << " " << h;
 }
 
 int main(int argc, char* argv[])
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     for (int g = 1; g <= no_of_cases; ++g) {
         int a, b, c;
         std::cin >> g_size >> a >> b >> c;
-        std::cout << "Case #" << g << ": ";
+        std::cout << "Case #" << g << ":";
         solve(a, b, c);
         std::cout << "\n";
     }
@@ -78,7 +78,7 @@ Output:
 Case #1: IMPOSSIBLE
 Case #2: 10 1 1 1 1 1 1 1 1 10
 Case #3: 1 1 9 1 1 1 1 1 10 10
-Case #4: 4 1 3 1 
+Case #4: 4 1 3 1
 Case #5: IMPOSSIBLE
 Case #6: 1 5 5 1 4
 Case #7: 1
