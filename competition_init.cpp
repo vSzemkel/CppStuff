@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 
     std::ifstream src{g_seedname};
     if (!src.good()) {
-        std::cout << "Template file: " << g_seedname << " not found\n";
+        std::cout << "Template file: " << g_seedname << " not found.\n";
         return 2;
     }
 
@@ -53,9 +53,9 @@ int main(int argc, char* argv[])
     std::string filename = replace_with + ".cpp";
     if (std::filesystem::exists(filename)) {
         if (!init_input(filename))
-            std::cout << "Specialization for " << replace_with << " already exists\n";
+            std::cout << "Specialization for " << replace_with << " already exists.\n";
         else
-            std::cout << "Input data for " << replace_with << " restored\n";
+            std::cout << "Input data for " << replace_with << " restored.\n";
         return 3;
     }
 
