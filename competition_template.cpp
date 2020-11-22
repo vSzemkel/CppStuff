@@ -37,7 +37,7 @@ template <typename T> std::vector<T> fill(const size_t size){ std::vector<T> con
 template <typename T> std::vector<std::vector<T>> fill2(T& cont){ int rows, cols; std::cin >> rows >> cols; cont.resize(rows); for (auto& r : cont) r = fill<T>(cols); return cont; };
 template <typename K, typename V> std::map<K, V> fillmap(size_t size){ std::map<K, V> cont; for (int i = 0; i < size; ++i) { int k, v; std::cin >> k >> v; cont[k] = v;} return cont; };
 template <typename T> T init2(const int rows, const int cols){ T cont(rows, typename T::value_type(cols)); return cont; };
-template <typename T> void incl_scan(const T& src, T& dst) {typename T::value_type s{}; dst = {}; for (const auto& n : src) { s += n; dst.push_back(s); };}
+template <typename T> void incl_scan(const T& src) { g_partial = {typename T::value_type()}; std::inclusive_scan(src.begin(), src.end(), std::back_inserter(g_partial)); };
 const auto rand_in_range = [](const int ubound){ std::random_device seed; std::mt19937 gen{seed()}; std::uniform_int_distribution<int> dist(0, ubound - 1); return dist(gen); };
 int64_t partial_sum(const int i, const int j) { return g_partial[j + 1] - g_partial[i]; }
 size_t next_max(const int off) { return std::lower_bound(g_input.begin() + off + 1, g_input.end(), 0, [](const auto& n, auto) { const auto pred = &n - 1; return *pred <= n; }) - g_input.begin() - 1;}

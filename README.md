@@ -12,4 +12,13 @@ with exactly the same command as for initialization.
 `$ ./competition_init <task_name>`  
 `Input data for <task_name> restored`
 
+Run the solution with command:
+
+`$ ./<task_name>.o < <task_name>.in`
+
+or configure *launch.json* in VS Code with settings:
+
+`"program": "${workspaceFolder}/<task_name>.exe",`  
+`"args": ["<", "${workspaceFolder}/<task_name>.in"],`
+
 And You can't accidentlly overwrite <task_name>.cpp in a rush with this utility of course..
