@@ -1,12 +1,14 @@
 
+#include <algorithm>
 #include <iostream>
 #include <set>
 #include <string>
 #include <vector>
 
-// find all uniformly edited fragments O(2n*logm)
+// Overlapped swipe
+// Find all uniformly edited fragments O(2n*logm)
 
-
+constexpr bool g_coalesce{true};
 using editors_t = std::set<std::string>;
 
 // globals
@@ -40,11 +42,21 @@ void print_window(const int start, const int finish, const editors_t& window)
 int main(int argc, char* argv[])
 {
     read_input();
-    
+
     int last = 0;
     editors_t window{};
-    for (int i = 0; i < g_text_size; ++i) 
-        if (!g_start[i].empty() || !g_finish[i].empty()) {
+    for (int i = 0; i < g_text_size; ++i) {
+        auto& start = g_start[i];
+        auto& finish = g_finish[i];
+        if (g_coalesce) {
+            std::vector<std::string> commons;
+            std::set_intersection(start.begin(), start.end(), finish.begin(), finish.end(), std::back_inserter(commons));
+            for (const auto& editor : commons) {
+                start.extract(editor);
+                finish.extract(editor);
+            }
+        }
+        if (!start.empty() || !finish.empty()) {
             // window changes - print out the last one if not empty
             if (!window.empty())
                 print_window(last, i, window);
@@ -56,13 +68,16 @@ int main(int argc, char* argv[])
             // start of a new window
             last = i;
         }
+    }
 
     return 0;
 }
 
-/* clang++.exe -Wall -g -std=c++17 overlap_swipe.cpp -o overlap_swipe.exe
+/* 
+clang++.exe -Wall -g -std=c++17 overlap_swipe.cpp -o overlap_swipe.exe
+overlap_swipe.exe < overlap_swipe.in
 
-Input
+Input:
 
 100
 10
