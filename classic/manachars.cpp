@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 
-// for a given string find the longest palindrome sufix
+// Manachars algorithm
+// For a given string find the longest palindrome substring
 
 
 // case definition
