@@ -6,7 +6,7 @@
 #include <vector>
 
 // Prefix sum operations for huge ranges
-// Inspired by encervala task solutions on Google coding competitions
+// Inspired by ecnervala task solutions on Google coding competitions
 
 template <typename T> using vec = std::vector<T>;
 vec<int64_t> g_input, g_partial, g_ecnerwala;
@@ -21,7 +21,7 @@ void print(const std::vector<int64_t>& v)
     std::cout << "\n";
 }
 
-void encervala_init(const std::vector<int64_t>& src)
+void ecnervala_init(const std::vector<int64_t>& src)
 {
     const int size = src.size();
     g_ecnerwala.assign(size, 0);
@@ -30,7 +30,7 @@ void encervala_init(const std::vector<int64_t>& src)
             g_ecnerwala[a] += src[i];
 }
 
-void encervala_update(std::vector<int64_t>& src, const size_t pos, const int64_t val)
+void ecnervala_update(std::vector<int64_t>& src, const size_t pos, const int64_t val)
 {
     const auto size = src.size();
     for (auto i = pos; i < size; i |= i + 1)
@@ -72,15 +72,15 @@ int main(int argc, char* argv[])
     std::generate_n(std::back_inserter(g_input), size, []{ return rand_in_range(range); });
 
     incl_scan(g_input);
-    encervala_init(g_input);
+    ecnervala_init(g_input);
     check();
 
     // set weights of elements 5 and size - 7 to val
     const int val = 17;
     for (int i = 5 + 1; i <= size; ++i) g_partial[i] += val - g_input[5];
     for (int i = size - 7 + 1; i <= size; ++i) g_partial[i] += val - g_input[size - 7];
-    encervala_update(g_input, 5, 17);
-    encervala_update(g_input, size - 7, 17);
+    ecnervala_update(g_input, 5, 17);
+    ecnervala_update(g_input, size - 7, 17);
     check();
 }
 
