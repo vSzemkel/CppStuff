@@ -65,8 +65,8 @@ int main(int argc, char* argv[])
 }
 
 /*
-clang++.exe -Wall -ggdb3 -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
-g++ -Wall -ggdb3 -Og -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.o
+clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.o
 $TASKNAME$.exe < $TASKNAME$.in
 
 Input:
