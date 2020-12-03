@@ -17,11 +17,11 @@ struct vertex_t {
 };
 
 class graph_t {
-public:
+  public:
     graph_t(uint32_t v, uint32_t e) : _v(v), _e(e) {};
     void load();
     void enumerate();
-private:
+  private:
     void dfs();
     void add_edge(const label_t& from, const label_t& to);
     vertex_t& get_node(label_t label) { return _nodes[label - 1]; }

@@ -35,6 +35,7 @@ size_t g_size;
 
 template <typename T> std::vector<T> fill(const size_t size){std::vector<T> cont(size);std::copy_n(std::istream_iterator<T>{std::cin},size,cont.begin());return cont;};
 template <typename T> void fill2(std::vector<std::vector<T>>& cont, int& rows, int& cols){std::cin>>rows>>cols;cont.resize(rows);for(auto& r:cont) r=fill<T>(cols);};
+template <typename T> void fill2sq(std::vector<std::vector<T>>& cont, int& size){std::cin>>size;cont.resize(size);for(auto& r:cont) r=fill<T>(size);};
 template <typename K, typename V> std::map<K, V> fillmap(size_t size){std::map<K, V> cont;for(int i=0;i<size;++i){int k,v;std::cin>>k>>v;cont[k]=v;}return cont;};
 template <typename T> T init2(const int rows, const int cols){T cont(rows,typename T::value_type(cols));return cont;};
 const auto rand_in_range = [](const int ubound){std::random_device seed;std::mt19937 gen{seed()};std::uniform_int_distribution<int> dist(0,ubound-1);return dist(gen);};
@@ -50,7 +51,7 @@ int64_t solve() {
     return rand_in_range((int)big64);
 }
 
-int main(int argc, char* argv[])
+int main(int, char**)
 {
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
