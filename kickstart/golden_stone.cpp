@@ -42,7 +42,7 @@ void parse_input()
         }
     }
     g_recipe_produces.resize(g_R);
-    g_recipe_ingridients.resize(g_R);
+    g_recipe_ingridients.assign(g_R, {});
     for (int i = 0; i < g_R; ++i) {
         std::cin >> c1;
         vec& tmp = g_recipe_ingridients[i];
@@ -89,7 +89,6 @@ int64_t solve()
             if (std::all_of(stones.begin(), stones.end(), [p](const auto s){ return s != p; })) {
                 const int64_t craft_baseline_cost = std::accumulate(ingredients.begin(), ingredients.end(), 0LL, [&cost, city](const auto acc, const auto s){ return acc + cost[s][city]; });
                 if (craft_baseline_cost < cost[p][city]) {
-                    stones.push_back(p);
                     cost[p][city] = craft_baseline_cost;
                     pq.push({craft_baseline_cost, {p, city}});
                 }
