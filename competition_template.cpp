@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <array>
 #include <assert.h>
+#include <bitset>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -30,6 +31,7 @@
 const auto big64 = std::numeric_limits<int64_t>::max();
 template <typename T> using vec = std::vector<T>;
 template <typename T> using vec2 = std::vector<std::vector<T>>;
+std::ofstream g_debug("$TASKNAME$.info");
 vec<int64_t> g_input, g_partial;
 vec<bool> g_marked;
 size_t g_size;
