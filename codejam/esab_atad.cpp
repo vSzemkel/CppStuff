@@ -19,7 +19,7 @@ int g_size;
 int g_pos;
 int g_chunks_needed;
 int g_question_count;
-std::ofstream g_debug("esab_atad.info");
+std::ofstream g_debug("esab_atad.log");
 std::vector<std::pair<std::vector<bool>, std::vector<bool>>> g_flags; // {left, right}
 
 std::vector<bool> flip(const std::vector<bool>& flag)
@@ -65,22 +65,45 @@ g_debug << "found palindrome " << " " << to_string(flag) << "\n";
     return true;
 }
 
-std::vector<bool> read_chunk()
+void print(const char* msg)
 {
-    std::vector<bool> ret(g_chunk_size);
-    for (int i = g_pos; i < g_pos + g_chunk_size; ++i) {
-        std::cout << g_size - i << std::endl;
-        std::cin >> g_val;
-        g_debug << i << " -> " << g_val << std::endl;
-        ret[i] = g_val;
+    g_debug << msg << std::endl;
+    for (auto& f : g_flags)
+        g_debug << to_string(f.first) << " " << to_string(f.second) << std::endl;
+}
+
+void print_candidates(const char* msg, const std::vector<std::vector<bool>>& cand)
+{
+    int max_lines = 10;
+    g_debug << msg << std::endl;
+    if (cand.empty())
+        g_debug << "empty" << std::endl;
+    std::vector<std::string> vecstr;
+    std::transform(cand.begin(), cand.end(), std::back_inserter(vecstr), [](const auto& vb){return to_string(vb);});
+    std::sort(vecstr.begin(), vecstr.end());
+    for (auto& s : vecstr) {
+        g_debug << s << std::endl;
+        if (--max_lines == 0) break;
     }
-    g_question_count -= g_chunk_size;
+    if (max_lines == 0)
+        g_debug << "..." << std::endl;
+}
+
+std::vector<bool> read(int size = g_chunk_size, bool reversed = false, int offset = 0)
+{
+    std::vector<bool> ret(size);
+    for (int i = g_pos + offset; i < g_pos + offset + size; ++i) {
+        std::cout << (reversed ? i + 1 : g_size - i) << std::endl;
+        std::cin >> g_val;
+        ret[i - g_pos - offset] = g_val;
+    }
+    g_question_count -= size;
     return ret;
 }
 
 std::vector<bool> read_associate(const std::vector<bool>& flag)
 {
-    const int half_size = g_chunk_size / 2;
+    const int half_size = g_chunk_size >> 1;
     const auto flag_flipped = flip(flag);
     std::string pattern_low = to_string(flag).substr(half_size);
     std::string pattern_low_flipped = to_string(flag_flipped).substr(half_size);
@@ -88,54 +111,25 @@ std::vector<bool> read_associate(const std::vector<bool>& flag)
     std::string pattern_high_flipped = to_string(flag_flipped).substr(0, half_size);
     std::string result_low, result_high;
 
-    std::vector<bool> candidate_low1(half_size);
-    for (int i = g_pos; i < g_pos + half_size; ++i) {
-        std::cout << g_size - i << std::endl;
-        std::cin >> g_val;
-        g_debug << i << " ll => " << g_val << std::endl;
-        candidate_low1[i] = g_val;
-    }
+    std::vector<bool> candidate_low1 = read(half_size, false);
     g_debug << "candidate_low1: " << to_string(candidate_low1) << std::endl;
-
-    std::vector<bool> candidate_low2(half_size);
-    for (int i = g_pos; i < g_pos + half_size; ++i) {
-        std::cout << i + 1 << std::endl;
-        std::cin >> g_val;
-        g_debug << g_size - i - 1 << " lh => " << g_val << std::endl;
-        candidate_low2[i - g_pos] = g_val;
-    }
-    g_debug << "candidate_low2: " << to_string(candidate_low2) << std::endl;
-
     auto lo = to_string(candidate_low1);
+    if (lo != pattern_low && lo != pattern_low_flipped) { // can read optimally
+        result_high = to_string(read(half_size, false, half_size));
+        return to_vecbool(result_high + lo);
+    }
+
+    std::vector<bool> candidate_low2 = read(half_size, true);
+    g_debug << "candidate_low2: " << to_string(candidate_low2) << std::endl;
     if (lo == pattern_low)
         result_low = to_string(candidate_low2);
     else if (lo == pattern_low_flipped)
         result_low = to_string(flip(candidate_low2));
-    else {
-        auto lo = to_string(candidate_low2);
-        if (lo == pattern_low)
-            result_low = to_string(candidate_low1);
-        else if (lo == pattern_low_flipped)
-            result_low = to_string(flip(candidate_low1));
-    }
     g_debug << "result_low: " << result_low << std::endl;
 
-    std::vector<bool> candidate_high1(half_size);
-    for (int i = g_pos + half_size; i < g_pos + g_chunk_size; ++i) {
-        std::cout << g_size - i << std::endl;
-        std::cin >> g_val;
-        g_debug << i << " hl => " << g_val << std::endl;
-        candidate_high1[i - g_pos - half_size] = g_val;
-    }
+    std::vector<bool> candidate_high1 = read(half_size, false, half_size);
     g_debug << "candidate_high1: " << to_string(candidate_high1) << std::endl;
-
-    std::vector<bool> candidate_high2(half_size);
-    for (int i = g_pos + half_size; i < g_pos + g_chunk_size; ++i) {
-        std::cout << i + 1 << std::endl;
-        std::cin >> g_val;
-        g_debug << g_size - i - 1 << " hh => " << g_val << std::endl;
-        candidate_high2[i - g_pos - half_size] = g_val;
-    }
+    std::vector<bool> candidate_high2 = read(half_size, true, half_size);
     g_debug << "candidate_high2: " << to_string(candidate_high2) << std::endl;
 
     auto hi = to_string(candidate_high1);
@@ -157,12 +151,11 @@ std::vector<bool> read_associate(const std::vector<bool>& flag)
 
 void read_chunk_pair(int& chunks_needed)
 {
-    const std::vector<bool> right = read_chunk();
+    const std::vector<bool> right = read();
     if ((chunks_needed % 2) == 1) {
         g_flags.emplace_back(right, right);
     } else {
         const auto left = read_associate(right); 
-        g_debug << "read_chunk_pair: " << to_string(left) << std::endl;
         g_flags.emplace_back(left, right);
         --chunks_needed;
     }
@@ -193,6 +186,7 @@ std::vector<std::vector<bool>> multiplex()
     }
     std::unordered_set<std::vector<bool>> tmp;
     while (chunks_needed > 0) {
+        tmp.clear();
         auto& [left, right] = g_flags.back();
         const auto leftflip = flip(left);
         const auto rightflip = flip(right);
@@ -230,28 +224,30 @@ std::vector<std::vector<bool>> multiplex()
         chunks_needed -= 2;
         g_flags.pop_back();
         ret.assign(tmp.begin(), tmp.end());
+        print_candidates("After multiplex", ret);
     }
 
     return ret;
 }
 
-void print(const char* msg)
+bool reduce(std::vector<std::vector<bool>>& candidates)
 {
-    g_debug << msg << std::endl;
-    for (auto& f : g_flags)
-        g_debug << to_string(f.first) << " " << to_string(f.second) << std::endl;
-}
+    int shift{0};
+    while (candidates.size() > 1) {
+        for (g_pos = shift; g_pos < g_size; g_pos += g_chunk_size) {
+            if (g_question_count-- == 0)
+                return false;
+            std::cout << g_size - g_pos << std::endl;
+            std::cin >> g_val;
+            const auto new_end = std::remove_if(candidates.begin(), candidates.end(), [](const auto& flag){ return flag[g_pos] != g_val; });
+            candidates.erase(new_end, candidates.end());
+            g_debug << "after preserving " << g_val << " on position " << g_pos << " remains " << candidates.size() << std::endl;
+            print_candidates("After elimination", candidates);
+        }
+        shift = (shift + 1) % g_chunk_size;
+    }
 
-void print_candidates(const char* msg, const std::vector<std::vector<bool>>& cand)
-{
-    g_debug << msg << std::endl;
-    if (cand.empty())
-        g_debug << "empty" << std::endl;
-    std::vector<std::string> vecstr;
-    std::transform(cand.begin(), cand.end(), std::back_inserter(vecstr), [](const auto& vb){return to_string(vb);});
-    std::sort(vecstr.begin(), vecstr.end());
-    for (auto& s : vecstr)
-        g_debug << s << std::endl;
+    return true;
 }
 
 void fake_answer()
@@ -276,33 +272,13 @@ void solve() {
     }
 
     auto candidates = multiplex();
-    print_candidates("After multiplex", candidates);
-
-    int shift{0};
-    while (candidates.size() > 1) {
-        for (g_pos = shift; g_pos < g_size; g_pos += g_chunk_size) {
-            if (g_question_count-- == 0) {
-                g_debug << "no questions left" << std::endl;
-                goto give_answer;
-            }
-            std::cout << g_size - g_pos << std::endl;
-            std::cin >> g_val;
-            const auto new_end = std::remove_if(candidates.begin(), candidates.end(), [](const auto& flag){ return flag[g_pos] != g_val; });
-            candidates.erase(new_end, candidates.end());
-            g_debug << "after preserving " << g_val << " on position " << g_pos << " remains " << candidates.size() << std::endl;
-            print_candidates("After elimination", candidates);
-        }
-        shift = (shift + 1) % g_chunk_size;
-    }
-
-    if (candidates.empty())
+    if (!reduce(candidates) || candidates.empty())
         fake_answer();
 
-give_answer:
     char answer;
     std::cout << to_string(candidates[0]) << std::endl;
     std::cin >> answer;
-    g_debug << "answer for " << to_string(candidates[0]) << " is " << answer << std::endl << std::endl;
+    g_debug << "After " << g_init_question_count - g_question_count << " questions, answer for " << to_string(candidates[0]) << " is " << answer << std::endl << std::endl;
     if (answer != 'Y')
         exit(1);
 }
