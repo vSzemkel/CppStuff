@@ -13,13 +13,12 @@
 
 constexpr int g_chunk_size = 10;
 constexpr int g_init_question_count = 150;
+constexpr int g_check_cycle = (g_chunk_size - 2) >> 1;
 
-bool g_val;
-int g_size;
-int g_pos;
-int g_chunks_needed;
-int g_question_count;
+bool g_val, g_reversed, g_flipped;
+int g_size, g_pos, g_eq_pair, g_neq_pair, g_chunks_needed, g_question_asked;
 std::ofstream g_debug("esab_atad.log");
+std::vector<bool> g_answer;
 std::vector<std::pair<std::vector<bool>, std::vector<bool>>> g_flags; // {left, right}
 
 std::vector<bool> flip(const std::vector<bool>& flag)
@@ -61,11 +60,10 @@ bool is_palindrome(const std::vector<bool>& flag)
     const int size = flag.size();
     for (int i = 0; i < size; ++i)
         if (flag[i] != flag[size - i - 1]) return false;
-g_debug << "found palindrome " << " " << to_string(flag) << "\n";
     return true;
 }
 
-void print(const char* msg)
+void print_associates(const char* msg)
 {
     g_debug << msg << std::endl;
     for (auto& f : g_flags)
@@ -89,15 +87,19 @@ void print_candidates(const char* msg, const std::vector<std::vector<bool>>& can
         g_debug << "..." << std::endl;
 }
 
-std::vector<bool> read(int size = g_chunk_size, bool reversed = false, int offset = 0)
+bool read_bit(const int pos)
+{
+    std::cout << g_size - pos << std::endl;
+    ++g_question_asked;
+    std::cin >> g_val;
+    return g_val;
+}
+
+std::vector<bool> read(const int size = g_chunk_size, const bool reversed = false, const int offset = 0)
 {
     std::vector<bool> ret(size);
-    for (int i = g_pos + offset; i < g_pos + offset + size; ++i) {
-        std::cout << (reversed ? i + 1 : g_size - i) << std::endl;
-        std::cin >> g_val;
-        ret[i - g_pos - offset] = g_val;
-    }
-    g_question_count -= size;
+    for (int i = g_pos + offset; i < g_pos + offset + size; ++i)
+        ret[i - g_pos - offset] = read_bit(reversed ? g_size - i - 1 : i);
     return ret;
 }
 
@@ -235,10 +237,9 @@ bool reduce(std::vector<std::vector<bool>>& candidates)
     int shift{0};
     while (candidates.size() > 1) {
         for (g_pos = shift; g_pos < g_size; g_pos += g_chunk_size) {
-            if (g_question_count-- == 0)
+            if (g_question_asked == g_init_question_count)
                 return false;
-            std::cout << g_size - g_pos << std::endl;
-            std::cin >> g_val;
+            read_bit(g_pos);
             const auto new_end = std::remove_if(candidates.begin(), candidates.end(), [](const auto& flag){ return flag[g_pos] != g_val; });
             candidates.erase(new_end, candidates.end());
             g_debug << "after preserving " << g_val << " on position " << g_pos << " remains " << candidates.size() << std::endl;
@@ -255,19 +256,18 @@ void fake_answer()
     char fake;
     std::cout << std::string(g_size, '0') << std::endl;
     std::cin >> fake;
-    g_debug << "answer is " << fake << std::endl << std::endl;
+    g_debug << "After " << g_question_asked << " questions fake answer is " << fake << std::endl << std::endl;
     exit(0);
 }
 
 void solve() {
     g_pos = 0;
     g_flags.clear();
-    g_question_count = g_init_question_count;
 
     int chunks_needed = g_chunks_needed;
     while (chunks_needed > 0) {
         read_chunk_pair(chunks_needed);
-        print("After read_chunk_pair");
+        print_associates("After read_chunk_pair");
         g_pos += g_chunk_size;
     }
 
@@ -278,7 +278,63 @@ void solve() {
     char answer;
     std::cout << to_string(candidates[0]) << std::endl;
     std::cin >> answer;
-    g_debug << "After " << g_init_question_count - g_question_count << " questions, answer for " << to_string(candidates[0]) << " is " << answer << std::endl << std::endl;
+    g_debug << "After " << g_question_asked << " questions, answer for " << to_string(candidates[0]) << " is " << answer << std::endl << std::endl;
+    if (answer != 'Y')
+        exit(1);
+}
+
+void read_pair()
+{
+    bool right = read_bit(g_pos);
+    bool left = read_bit(g_size - g_pos - 1);
+    if (g_reversed)
+        std::swap(left, right);
+    if (g_flipped) {
+        left ^= true;
+        right ^= true;
+    }
+    if (left == right)
+        g_eq_pair = g_pos;
+    else
+        g_neq_pair = g_pos;
+    g_answer[g_size - g_pos - 1] = left;
+    g_answer[g_pos] = right;
+}
+
+void check_fluctuation()
+{
+    if (g_eq_pair == -1 && g_neq_pair == -1)
+        read_pair();
+    else if (g_eq_pair == -1 || g_neq_pair == -1) {
+        auto known_pos = std::max(g_eq_pair, g_neq_pair);
+        read_bit(0); // align fluctuation
+        g_flipped  = g_answer[known_pos] != read_bit(known_pos);
+        g_reversed= false;
+    } else {
+        g_flipped = g_answer[g_eq_pair] != read_bit(g_eq_pair);
+        g_reversed = g_flipped ^ (g_answer[g_neq_pair] != read_bit(g_neq_pair));
+    }
+}
+
+void smart()
+{
+    g_answer.resize(g_size);
+    g_eq_pair = g_neq_pair = -1;
+    g_reversed = g_flipped = false;
+    for (g_pos = 0; g_pos < g_size / 2; ++g_pos) {
+        if (g_pos % g_check_cycle == 0) check_fluctuation();
+        read_pair();
+    }
+
+    if (g_reversed)
+        g_answer = reverse(g_answer);
+    if (g_flipped)
+        g_answer = flip(g_answer);
+
+    char answer;
+    std::cout << to_string(g_answer) << std::endl;
+    std::cin >> answer;
+    g_debug << "After " << g_question_asked << " questions, answer for " << to_string(g_answer) << " is " << answer << std::endl << std::endl;
     if (answer != 'Y')
         exit(1);
 }
@@ -294,7 +350,9 @@ int main(int, char**)
     g_chunks_needed = g_size / g_chunk_size;
     for (int g = 1; g <= no_of_cases; ++g) {
         g_debug << "\nCASE: " << g << std::endl;
-        solve();
+        g_question_asked = 0;
+        //solve();
+        smart();
     }
 }
 
