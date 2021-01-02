@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
-#include <stdlib.h>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -61,6 +60,7 @@ std::string solve() {
                 ret_middle = merge(ret_middle, std::string(mid));
         }
     }
+
     const auto ret_left = *std::max_element(left.begin(), left.end(), [](const std::string_view& s1, const std::string_view& s2){ return s1.size() < s2.size(); });
     if (!std::all_of(left.begin(), left.end(), [&ret_left](const std::string_view& s){ return ret_left.find(s) == 0; }))
         return not_found;
