@@ -55,7 +55,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ":\n"; solve(); std::cout << "\n";
+        std::cout << "Case #" << g << ":\n"; solve();
     }
 }
 
@@ -66,8 +66,43 @@ pascal_walk.exe < pascal_walk.in
 
 Input:
 
+4
+1
+4
+19
+27485960
 
 Output:
 
+Case #1:
+1 1
+Case #2:
+1 1
+2 1
+2 2
+3 3
+Case #3:
+1 1
+2 1
+2 2
+3 3
+3 2
+3 1
+4 1
+4 2
+4 3
+4 4
+5 5
+6 6
+7 7
+8 8
+Case #4:
+...
+25 24
+25 25
+26 26
+27 27
+..
+37 37
 
 */
