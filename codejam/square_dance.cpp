@@ -14,33 +14,21 @@ struct dancer_t
     int skill;
     int N, S, E, W;
     int dist_N, dist_S, dist_E, dist_W;
+    bool well_dancing;
 };
 
 int g_rows, g_cols;
 std::vector<std::vector<dancer_t>> g_board;
 
-bool quallify(const coord_t& coord)
+void quallify(dancer_t& d)
 {
     int sum{0}, cnt{0};
-    const auto& d = g_board[coord.first][coord.second];
-    if (d.N > 0) {
-        sum += d.N;
-        ++cnt;
-    }
-    if (d.S > 0) {
-        sum += d.S;
-        ++cnt;
-    }
-    if (d.E > 0) {
-        sum += d.E;
-        ++cnt;
-    }
-    if (d.W > 0) {
-        sum += d.W;
-        ++cnt;
-    }
+    if (d.N > 0) { sum += d.N; ++cnt; }
+    if (d.S > 0) { sum += d.S; ++cnt; }
+    if (d.E > 0) { sum += d.E; ++cnt; }
+    if (d.W > 0) { sum += d.W; ++cnt; }
 
-    return cnt == 0 || d.skill >= (double)sum / cnt;
+    d.well_dancing = cnt == 0 || d.skill >= (double)sum / cnt;
 }
 
 int64_t solve() {
@@ -51,7 +39,7 @@ int64_t solve() {
         for (int c = 0; c < g_cols; ++c)
             std::cin >> g_board[r][c].skill;
     // initialize
-    std::vector<coord_t> dancing;
+    std::vector<coord_t> still_dancing;
     int64_t ret{0}, survivors_skills{0};
     for (int r = 0; r < g_rows; ++r)
         for (int c = 0; c < g_cols; ++c) {
@@ -72,54 +60,59 @@ int64_t solve() {
                 d.S = g_board[r + 1][c].skill;
                 d.dist_S = 1;
             }
+            quallify(d);
             survivors_skills += d.skill;
-            dancing.emplace_back(r, c);
+            still_dancing.emplace_back(r, c);
         }
     // play rounds
     while (true) {
         ret += survivors_skills;
-        const auto victims = std::partition(dancing.begin(), dancing.end(), [](const coord_t& d){ return quallify(d); });
-        if (victims == dancing.end()) break;
+        const auto victims = std::partition(still_dancing.begin(), still_dancing.end(), [](const coord_t& d){ return g_board[d.first][d.second].well_dancing; });
+        if (victims == still_dancing.end()) break;
 
-        for (auto v = victims; v != dancing.end(); ++v) {
+        for (auto v = victims; v != still_dancing.end(); ++v) {
             const auto [r, c] = *v;
             const auto& d = g_board[r][c];
             survivors_skills -= d.skill;
             if (c > 0 && d.dist_W > 0) {
-                auto& wd = g_board[r][c - d.dist_W];
+                auto& w = g_board[r][c - d.dist_W];
                 if (d.dist_E > 0) {
-                    wd.E = d.E;
-                    wd.dist_E += d.dist_E;
+                    w.E = d.E;
+                    w.dist_E += d.dist_E;
                 } else
-                    wd.dist_E = wd.E = 0;
+                    w.dist_E = w.E = 0;
+                quallify(w);
             }
             if (c < g_cols - 1 && d.dist_E > 0) {
-                auto& ed = g_board[r][c + d.dist_E];
+                auto& e = g_board[r][c + d.dist_E];
                 if (d.dist_W > 0) {
-                    ed.W = d.W;
-                    ed.dist_W += d.dist_W;
+                    e.W = d.W;
+                    e.dist_W += d.dist_W;
                 } else
-                    ed.dist_W = ed.W = 0;
+                    e.dist_W = e.W = 0;
+                quallify(e);
             }
             if (r > 0 && d.dist_N > 0) {
-                auto& nd = g_board[r - d.dist_N][c];
+                auto& n = g_board[r - d.dist_N][c];
                 if (d.dist_S > 0) {
-                    nd.S = d.S;
-                    nd.dist_S += d.dist_S;
+                    n.S = d.S;
+                    n.dist_S += d.dist_S;
                 } else
-                    nd.dist_S = nd.S = 0;
+                    n.dist_S = n.S = 0;
+                quallify(n);
             }
             if (r < g_rows - 1 && d.dist_S > 0) {
-                auto& sd = g_board[r + d.dist_S][c];
+                auto& s = g_board[r + d.dist_S][c];
                 if (d.dist_S > 0) {
-                    sd.N = d.N;
-                    sd.dist_N += d.dist_N;
+                    s.N = d.N;
+                    s.dist_N += d.dist_N;
                 } else
-                    sd.dist_N = sd.N = 0;
+                    s.dist_N = s.N = 0;
+                quallify(s);
             }
         }
 
-        dancing.erase(victims, dancing.end());
+        still_dancing.erase(victims, still_dancing.end());
     }
 
     return ret;
@@ -145,8 +138,23 @@ square_dance.exe < square_dance.in
 
 Input:
 
+4
+1 1
+15
+3 3
+1 1 1
+1 2 1
+1 1 1
+1 3
+3 1 2
+1 3
+1 2 3
 
 Output:
 
+Case #1: 15
+Case #2: 16
+Case #3: 14
+Case #4: 14
 
 */
