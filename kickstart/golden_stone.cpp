@@ -16,8 +16,8 @@ using vec = std::vector<uint16_t>;
 
 int_t g_V, g_E, g_S, g_R;
 int64_t g_max_cost = pow(10, 12);
+std::vector<vec> g_city2cities;
 std::vector<vec> g_city2stones;
-std::vector<vec> g_city, g_dist;
 std::vector<vec> g_stone2recipes;
 std::vector<vec> g_recipe_ingridients;
 std::vector<int_t> g_recipe_produces;
@@ -26,14 +26,15 @@ void parse_input()
 {
     int_t c1, c2;
     std::cin >> g_V >> g_E >> g_S >> g_R;
-    g_city.assign(g_V, vec{});
-    g_city2stones.assign(g_V, {});
-    g_stone2recipes.assign(g_S, {});
+
+    g_city2cities.assign(g_V, {});
     for (int i = 0; i < g_E; ++i) {
         std::cin >> c1 >> c2; --c1; --c2;
-        g_city[c1].push_back(c2);
-        g_city[c2].push_back(c1);
+        g_city2cities[c1].push_back(c2);
+        g_city2cities[c2].push_back(c1);
     }
+
+    g_city2stones.assign(g_V, {});
     for (int i = 0; i < g_V; ++i) {
         std::cin >> c1;
         for (int j = 0; j < c1; ++j) {
@@ -41,7 +42,9 @@ void parse_input()
             g_city2stones[i].push_back(c2);
         }
     }
+
     g_recipe_produces.resize(g_R);
+    g_stone2recipes.assign(g_S, {});
     g_recipe_ingridients.assign(g_R, {});
     for (int i = 0; i < g_R; ++i) {
         std::cin >> c1;
@@ -76,7 +79,7 @@ int64_t solve()
         const int_t stone = cell.second.first;
         const int_t city = cell.second.second;
         // try transport stone to nearby city
-        for (const auto adj : g_city[city])
+        for (const auto adj : g_city2cities[city])
             if (cell_cost + 1 < cost[stone][adj]) {
                 cost[stone][adj] = cell_cost + 1;
                 pq.push({cell_cost + 1, {stone, adj}});
