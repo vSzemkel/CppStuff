@@ -65,7 +65,7 @@ int main(int, char**)
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
         std::cout << "Case #" << g << ": " << std::setprecision(15) << solve() << "\n";
-        //std::cout << "Case #" << g << ": "; solve(); std::cout << "\n";
+        //std::cout << "Case #" << g << ": "; solve();
     }
 }
 
