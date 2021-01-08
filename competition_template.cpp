@@ -27,7 +27,7 @@
 #include <vector>
 
 // $TASKNAME$
-// https://
+// 
 
 const auto big64 = std::numeric_limits<int64_t>::max();
 template <typename T> using vec = std::vector<T>;
@@ -70,8 +70,13 @@ int main(int, char**)
 }
 
 /*
+
+Compile:
 clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.o
+
+Run:
+py.exe interactive_runner.py py.exe $TASKNAME$_testing_tool.py 1 -- $TASKNAME$.exe
 $TASKNAME$.exe < $TASKNAME$.in
 
 Input:

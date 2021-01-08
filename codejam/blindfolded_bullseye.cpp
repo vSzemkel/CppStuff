@@ -42,13 +42,22 @@ void solve() {
     // find hit
     int x0{0}, y0{0};
     std::array<std::pair<int, int>, 8> test = {std::make_pair(-5, 0), {-5, -5}, {0, -5}, {5, -5}, {5, 0}, {5, 5}, {0, 5}, {-5, 5}};
-    for (const auto& [x, y] : test)
-        if (ask(g_max / 10 * x, g_max / 10 * y) == answer_t::hit) {
+    for (const auto& [x, y] : test) {
+        const auto ans = ask(g_max / 10 * x, g_max / 10 * y);
+        if (ans == answer_t::center) return;
+        if (ans == answer_t::hit) {
             x0 = g_max / 10 * x;
             y0 = g_max / 10 * y;
             break;
         }
+    }
     g_debug << "Found point within the dartboard\n";
+    // correct edge cases
+    const int corr = g_max / 5;
+    if (ask( g_max, y0) == answer_t::hit) y0 += corr;
+    if (ask(-g_max, y0) == answer_t::hit) y0 += corr;
+    if (ask(x0,  g_max) == answer_t::hit) x0 += corr;
+    if (ask(x0, -g_max) == answer_t::hit) x0 += corr;
     // find left
     int l{-g_max}, r{x0};
     while (l + 1 < r) {
@@ -121,12 +130,5 @@ int main(int, char**)
 /*
 clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 blindfolded_bullseye.cpp -o blindfolded_bullseye.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 blindfolded_bullseye.cpp -o blindfolded_bullseye.o
-cls & py.exe interactive_runner.py py.exe blindfolded_bullseye_testing_tool.py 1 -- blindfolded_bullseye.exe
-
-Input:
-
-
-Output:
-
-
+py.exe interactive_runner.py py.exe blindfolded_bullseye_testing_tool.py 1 -- blindfolded_bullseye.exe
 */
