@@ -34,9 +34,11 @@ template <typename T> using vec = std::vector<T>;
 template <typename T> using vec2 = std::vector<std::vector<T>>;
 std::ofstream g_debug("$TASKNAME$.log");
 vec<int64_t> g_input, g_partial;
+size_t g_rows, g_cols, g_size;
 vec<bool> g_marked;
-size_t g_size;
 
+const auto col = [](const size_t pos) noexcept { return pos % g_cols; };
+const auto row = [](const size_t pos) noexcept { return pos / g_cols; };
 template <typename T> std::vector<T> fill(const size_t size){std::vector<T> cont(size);std::copy_n(std::istream_iterator<T>{std::cin},size,cont.begin());return cont;};
 template <typename T> void fill2(std::vector<std::vector<T>>& cont, int& rows, int& cols){std::cin>>rows>>cols;cont.resize(rows);for(auto& r:cont) r=fill<T>(cols);};
 template <typename T> void fill2sq(std::vector<std::vector<T>>& cont, int& size){std::cin>>size;cont.resize(size);for(auto& r:cont) r=fill<T>(size);};
