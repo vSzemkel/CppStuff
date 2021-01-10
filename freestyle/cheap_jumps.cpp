@@ -24,7 +24,7 @@ void solve() {
         pq.push(jump_t{input[i], 0, i});
     visited[0] = true;
     while (true) {
-        const jump_t jump = pq.top();
+        const jump_t& jump = pq.top();
         const size_t from = std::get<1>(jump);
         const size_t to = std::get<2>(jump);
         pq.pop();
@@ -46,7 +46,6 @@ void solve() {
         path.push_back(slot);
         slot = prev[slot];
     }
-
 
     std::cout << ret << "\n0 -> ";
     for (auto it = path.rbegin(); it != path.rend(); ++it)
@@ -88,12 +87,6 @@ Input:
 
 Output:
 
-Case #1: 25
-0 -> 2 -> 5 -> 7 -> 9 -> END
-Case #2: 4
-0 -> 1 -> 7 -> END
-
-C:\GitHub\GCC-test>cheap_jumps.exe < cheap_jumps.in
 Case #1: 25
 0 -> 2 -> 5 -> 7 -> 9 -> END
 Case #2: 4
