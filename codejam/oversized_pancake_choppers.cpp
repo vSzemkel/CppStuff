@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
+#include <numeric>
 #include <set>
 #include <utility>
 #include <vector>
@@ -27,22 +28,16 @@ const auto can_slice_target = [](const slice_t& t) noexcept -> bool {
 };
 
 int solve() {
-    std::map<slice_t, int> slice_index;
-    std::vector<std::set<int>> fully_usable_sectors; // slice index -> set of sector indexes
     std::sort(g_sectors.begin(), g_sectors.end());
 
-    int si{0};
     const auto comp_slice = [](const slice_t& s1, const slice_t& s2){ return s1.first * s2.second < s2.first * s1.second; };
     std::set<slice_t, decltype(comp_slice)> target_sizes(std::move(comp_slice));
+    std::map<slice_t, std::set<int>> fully_usable_sectors; // slice -> set of sector indexes
     for (int64_t i = 1; i <= g_D; ++i)
         for (int s = 0; s < g_N; ++s) {
             const auto gd = std::gcd(g_sectors[s], i);
             const auto empres = target_sizes.emplace(g_sectors[s] / gd, i / gd);
-            if (empres.second) {
-                slice_index[*empres.first] = si++;
-                fully_usable_sectors.push_back({});
-            }
-            fully_usable_sectors[slice_index[*empres.first]].insert(s);
+            fully_usable_sectors[*empres.first].insert(s);
         }
 
     int ret{g_D - 1};
@@ -51,7 +46,7 @@ int solve() {
         int ca{g_D};
         int64_t served{0};
         const auto chunk = *tit;
-        for (const auto si : fully_usable_sectors[slice_index[chunk]]) {
+        for (const auto si : fully_usable_sectors[chunk]) {
             const auto slice = g_sectors[si];
             if (served * chunk.second < g_D * chunk.first) {
                 served += slice;
