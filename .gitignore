@@ -5,6 +5,8 @@
 *.dSYM/
 a.*
 *.o
+.vs/
+.vscode/
 .vscode/ipch/
 *cppcheck-build*
-
+out/
