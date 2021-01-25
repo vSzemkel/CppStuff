@@ -6,7 +6,7 @@
 #include <vector>
 
 // translate expression of the form: ab{1,2}c{mn,op}d
-// enumerating tokens in perenthesis
+// enumerating tokens in perentheses
 
 char g_patern[] = "ab{1,2,3}c{mn,op}d";
 
