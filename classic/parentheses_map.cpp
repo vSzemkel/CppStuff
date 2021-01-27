@@ -63,6 +63,17 @@ std::vector<int> solve_time(const std::string& ps)
     return ret;
 }
 
+std::vector<int> solve_depth(const std::string& ps)
+{
+    int depth{0};
+    const auto size = (int)ps.size();
+    std::vector<int> ret(size);
+    for (int i = 0; i < size; ++i)
+        ret[i] = (ps[i] == '(' ? depth++ : --depth);
+    assert(depth == 0);
+    return ret;
+}
+
 std::string generate(const int n)
 {
     std::string ret;
@@ -84,15 +95,21 @@ void fuzz()
     const std::vector<int> space = solve_space(ps);
     const std::vector<int> time = solve_time(ps);
 
-    std::cout << ps << "\n";
-    print(space);
-    std::cout << "\n";
+    //std::cout << ps << "\n";
+    //print(space);
+    //std::cout << "\n";
 
     assert(space == time);
 }
 
 int main(int, char**)
 {
+    const auto test = generate(20);
+    std::cout << test << "\n";
+    print(solve_depth(test));
+    print(solve_time(test));
+    std::cout << "\n";
+
     int no_of_cases = 100;
     for (int g = 1; g <= no_of_cases; ++g)
         fuzz();
