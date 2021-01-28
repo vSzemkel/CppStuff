@@ -2,6 +2,7 @@
 ID: marcin.8
 LANG: C++
 TASK: ride
+CONTENT: https://train.usaco.org/usacoprob2?a=F3EJ5Ggwb1V&S=ride
 */
 
 #include <iostream>
@@ -30,10 +31,6 @@ int main(int, char**)
 Compile:
 clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 ride.cpp -o ride.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 ride.cpp -o ride.o
-
-Run:
-py.exe interactive_runner.py py.exe ride_testing_tool.py 1 -- ride.exe
-ride.exe < ride.in
 
 Input:
 
