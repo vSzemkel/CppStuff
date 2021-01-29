@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-// lexicographical_difference
+// Lexicographical difference
 // https://en.wikipedia.org/wiki/Levenshtein_distance
 
 int levenstine(const std::string& s1, const std::string& s2)
@@ -11,8 +11,8 @@ int levenstine(const std::string& s1, const std::string& s2)
     const int size1 = s1.size();
     const int size2 = s2.size();
     std::vector<std::vector<int>> cost(size1 + 1, std::vector<int>(size2 + 1));
-    for (int i =  1; i <= size1; ++i) cost[i][0] = i;
-    for (int i =  1; i <= size2; ++i) cost[0][i] = i;
+    for (int r = 1; r <= size1; ++r) cost[r][0] = r;
+    for (int c = 1; c <= size2; ++c) cost[0][c] = c;
     for (int r = 1; r <= size1; ++r)
         for (int c = 1; c <= size2; ++c) {
             const int substitution_cost = (s1[r - 1] == s2[c - 1] ? 0 : 1);
