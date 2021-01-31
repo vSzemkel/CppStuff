@@ -78,6 +78,21 @@ g++ -Wall -Wextra -ggdb3 -Og -std=c++17 naming_compromise.cpp -o naming_compromi
 Run:
 naming_compromise.exe < naming_compromise.in
 
+Analysis:
+
+0      X   Y   Z   Z   Y
+   0   1   2   3   4   5
+Z  1   1   2   2   3   4
+Z  2   2   2   2   2   3  
+Y  3   3   2   3   3   2
+Z  4   4   3   2   3   3
+X  5   4   3   3   3   4
+
+
+0      C   B   A
+   0   1   2   3
+A  1   1   2   2
+
 Input:
 
 8
