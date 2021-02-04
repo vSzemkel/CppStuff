@@ -2,7 +2,7 @@
 ID: marcin.8
 LANG: C++
 TASK: friday
-CONTENT: https://train.usaco.org/usacoprob2?a=F3EJ5Ggwb1V&S=ride
+PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=F3EJ5Ggwb1V&S=ride
 */
 
 #include <array>

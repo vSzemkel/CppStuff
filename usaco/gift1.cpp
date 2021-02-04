@@ -2,7 +2,7 @@
 ID: marcin.8
 LANG: C++
 TASK: gift1
-CONTENT: https://train.usaco.org/usacoprob2?a=CcFbOqTd1uM&S=gift1
+PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=CcFbOqTd1uM&S=gift1
 */
 
 #include <iostream>
