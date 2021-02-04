@@ -27,7 +27,7 @@ int solve() // complicated, in-place
     while (ret < size && (necklace[ret] == 'w' || necklace[ret] == c))
         ++ret;
     if (ret == size)
-        return ret;
+        return size;
     else
         std::rotate(necklace.begin(), necklace.begin() + ret, necklace.end());
 
@@ -60,19 +60,25 @@ int solve_smart() // simple, O(N) additional memory
     int size; task_in >> size;
     std::string necklace; task_in >> necklace;
 
-    int ret{0};
+    int ret{0}, pos{0};
     necklace += necklace;
-    for (int i = 0; i < size; ++i) {
-        int pos{i};
-        while (pos < i + size && necklace[pos] == 'w') ++pos;
-        if (pos == i + size) return size;
-        const char c = necklace[pos];
-        while (pos < i + size && (necklace[pos] == 'w' || necklace[pos] == c)) ++pos;
-        if (pos == i + size) return size;
-        const char c2 = necklace[pos];
-        while (pos < i + size && (necklace[pos] == 'w' || necklace[pos] == c2)) ++pos;
-        if (pos == i + size) return size;
-        ret = std::max(ret, pos - i);
+    while (pos < size && necklace[pos] == 'w') ++pos;
+    if (pos == size) return size;
+    const char c = necklace[pos];
+    while (pos < size && (necklace[pos] == 'w' || necklace[pos] == c)) ++pos;
+    if (pos == size) return size;
+
+    int first_chunk{pos}, i{pos};
+    while (i < size) {
+        const char c2 = necklace[i];
+        while (i < pos + size && (necklace[i] == 'w' || necklace[i] == c2)) ++i;
+        if (i == pos + size) return size;
+        ret = std::max(ret, first_chunk + i - pos);
+
+        int bonus{0};
+        while (pos - bonus - 1 > 0 && necklace[pos - bonus - 1] == 'w') ++bonus;
+        first_chunk = i - pos + bonus;
+        pos = i;
     }
 
     return ret;
