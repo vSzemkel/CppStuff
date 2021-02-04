@@ -54,39 +54,42 @@ int solve() {
     for (int i = 0; i < N; ++i) {
         const auto dprev = i == 0 ? hi : X[i] - X[i - 1];
         const auto dcurr = X[i + 1] - X[i];
+        const auto old_lo = lo;
         sum += sign * dcurr;
         sign *= -1;
         lo = std::max(lo, dprev - hi);
         lo = std::min(lo, dcurr);
-        hi = std::min(hi, dprev - lo);
+        hi = std::min(hi, dprev - old_lo);
         hi = std::min(hi, dcurr);
     }
 
     if (N % 2 == 0) {
         if (sum == 0 && lo <= hi) return N;
     } else
-        if (0 <= sum && sum <= 2 * dinit) return N;
+        if (0 <= sum && sum <= 2 * dinit && lo <= hi) return N;
 
     // need more then N thermomenters
     X.resize(2 * N + 1);
     for (int i = 1; i < N; ++i)
         X[N + i] = K + X[i];
 
-    std::vector<int> transfer(N, 1);
+    std::vector<int> transfer(N);
     for (int i = 0; i < N; ++i) {
-        lo = 0; hi = X[i + 1] - X[i];
-        for (int j = i; j < i + N; ++j) {
-            const auto dprev = j == 0 ? hi : X[j] - X[j - 1];
+        lo = 0; hi = X[N + i] - X[N + i - 1];
+        auto dprev = hi;
+        int j = i;
+        for (; j < i + N; ++j) {
             const auto dcurr = X[j + 1] - X[j];
+            const auto old_lo = lo;
             lo = std::max(lo, dprev - hi);
             lo = std::min(lo, dcurr);
-            hi = std::min(hi, dprev - lo);
+            hi = std::min(hi, dprev - old_lo);
             hi = std::min(hi, dcurr);
-            if (lo >= hi) {
-                transfer[i] = j - i + 1;
+            if (lo > hi)
                 break;
-            }
+            dprev = dcurr;
         }
+        transfer[i] = j - i + 1;
     }
 
     int ret{2 * N};
