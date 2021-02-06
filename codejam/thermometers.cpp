@@ -5,7 +5,7 @@
 
 // Thermometers
 // https://codingcompetitions.withgoogle.com/codejam/round/000000000019ff7e/000000000037776b#analysis
-
+// This solution is inspiered by ecnerwala
 
 /*
 
@@ -23,10 +23,6 @@ if (N % 2 == 0)
     0 = X1 - X2 + .. XN-1 - XN
 else
     2d1 = X1 - X2 + .. XN-2 - XN-1 + XN
-
-
-lo = max(lo, X - hi)
-hi = min(hi, X - lo)
 
 */
 
@@ -48,9 +44,9 @@ int solve() {
     // try to construct optimal solution: N
     int sign{1};
     int64_t dinit = K - X[N - 1];
-    int64_t sum{0}, lo{0}, hi{dinit}, dprev{dinit};
+    int64_t sum{0}, lo{0}, hi{dinit}, dprev{dinit}, dcurr;
     for (int i = 0; i < N; ++i) {
-        const auto dcurr = X[i + 1] - X[i];
+        auto dcurr = X[i + 1] - X[i];
         const auto old_lo = lo;
         sum += sign * dcurr;
         sign *= -1;
@@ -59,14 +55,20 @@ int solve() {
         dprev = dcurr;
     }
 
+    // close the circle
+    const auto old_lo = lo;
+    dcurr = X[1];
+    lo = std::min(dcurr, dprev - hi);
+    hi = std::min(dcurr, dprev - old_lo);
+
     if (N % 2 == 0) {
         if (sum == 0 && lo < hi) return N;
     } else
-        if (0 <= sum && sum <= 2 * dinit && lo < hi) return N;
+        if (2 * lo < sum && sum < 2 * hi) return N;
 
     // need more then N thermomenters
     X.resize(2 * N + 1);
-    for (int i = 1; i < N; ++i)
+    for (int i = 1; i <= N; ++i)
         X[N + i] = K + X[i];
 
     std::vector<int> transfer(N);
@@ -74,7 +76,7 @@ int solve() {
         lo = 0; hi = X[N + i] - X[N + i - 1];
         auto dprev = hi;
         int j = i;
-        for (; j < i + N; ++j) {
+        while (j < i + N) {
             const auto dcurr = X[j + 1] - X[j];
             const auto old_lo = lo;
             lo = std::min(dcurr, dprev - hi);
@@ -82,8 +84,9 @@ int solve() {
             if (lo >= hi)
                 break;
             dprev = dcurr;
+            ++j;
         }
-        transfer[i] = j - i + 1;
+        transfer[i] = j - i;
     }
 
     int ret{2 * N};
@@ -96,6 +99,7 @@ int solve() {
         }
         ret = std::min(ret, thermo);
     }
+
     return ret;
 }
 
@@ -124,12 +128,6 @@ thermometers.exe < thermometers.in
 Input:
 
 5
-16 8
-1 3 5 7 10 11 13 15
-333 333 333 333 333 333 333 333
-10 3
-1 5 9
-184 200 330
 2 2
 0 1
 184 330
@@ -137,15 +135,21 @@ Input:
 0 1
 184 330
 10 3
-0 3 8
-333 333 333
+1 5 9
+184 200 330
+4 3
+0 1 2
+333 334 335
+4 3
+0 2 3
+333 334 335
 
 Output:
 
-Case #1: 9
+Case #1: 2
 Case #2: 3
-Case #3: 2
-Case #4: 3
+Case #3: 3
+Case #4: 4
 Case #5: 4
 
 */
