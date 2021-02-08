@@ -111,8 +111,8 @@ int graph_t::bfs()
             if (n._letters & hull) {
                 if (depth > 2) {
                     const auto node_hash = hash(_start, n._id);
-                    const auto cached = _cache.find(node_hash);
-                    if (cached == _cache.end())
+                    const auto cached2 = _cache.find(node_hash);
+                    if (cached2 == _cache.end())
                         _cache[node_hash] = depth;
                 }
 
@@ -148,7 +148,6 @@ void smart() {
 
     uint16_t v, p, start, target;
     std::cin >> v >> p;
-    std::string name;
     std::vector<std::string> names(v);
     for (auto& name : names) {
         std::cin >> name;

@@ -92,12 +92,13 @@ uint64_t solve() {
             upper_bound = K - 1;
         }
         // try to find better with DFS
-        std::vector<std::tuple<int, uint64_t, move_t>> dfs;
+        std::vector<std::tuple<int, int64_t, move_t>> dfs;
         dfs.emplace_back(start, 0, move_t::any);
         while (!dfs.empty()) {
-            const int pos = std::get<0>(dfs.back());
-            uint64_t path_cost = std::get<1>(dfs.back());
-            move_t last = std::get<2>(dfs.back());
+            const auto& last_item = dfs.back();
+            const int pos = std::get<0>(last_item);
+            int64_t path_cost = std::get<1>(last_item);
+            move_t last = std::get<2>(last_item);
             bool transfered = path_cost < 0;
             if (transfered) path_cost *= -1;
             dfs.pop_back();
@@ -115,7 +116,7 @@ uint64_t solve() {
             }
             if (last != move_t::transfer) {
                 const auto new_cost = path_cost + cost[{pos, pos + transfer[pos]}];
-                if (new_cost < ca) dfs.emplace_back(pos + transfer[pos], new_cost, move_t::transfer);
+                if (new_cost < ca) dfs.emplace_back(pos + transfer[pos], -new_cost, move_t::transfer);
             }
         }
         ret += ca;

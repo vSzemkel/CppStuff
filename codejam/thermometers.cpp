@@ -44,9 +44,9 @@ int solve() {
     // try to construct optimal solution: N
     int sign{1};
     int64_t dinit = K - X[N - 1];
-    int64_t sum{0}, lo{0}, hi{dinit}, dprev{dinit}, dcurr;
+    int64_t sum{0}, lo{0}, hi{dinit}, dprev{dinit};
     for (int i = 0; i < N; ++i) {
-        auto dcurr = X[i + 1] - X[i];
+        const auto dcurr = X[i + 1] - X[i];
         const auto old_lo = lo;
         sum += sign * dcurr;
         sign *= -1;
@@ -57,7 +57,7 @@ int solve() {
 
     // close the circle
     const auto old_lo = lo;
-    dcurr = X[1];
+    const auto dcurr = X[1];
     lo = std::min(dcurr, dprev - hi);
     hi = std::min(dcurr, dprev - old_lo);
 

@@ -24,8 +24,9 @@ void solve() // O((m+n)logm)
 {
     int sza, szb;
     std::cin >> sza >> szb;
-    auto g_a = fill<int>(sza);
-    auto ab = g_b = fill<int>(szb);
+    g_a = fill<int>(sza);
+    g_b = fill<int>(szb);
+    auto ab = g_b;
 
     const int suma = std::accumulate(g_a.begin(), g_a.end(), 0);
     const int sumb = std::accumulate(g_b.begin(), g_b.end(), 0);

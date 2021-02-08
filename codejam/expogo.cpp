@@ -87,11 +87,11 @@ void solve2(int x, int y) // O(x + y)
     }
 
     if (found)
-        for (int i = 1; i <= sum; i <<= 1) {
-            if (RX & i) { std::cout << (g_rev_x ? 'W' : 'E'); continue; }
-            if (LX & i) { std::cout << (g_rev_x ? 'E' : 'W'); continue; }
-            if (TY & i) { std::cout << (g_rev_y ? 'S' : 'N'); continue; }
-            if (BY & i) { std::cout << (g_rev_y ? 'N' : 'S'); continue; }
+        for (int j = 1; j <= sum; j <<= 1) {
+            if (RX & j) { std::cout << (g_rev_x ? 'W' : 'E'); continue; }
+            if (LX & j) { std::cout << (g_rev_x ? 'E' : 'W'); continue; }
+            if (TY & j) { std::cout << (g_rev_y ? 'S' : 'N'); continue; }
+            if (BY & j) { std::cout << (g_rev_y ? 'N' : 'S'); continue; }
         }
     else
         std::cout << "IMPOSSIBLE";
