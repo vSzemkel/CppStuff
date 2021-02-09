@@ -42,10 +42,10 @@ int solve()
         for (int c = 0; c < size; ++c)
             task_in >> dst[r][c];
 
-    auto r90 = rotate90(src, size);
-    auto r180 = rotate90(r90, size);
-    auto r270 = rotate90(r180, size);
-    auto mh = mirror_h(src, size);
+    const auto r90 = rotate90(src, size);
+    const auto r180 = rotate90(r90, size);
+    const auto r270 = rotate90(r180, size);
+    const auto mh = mirror_h(src, size);
 
     if (r90 == dst) return 1;
     if (r180 == dst) return 2;
