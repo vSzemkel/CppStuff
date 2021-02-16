@@ -134,14 +134,4 @@ Compile:
 clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 modnum.cpp -o modnum.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 modnum.cpp -o modnum.o
 
-Run:
-py.exe interactive_runner.py py.exe modnum_testing_tool.py 1 -- modnum.exe
-modnum.exe < modnum.in
-
-Input:
-
-
-Output:
-
-
 */
