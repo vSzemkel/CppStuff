@@ -3,6 +3,7 @@
 #include <limits>
 #include <queue>
 
+// Shortest Path Faster Algorithm (SPFA)
 // for a given graph with positive length edges find
 // the shortest path between two arbitrary vertexes
 // special case: minimal spanning tree on input

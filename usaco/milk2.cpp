@@ -21,7 +21,7 @@ enum class event_t {
 
 using sweep_t = std::pair<int, event_t>; // <TIME, TYPE>
 
-int main(int, char**) // O(NlogN) better for small N
+int main(int, char**) // O(NlogN) CPU + O(N) MEMORY, better for small N << max
 {
     int N; task_in >> N;
     std::vector<sweep_t> events(2 * N);

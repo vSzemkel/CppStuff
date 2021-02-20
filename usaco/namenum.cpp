@@ -41,7 +41,7 @@ int main(int, char**)
         task_out << "NONE\n";
 }
 
-void not_so_smart() // but better for huge dict
+void for_huge_dict()
 {
     std::unordered_map<char, std::vector<char>> mapping = {
         {'2', {'A', 'B', 'C'}},

@@ -49,13 +49,23 @@ int with_partition(int n)
     return g_coll.front();
 }
 
+int with_stl(int n) 
+{
+    --n; // the first one has really index == 0
+    std::nth_element(g_coll.begin(), g_coll.begin() + n, g_coll.end());
+    return g_coll[n];
+}
+
 int main(int argc, char* argv[])
 {
     init();
-    std::cout << "512th lowest element is: " << with_heap(512) << "\n";
+    std::cout << "512nd lowest element is: " << with_heap(512) << "\n";
 
     init();
     std::cout << "1039561st lowest element is: " << with_partition(1039561) << "\n";
+
+    init();
+    std::cout << "1409265th lowest element is: " << with_stl(1409265) << "\n";
 
     return 0;
 }

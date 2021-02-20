@@ -34,18 +34,6 @@ struct cover_query {
             nodes[i].node_weight = nodes[2 * i].node_weight + nodes[2 * i + 1].node_weight;
     }
 
-    int range_query(int l, int r) const { // range [l, r)
-        int ret{0};
-        for (l += offset, r += offset; l < r; l >>= 1, r >>= 1) { 
-            if (l & 1)
-                ret += nodes[l++].node_weight; 
-            if (r & 1)  
-                ret += nodes[--r].node_weight; 
-        }
-
-        return ret;
-    }
-
     void change(int begin, int end, event_t ev) {
         _change(1, 0, offset, begin, end, (int)ev);
     }
