@@ -121,6 +121,7 @@ struct modnum_t {
     int value;
 };
 
+template <int BASE = 31> // 53 for mixed case
 class string_hasher
 {
     using modn_t = modnum_t<998244353>;
@@ -170,7 +171,6 @@ class string_hasher
 
     int _size;
     std::vector<modn_t> _prefix_hash;
-    static constexpr int BASE = 31; // 53 for mixed case
     static inline std::vector<modn_t> POWERS;
 };
 

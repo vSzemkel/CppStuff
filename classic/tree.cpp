@@ -151,12 +151,12 @@ int main(int argc, char* argv[])
 {
     init();
 
-    std::cout << "Nodes count: " << g_tree.size() << "\n";
-    std::cout << "Root paths sum: " << g_tree.root_paths_sum() << "\n";
-    std::cout << "Subtrees paths sum: " << g_tree.subtrees_paths_sum() << "\n";
-    std::cout << "Sum of paths to 3: " << g_tree.count_paths_to(3) << "\n";
-    std::cout << "Lowest common ancestor of 7 and 10: " << g_tree.find_lca(7, 10)->label() << "\n";
-    std::cout << "Distance between 6 and 8: " << g_tree.distance(6, 8) << "\n";
+    std::cout << "Nodes count: " << g_tree.size() << '\n';
+    std::cout << "Root paths sum: " << g_tree.root_paths_sum() << '\n';
+    std::cout << "Subtrees paths sum: " << g_tree.subtrees_paths_sum() << '\n';
+    std::cout << "Sum of paths to 3: " << g_tree.count_paths_to(3) << '\n';
+    std::cout << "Lowest common ancestor of 7 and 10: " << g_tree.find_lca(7, 10)->label() << '\n';
+    std::cout << "Distance between 6 and 8: " << g_tree.distance(6, 8) << '\n';
 }
 
 /*
