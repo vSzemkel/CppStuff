@@ -23,7 +23,7 @@ int main(int, char**)
 {
     std::string comet, group;
     task_in >> comet >> group;
-    task_out << (decrypt(comet) == decrypt(group) ? "GO" : "STAY") << "\n";
+    task_out << (decrypt(comet) == decrypt(group) ? "GO" : "STAY") << '\n';
 }
 
 /*

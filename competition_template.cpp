@@ -54,7 +54,7 @@ int64_t partial_sum(const int i, const int j){int64_t ret{0};for(int k=j+1;k>0;k
 
 
 
-int64_t solve() {
+static int64_t solve() {
     return rand_in_range((int)big64);
 }
 
@@ -75,7 +75,7 @@ int main(int, char**)
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
+clang++.exe -Wall -Wextra -g -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.o
 
 Run:
