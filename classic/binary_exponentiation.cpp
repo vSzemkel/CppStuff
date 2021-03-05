@@ -29,14 +29,4 @@ Compile:
 clang++.exe -Wall -Wextra -g -O0 -std=c++17 binary_exponentiation.cpp -o binary_exponentiation.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 binary_exponentiation.cpp -o binary_exponentiation.o
 
-Run:
-py.exe interactive_runner.py py.exe binary_exponentiation_testing_tool.py 1 -- binary_exponentiation.exe
-binary_exponentiation.exe < binary_exponentiation.in
-
-Input:
-
-
-Output:
-
-
 */

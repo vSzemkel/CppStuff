@@ -9,24 +9,29 @@
 // Given two arrays of integers, find a pair of values (one value from each array)
 // that you can swap to give the two arrays the same sum
 
+bool g_swapped;
 std::vector<int> g_a, g_b;
 
 template <typename T> std::vector<T> fill(const size_t size){ std::vector<T> cont(size); std::copy_n(std::istream_iterator<T>{std::cin}, size, cont.begin()); return cont; };
 
-void print(const int a, const int b)
+static void print(int posa, int valb)
 {
-    int posb{0};
-    while (g_b[posb] != b) ++posb;
-    std::cout << "{" << a << ", " << posb << "}";
+    int posb = std::find(g_b.begin(), g_b.end(), valb) - g_b.begin();
+    if (g_swapped) std::swap(posa, posb);
+    std::cout << "{" << posa << ", " << posb << "}";
 }
 
-void solve() // O((m+n)logm)
+static void solve() // O((M+N)log(min(M,N)))
 {
     int sza, szb;
     std::cin >> sza >> szb;
     g_a = fill<int>(sza);
     g_b = fill<int>(szb);
-    auto ab = g_b;
+    g_swapped = sza < szb;
+    if (g_swapped) {
+        std::swap(sza, szb);
+        std::swap(g_a, g_b);
+    }
 
     const int suma = std::accumulate(g_a.begin(), g_a.end(), 0);
     const int sumb = std::accumulate(g_b.begin(), g_b.end(), 0);
@@ -34,17 +39,13 @@ void solve() // O((m+n)logm)
     int diff = suma - sumb;
     if (diff % 2 == 0) {
         diff >>= 1;
+        auto ab = g_b;
         std::sort(ab.begin(), ab.end());
         for (int posa = 0; posa < sza; ++posa) {
             const auto vala = g_a[posa];
-            const auto it1 = std::lower_bound(ab.begin(), ab.end(), vala - diff);
-            if (it1 < ab.end() && diff == vala - *it1) {
-                print(posa, *it1);
-                return;
-            }
-            const auto it2 = std::lower_bound(ab.begin(), ab.end(), vala + diff);
-            if (it2 < ab.end() && diff == *it2 - vala) {
-                print(posa, *it2);
+            const auto it = std::lower_bound(ab.begin(), ab.end(), vala - diff);
+            if (it < ab.end() && diff == vala - *it) {
+                print(posa, *it);
                 return;
             }
         }
@@ -91,7 +92,7 @@ Input:
 Output:
 
 Case #1: {0, 0}
-Case #2: {0, 4}
+Case #2: {2, 0}
 Case #3: IMPOSSIBLE
 Case #4: {1, 7}
 
