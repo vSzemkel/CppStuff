@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -76,9 +77,9 @@ static void solve() {
         // append not scored brokens
         const int end = prev->start + prev->length;
         if (end < N) {
-            const int size = N - end;
-            sections.push_back(section_t{end, size, size, 0, marker});
-            g_debug << "Adding extra broken section: " << end << " " << size << '\n';
+            sections.push_back(section_t{end, chunk, chunk, 0, marker});
+            prev = &sections.back();
+            g_debug << "Adding extra broken section from: " << end << '\n';
         }
         // trim the last one if needed
         if (overflow != 0) {
@@ -190,6 +191,57 @@ static void solve() {
     if (answer == "-1") exit(0);
 }
 
+void ecnerwala()
+{
+    using namespace std;
+    string S[5];
+    for (int i = 0; i < 1024; i++) {
+        for (int z = 0; z < 5; z++) {
+            S[z] += char('0' + ((i >> z) & 1));
+        }
+    }
+
+    int N, B, F; cin >> N >> B >> F;
+    assert(B <= 15);
+
+    string Q[5];
+    for (int q = 0; q < 5; q++) {
+        cout << S[q].substr(0, N) << endl << flush;
+        cin >> Q[q];
+        if (Q[q] == "-1") exit(0);
+        assert(int(Q[q].size()) == N - B);
+        Q[q] += S[q].substr(N);
+        assert(int(Q[q].size()) == 1024 - B);
+    }
+
+    vector<int> bads;
+    int nxt = 0;
+    for (int i = 0; i < 1024 - B; i++) {
+        int v = 0;
+        for (int q = 0; q < 5; q++) {
+            v |= int(Q[q][i] - '0') << q;
+        }
+        while ((nxt & 31) != v) {
+            bads.push_back(nxt);
+            nxt++;
+        }
+        nxt++;
+    }
+
+    while (nxt != 1024) {
+        bads.push_back(nxt);
+        nxt++;
+    }
+
+    assert(int(bads.size()) == B);
+    for (int i = 0; i < B; i++) {
+        cout << bads[i] << " \n"[i+1==B];
+    }
+
+    int verdict; std::cin >> verdict;
+    if (verdict == -1) exit(0);
+}
+
 int main(int, char**)
 {
     std::ios_base::sync_with_stdio(false);
@@ -201,8 +253,6 @@ int main(int, char**)
     for (int g = 1; g <= no_of_cases; ++g) {
         solve();
     }
-
-    exit(0);
 }
 
 /*
@@ -213,11 +263,5 @@ g++ -Wall -Wextra -ggdb3 -Og -std=c++17 dat_bae.cpp -o dat_bae.o
 
 Run:
 py.exe interactive_runner.py py.exe dat_bae_testing_tool.py 0 -- dat_bae.exe
-
-Input:
-
-
-Output:
-
 
 */
