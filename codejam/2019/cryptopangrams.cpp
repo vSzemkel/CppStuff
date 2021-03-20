@@ -22,7 +22,7 @@ static void solve() {
     int i{0};
     for (; i < L - 1; ++i) {
         const auto gcd = std::gcd(tokens[i], tokens[i + 1]);
-        if (gcd > 1 && gcd < tokens[i]) { // found a vanila prime factor
+        if (1 < gcd && gcd < tokens[i]) { // found a vanila prime factor
             sentence[i + 1] = gcd;
             break;
         }
