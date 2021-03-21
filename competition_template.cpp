@@ -35,11 +35,11 @@ template <typename T> using vec = std::vector<T>;
 template <typename T> using vec2 = std::vector<std::vector<T>>;
 std::ofstream g_debug("$TASKNAME$.log");
 vec<int64_t> g_input, g_partial;
-size_t g_rows, g_cols, g_size;
+int64_t g_rows, g_cols, g_size;
 vec<bool> g_marked;
 
-const auto col = [](const size_t pos) noexcept { return pos % g_cols; };
-const auto row = [](const size_t pos) noexcept { return pos / g_cols; };
+const auto col = [](const int64_t pos) noexcept { return pos % g_cols; };
+const auto row = [](const int64_t pos) noexcept { return pos / g_cols; };
 template <typename T> std::vector<T> fill(const size_t size){std::vector<T> cont(size);std::copy_n(std::istream_iterator<T>{std::cin},size,cont.begin());return cont;};
 template <typename T> void fill2(std::vector<std::vector<T>>& cont, int& rows, int& cols){std::cin>>rows>>cols;cont.resize(rows);for(auto& r:cont) r=fill<T>(cols);};
 template <typename T> void fill2sq(std::vector<std::vector<T>>& cont, int& size){std::cin>>size;cont.resize(size);for(auto& r:cont) r=fill<T>(size);};
@@ -76,7 +76,7 @@ int main(int, char**)
 
 Compile:
 clang++.exe -Wall -Wextra -g -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.o
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address $TASKNAME$.cpp -o $TASKNAME$.o
 
 Run:
 py.exe interactive_runner.py py.exe $TASKNAME$_testing_tool.py 1 -- $TASKNAME$.exe
