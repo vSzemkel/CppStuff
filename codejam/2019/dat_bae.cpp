@@ -28,7 +28,7 @@ static void print_sections(const std::vector<section_t>& sec) {
 }
 
 static void solve() {
-    int Q{0}, N, B, F; std::cin >> N >> B >> F;
+    int N, B, F; std::cin >> N >> B >> F;
     g_debug << N << " " << B << " " << F << std::endl;
     constexpr auto switch_marker = [](const char m){ return (m == '0') ? '1' : '0'; };
 
@@ -39,7 +39,7 @@ static void solve() {
     // initialize sections
     {
         char marker{'0'};
-        const int chunk = std::min(B + 1, N / 2);
+        const int chunk = B + 1;
         const int overflow = (chunk - (N % chunk)) % chunk;
         g_debug << "chunk: " << chunk << " overflov: " << overflow << '\n';
         for (int i = 0; i < N; ) {
@@ -48,7 +48,7 @@ static void solve() {
                 query[j] = marker;
             marker = switch_marker(marker);
         }
-        std::cout << query << std::endl; ++Q;
+        std::cout << query << std::endl;
         std::cin >> answer;
         g_debug << "INIT: " << query << " -> " << answer << std::endl;
         marker = '0';
@@ -74,16 +74,16 @@ static void solve() {
             marker = switch_marker(marker);
             back_operational = sec.broken == 0;
         }
-        // append not scored brokens
+
         const int end = prev->start + prev->length;
-        if (end < N) {
+        if (end < N) { // append not scored brokens
             sections.push_back(section_t{end, N - end, N - end, 0, marker});
-            prev = &sections.back();
             g_debug << "Adding extra broken section from: " << end << '\n';
         } else if (overflow != 0) { // trim the last one if needed
             prev->length -= overflow;
             prev->broken -= overflow;
         }
+
         // identify broken sections
         for (const auto& s : sections)
             if (s.broken == s.length)
@@ -134,10 +134,11 @@ static void solve() {
 
         // ask question
         print_sections(sections);
-        std::cout << query << std::endl; ++Q;
+        std::cout << query << std::endl;
         std::cin >> answer;
         g_debug << "QA: " << query << " -> " << answer << std::endl;
         if (answer == "-1") exit(0);
+
         // analyze the answer
         pos = 0;
         int continuation{0}; // =0 first chunk, <0 number of broken, =1 fully functional
@@ -181,7 +182,6 @@ static void solve() {
         std::cout << b << " ";
     std::cout << std::endl;
     std::cin >> answer;
-    g_debug << "Answer == " << answer << " after asking " << Q << " queries" << std::endl;
     if (answer == "-1") exit(0);
 }
 
