@@ -162,17 +162,17 @@ def getTestCases(test_number):
   # You can edit or add your own test cases here.
   randomCase = []
   bit_count = random.randint(2, 1024)
-  num_broken = random.randint(1, 15)
+  num_broken = random.randint(1, min(15, bit_count - 1))
   for _ in range(num_broken):
     randomCase.append(random.randint(0, bit_count - 1))
   randomCase = sorted(set(randomCase))
+
+  #cases = [Case([7, 8, 9], 10, F), Case([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], 16, F), Case([2, 4, 7, 8, 11, 14, 17, 18, 19, 20, 25], 30, F), Case([9, 27, 99, 101, 102, 103, 333, 306, 309, 310, 311, 503, 991, 992, 1000], 1024, F)]
+  # cases = [Case([2, 5, 52], 53, 555)]
+  # cases = [Case(randomCase, 2, 5)]
   cases = [Case(randomCase, bit_count, F)]
 
-  #randomCase = [7, 8, 9, 99]
-  #cases = [Case(randomCase, 100, F)]
-  #cases = [Case([7, 8, 9], 10, F), Case([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], 16, F), Case([2, 4, 7, 8, 11, 14, 17, 18, 19, 20, 25], 30, F), Case([9, 27, 99, 101, 102, 103, 333, 306, 309, 310, 311, 503, 991, 992, 1000], 1024, F)]
-
-  print("Case: ", randomCase, file=sys.stderr)
+  print("Case: ", randomCase, bit_count, F, file=sys.stderr)
   sys.stderr.flush()
   return cases
 

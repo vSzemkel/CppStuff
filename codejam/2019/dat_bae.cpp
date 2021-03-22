@@ -74,8 +74,13 @@ static void solve() {
             marker = switch_marker(marker);
             back_operational = sec.broken == 0;
         }
-        // trim the last one if needed
-        if (overflow != 0) {
+        // append not scored brokens
+        const int end = prev->start + prev->length;
+        if (end < N) {
+            sections.push_back(section_t{end, N - end, N - end, 0, marker});
+            prev = &sections.back();
+            g_debug << "Adding extra broken section from: " << end << '\n';
+        } else if (overflow != 0) { // trim the last one if needed
             prev->length -= overflow;
             prev->broken -= overflow;
         }
