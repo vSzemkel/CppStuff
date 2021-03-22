@@ -2,6 +2,7 @@
 # is 0 for Test Set 1 or 1 for Test Set 2.
 
 from __future__ import print_function
+from datetime import datetime
 import random
 import sys
 import re
@@ -159,7 +160,20 @@ class Case:
 def getTestCases(test_number):
   F = (10, 5)[test_number]
   # You can edit or add your own test cases here.
-  cases = [Case([1, 2, 3], 4, F), Case([2, 3, 5], 6, F), Case([2, 4, 7, 8, 11, 14, 17, 18, 19, 20, 25], 30, F), Case([9, 27, 99, 101, 102, 103, 503, 1000], 1024, F)]
+  randomCase = []
+  bit_count = random.randint(2, 1024)
+  num_broken = random.randint(1, 15)
+  for _ in range(num_broken):
+    randomCase.append(random.randint(0, bit_count - 1))
+  randomCase = sorted(set(randomCase))
+  cases = [Case(randomCase, bit_count, F)]
+
+  #randomCase = [7, 8, 9, 99]
+  #cases = [Case(randomCase, 100, F)]
+  #cases = [Case([7, 8, 9], 10, F), Case([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], 16, F), Case([2, 4, 7, 8, 11, 14, 17, 18, 19, 20, 25], 30, F), Case([9, 27, 99, 101, 102, 103, 333, 306, 309, 310, 311, 503, 991, 992, 1000], 1024, F)]
+
+  print("Case: ", randomCase, file=sys.stderr)
+  sys.stderr.flush()
   return cases
 
 
@@ -197,7 +211,7 @@ def JudgeAllCases(test_number):
 
 
 def main():
-  random.seed(379009)
+  random.seed(datetime.now())
   test_number = int(sys.argv[1])
   test_number %= 2
   result = JudgeAllCases(test_number)
