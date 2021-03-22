@@ -28,7 +28,7 @@ static void print_sections(const std::vector<section_t>& sec) {
 }
 
 static void solve() {
-    int N, B, F; std::cin >> N >> B >> F;
+    int Q{0}, N, B, F; std::cin >> N >> B >> F;
     g_debug << N << " " << B << " " << F << std::endl;
     constexpr auto switch_marker = [](const char m){ return (m == '0') ? '1' : '0'; };
 
@@ -41,14 +41,14 @@ static void solve() {
         char marker{'0'};
         const int chunk = std::min(B + 1, N / 2);
         const int overflow = (chunk - (N % chunk)) % chunk;
-        g_debug << "chunk: " << chunk << '\n';
+        g_debug << "chunk: " << chunk << " overflov: " << overflow << '\n';
         for (int i = 0; i < N; ) {
             const int bound = std::min(i + chunk, N);
             for (int j = i; j < bound; ++j, ++i)
                 query[j] = marker;
             marker = switch_marker(marker);
         }
-        std::cout << query << std::endl;
+        std::cout << query << std::endl; ++Q;
         std::cin >> answer;
         g_debug << "INIT: " << query << " -> " << answer << std::endl;
         marker = '0';
@@ -64,7 +64,7 @@ static void solve() {
                 ++pos;
                 --sec.broken;
             }
-            if (back_operational && (sec.broken == 0 || (pos == ans_size && sec.broken == overflow))) {
+            if (back_operational && (sec.broken == 0 || (pos == ans_size && sec.broken == chunk))) {
                 prev->length += sec.length;
                 prev->broken += sec.broken; // for the last broken trimmed
             } else {
@@ -73,13 +73,6 @@ static void solve() {
             }
             marker = switch_marker(marker);
             back_operational = sec.broken == 0;
-        }
-        // append not scored brokens
-        const int end = prev->start + prev->length;
-        if (end < N) {
-            sections.push_back(section_t{end, chunk, chunk, 0, marker});
-            prev = &sections.back();
-            g_debug << "Adding extra broken section from: " << end << '\n';
         }
         // trim the last one if needed
         if (overflow != 0) {
@@ -136,7 +129,7 @@ static void solve() {
 
         // ask question
         print_sections(sections);
-        std::cout << query << std::endl;
+        std::cout << query << std::endl; ++Q;
         std::cin >> answer;
         g_debug << "QA: " << query << " -> " << answer << std::endl;
         if (answer == "-1") exit(0);
@@ -182,12 +175,8 @@ static void solve() {
     for (const int b : broken)
         std::cout << b << " ";
     std::cout << std::endl;
-    for (const int b : broken)
-        g_debug << b << " ";
-    g_debug << std::endl;
-
     std::cin >> answer;
-    g_debug << "Answer == " << answer << std::endl;
+    g_debug << "Answer == " << answer << " after asking " << Q << " queries" << std::endl;
     if (answer == "-1") exit(0);
 }
 
