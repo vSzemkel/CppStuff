@@ -21,7 +21,7 @@ struct maxelem_segment_tree
             nodes[n] = std::max(nodes[2 * n], nodes[2 * n + 1]);
     }
 
-    int query(int lower, int upper) { // range [lower, upper)
+    int query(int lower, int upper) const { // range [lower, upper)
         int ret{MIN32};
         for (lower += offset, upper += offset; lower < upper; lower >>= 1, upper >>= 1) { 
             if (lower & 1)
@@ -72,7 +72,7 @@ int main(int, char**)
     assert(mst.query(0, 5) == 15);
     assert(mst.query(1, 4) == 15);
     assert(mst.query(2, 5) == 11);
-    assert(mst.query(2, 5) == 11);
+    assert(mst.query(4, 5) == 11);
     assert(mst.query(2, 4) == 7);
     assert(mst.query(2, 3) == 3);
     assert(mst.query(0, 1) == 1);

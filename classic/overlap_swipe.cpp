@@ -1,36 +1,17 @@
 
 #include <algorithm>
 #include <iostream>
+#include <queue>
 #include <set>
 #include <string>
+#include <tuple>
 #include <vector>
 
 // Overlapped swipe
-// Find all uniformly edited fragments O(2n*logm)
+// Find all uniformly edited fragments
 
 constexpr bool g_coalesce{true};
 using editors_t = std::set<std::string>;
-
-// globals
-int g_text_size;
-std::vector<editors_t> g_start;
-std::vector<editors_t> g_finish;
-
-void read_input() {
-    std::string editor;
-    int no_of_editors, start, finish;
-    std::cin >> g_text_size;
-    ++g_text_size;
-    g_start.resize(g_text_size);
-    g_finish.resize(g_text_size);
-    std::cin >> no_of_editors;
-    for (int i = 0; i < no_of_editors; ++i) {
-        // format: editor_name, start_position, one_after_last_position
-        std::cin >> editor >> start >> finish;
-        g_start[start].insert(editor);
-        g_finish[finish].insert(editor);
-    }
-}
 
 void print_window(const int start, const int finish, const editors_t& window)
 {
@@ -39,11 +20,27 @@ void print_window(const int start, const int finish, const editors_t& window)
     std::cout << "\n";
 }
 
-int main(int argc, char* argv[])
+void solution1() // O(N*logM)
 {
-    read_input();
+    std::vector<editors_t> g_start;
+    std::vector<editors_t> g_finish;
+    int g_text_size; std::cin >> g_text_size;
+    int no_of_editors; std::cin >> no_of_editors;
 
-    int last = 0;
+    ++g_text_size;
+    g_start.resize(g_text_size);
+    g_finish.resize(g_text_size);
+    
+    for (int i = 0; i < no_of_editors; ++i) {
+        // format: editor_name, start_position, one_after_last_position
+        int start, finish;
+        std::string editor;
+        std::cin >> editor >> start >> finish;
+        g_start[start].insert(editor);
+        g_finish[finish].insert(editor);
+    }
+
+    int last{0};
     editors_t window{};
     for (int i = 0; i < g_text_size; ++i) {
         auto& start = g_start[i];
@@ -69,12 +66,60 @@ int main(int argc, char* argv[])
             last = i;
         }
     }
+}
+
+void solution2() // O(M*logM) not depending on text size
+{
+    using edition_t = std::tuple<int, int, std::string>;
+    constexpr auto ed_comp = [](const edition_t& ed1, const edition_t& ed2) {
+        return std::get<1>(ed1) > std::get<1>(ed2);
+    };
+
+    int size; std::cin >> size;
+    int N; std::cin >> N;
+    std::vector<edition_t> editors(N); // [start, stop)
+    for (auto& ed : editors)
+        // format: editor_name, start_position, one_after_last_position
+        std::cin >> std::get<2>(ed) >> std::get<0>(ed) >> std::get<1>(ed);
+
+    editors_t window;
+    edition_t result;
+    std::priority_queue<edition_t, std::vector<edition_t>, decltype(ed_comp)> pq(ed_comp);
+    std::sort(editors.begin(), editors.end());
+
+    for (const edition_t& ed : editors) {
+        while (!pq.empty() && std::get<1>(pq.top()) <= std::get<1>(ed)) {
+            const auto& fin = pq.top();
+            if (std::get<1>(pq.top()) != std::get<1>(ed) || !g_coalesce)
+                print_window(std::get<0>(fin), std::get<1>(fin), window);
+            window.extract(std::get<2>(fin));
+            pq.pop();
+        }
+
+        window.insert(std::get<2>(ed));
+        pq.push(ed);
+    }
+
+    while (!pq.empty()) {
+        const auto fin = pq.top();
+        print_window(std::get<0>(fin), std::get<1>(fin), window);
+        window.extract(std::get<2>(fin));
+        pq.pop();
+    }
+}
+
+int main(int, char**)
+{
+    //solution1();
+    solution2();
 
     return 0;
 }
 
 /* 
 clang++.exe -Wall -g -std=c++17 overlap_swipe.cpp -o overlap_swipe.exe
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address overlap_swipe.cpp -o overlap_swipe.o
+
 overlap_swipe.exe < overlap_swipe.in
 
 Input:
