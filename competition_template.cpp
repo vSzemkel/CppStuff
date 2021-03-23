@@ -40,6 +40,7 @@ vec<bool> g_marked;
 
 const auto col = [](const int64_t pos) noexcept { return pos % g_cols; };
 const auto row = [](const int64_t pos) noexcept { return pos / g_cols; };
+const auto rc  = [](const int64_t row, const int64_t col) noexcept { return row * g_cols + col; };
 template <typename T> std::vector<T> fill(const size_t size){std::vector<T> cont(size);std::copy_n(std::istream_iterator<T>{std::cin},size,cont.begin());return cont;};
 template <typename T> void fill2(std::vector<std::vector<T>>& cont, int& rows, int& cols){std::cin>>rows>>cols;cont.resize(rows);for(auto& r:cont) r=fill<T>(cols);};
 template <typename T> void fill2sq(std::vector<std::vector<T>>& cont, int& size){std::cin>>size;cont.resize(size);for(auto& r:cont) r=fill<T>(size);};
