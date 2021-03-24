@@ -17,7 +17,7 @@ void print_window(const int start, const int finish, const editors_t& window)
 {
     std::cout << "    [" << start << ", " << finish << "] ";
     for (const auto& s : window) std::cout << s << ", ";
-    std::cout << "\n";
+    std::cout << std::endl;
 }
 
 void solution1() // O(N*logM)
@@ -70,7 +70,7 @@ void solution1() // O(N*logM)
 
 void solution2() // O(M*logM) not depending on text size
 {
-    using edition_t = std::tuple<int, int, std::string>;
+    using edition_t = std::tuple<int, int, std::string>; // {start, stop, editor_name }
     constexpr auto ed_comp = [](const edition_t& ed1, const edition_t& ed2) {
         return std::get<1>(ed1) > std::get<1>(ed2);
     };
@@ -83,17 +83,24 @@ void solution2() // O(M*logM) not depending on text size
         std::cin >> std::get<2>(ed) >> std::get<0>(ed) >> std::get<1>(ed);
 
     editors_t window;
-    edition_t result;
     std::priority_queue<edition_t, std::vector<edition_t>, decltype(ed_comp)> pq(ed_comp);
     std::sort(editors.begin(), editors.end());
 
+    int cur{0};
     for (const edition_t& ed : editors) {
-        while (!pq.empty() && std::get<1>(pq.top()) <= std::get<1>(ed)) {
+        while (!pq.empty() && std::get<1>(pq.top()) <= std::get<0>(ed)) {
             const auto& fin = pq.top();
-            if (std::get<1>(pq.top()) != std::get<1>(ed) || !g_coalesce)
-                print_window(std::get<0>(fin), std::get<1>(fin), window);
+            if (std::get<1>(pq.top()) != std::get<0>(ed) || (!g_coalesce && window.count(std::get<2>(fin)) == 1)) {
+                print_window(cur, std::get<1>(fin), window);
+                cur = std::get<1>(fin);
+            }
             window.extract(std::get<2>(fin));
             pq.pop();
+        }
+
+        if (!window.empty()) {
+            print_window(cur, std::get<0>(ed), window);
+            cur = std::get<0>(ed);
         }
 
         window.insert(std::get<2>(ed));
@@ -101,8 +108,9 @@ void solution2() // O(M*logM) not depending on text size
     }
 
     while (!pq.empty()) {
-        const auto fin = pq.top();
-        print_window(std::get<0>(fin), std::get<1>(fin), window);
+        const auto& fin = pq.top();
+        print_window(cur, std::get<1>(fin), window);
+        cur = std::get<1>(fin);
         window.extract(std::get<2>(fin));
         pq.pop();
     }
