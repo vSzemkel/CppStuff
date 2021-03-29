@@ -25,17 +25,15 @@ static void print_debug(const std::vector<int>& v)
 }
 
 static void solve() {
-    std::vector<int> data = {1, 2, 3};
+    std::vector<int> data = {1, 2};
     data.reserve(N);
-    std::cout << "1 2 3" << std::endl;
-    int answer; std::cin >> answer;
-    std::rotate(data.begin(), data.begin() + (answer + 1) % 3, data.end());
 
-    for (int i = 4; i <= N; ++i) {
+    int answer;
+    for (int i = 3; i <= N; ++i) {
         int lpos, rpos, lo{0}, hi{i - 1};
-        while (lo < hi) {
+        while (lo + 1 < hi) {
             const int width = hi - lo;
-            lpos = lo + width / 3;
+            lpos = std::max(0, lo + width / 3);
             rpos = lo + 2 * width / 3;
             if (lpos == rpos) ++rpos;
             std::cout << i << " " << data[lpos] << " " << data[rpos] << std::endl;
@@ -46,29 +44,20 @@ static void solve() {
             if (answer == -1)
                 exit(0);
             if (answer == i) {
-                if (lpos + 1 == rpos) {
-                    data.insert(data.begin() + rpos, i);
-                    break;
-                }
                 lo = lpos;
                 hi = rpos;
                 g_debug << "V0 lpos,rpos,lo,hi " << lpos << " " << rpos << " " << lo << " " << hi << std::endl;
             } else if (answer == data[lpos]) {
-                if (lpos == 0) {
-                    data.insert(data.begin(), i);
-                    break;
-                }
                 hi = lpos;
+                if (lo == 0 && hi == 1) --lo;
                 g_debug << "V1 lpos,rpos,lo,hi " << lpos << " " << rpos << " " << lo << " " << hi << std::endl;
             } else {
-                if (rpos == i - 2) {
-                    data.push_back(i);
-                    break;
-                }
                 lo = rpos;
                 g_debug << "V2 lpos,rpos,lo,hi " << lpos << " " << rpos << " " << lo << " " << hi << std::endl;
             }
         }
+
+        data.insert(data.begin() + hi, i);
     }
 
     print(data);
