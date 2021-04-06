@@ -8,11 +8,25 @@
 // Plates
 // https://codingcompetitions.withgoogle.com/kickstart/round/000000000019ffc7/00000000001d40bb#problem
 
-int g_N;
+int g_N, g_K, g_P;
 std::unordered_map<int, int> g_cache;
 std::vector<std::vector<int>> g_plates;
 
-static int dp(const int count, const int prefix)
+static int nice() // O(N*P*K)
+{
+    const int max_take = std::min(g_P, g_K);
+    std::vector<std::vector<int>> dp(g_N + 1, std::vector<int>(g_P + 1));
+    for (int i = 1; i <= g_N; ++i) {
+        dp[i] = dp[i - 1];
+        for (int j = 1; j <= g_P; ++j)
+            for (int t = 1; t <= std::min(j, max_take); ++t)
+                dp[i][j] = std::max(dp[i][j], dp[i - 1][j - t] + g_plates[i - 1][t - 1]);
+    }
+
+    return dp[g_N][g_P];
+}
+
+static int ugly(const int count, const int prefix)
 {
     if (count == 0 || prefix == g_N)
         return 0;
@@ -21,11 +35,11 @@ static int dp(const int count, const int prefix)
     if (cached != g_cache.end())
         return cached->second;
 
-    const int max_take = std::min(count, (int)g_plates[prefix].size());
+    const int max_take = std::min(count, g_K);
     std::vector<int> candidates(max_take + 1);
-    candidates[0] = dp(count, prefix + 1);
+    candidates[0] = ugly(count, prefix + 1);
     for (int i = 1; i <= max_take; ++i)
-        candidates[i] = g_plates[prefix][i - 1] + dp(count - i, prefix + 1);
+        candidates[i] = g_plates[prefix][i - 1] + ugly(count - i, prefix + 1);
 
     const auto it = std::max_element(candidates.begin(), candidates.end());
     g_cache[hash] = *it;
@@ -33,16 +47,22 @@ static int dp(const int count, const int prefix)
 }
 
 static void solve() {
-    int K, P; std::cin >> g_N >> K >> P;
-    g_plates.assign(g_N, std::vector<int>(K));
+    std::cin >> g_N >> g_K >> g_P;
+    g_plates.assign(g_N, std::vector<int>(g_K));
     for (int i = 0; i < g_N; ++i) {
-        for (int j = 0; j < K; ++j)
+        for (int j = 0; j < g_K; ++j)
             std::cin >> g_plates[i][j];
         std::inclusive_scan(g_plates[i].begin(), g_plates[i].end(), g_plates[i].begin());
+        /*int sum{0};
+        for (auto& b : g_plates[i]) {
+            sum += b;
+            b = sum;
+        }*/
     }
 
-    g_cache.clear();
-    std::cout << dp(P, 0);
+    //g_cache.clear();
+    //std::cout << ugly(g_P, 0);
+    std::cout << nice();
 }
 
 int main(int, char**)
@@ -81,5 +101,7 @@ Input:
 
 Output:
 
+Case #1: 250
+Case #2: 180
 
 */
