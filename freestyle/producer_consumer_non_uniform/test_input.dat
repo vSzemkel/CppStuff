@@ -1,0 +1,37 @@
+5
+1 57 HAAAAAT                 // size: 20: normal
+2 1000000000 HBBBBBT         // size: 20: no space and overlap 10:10, should wait
+1 130 HCCCCT                 // size: 18: normal
+1 99 HDDDDDDDDDDT            // size: 25: should overlap size field 1:24 - edge case
+2 26173894 HEEEEEEEEEEEEEEET // size: 30: should send maximal length message
+
+
+Producer:
+
+diag> [339:339] Shared memory buffer of size 30 initialized at local address 0x7f750001c000
+diag> [339:339] Preparing message [0]
+diag> [339:339] Message [0]: HAAAAAT of size 20
+diag> [339:339] Preparing message [1]
+diag> [339:339] Fragmented 10:10
+diag> [339:339] Message [1]: HBBBBBT of size 20
+diag> [339:339] Preparing message [2]
+diag> [339:339] Message [2]: HCCCCT of size 19
+diag> [339:339] Preparing message [3]
+diag> [339:339] Fragmented 1:24
+diag> [339:339] Message [3]: HDDDDDDDDDDT of size 25
+diag> [339:339] Preparing message [4]
+diag> [339:339] Fragmented 6:19
+diag> [339:339] Message [4]: HEEEEEEEEEET of size 25
+
+Consumer:
+
+diag> [340:340] Shared memory buffer of size 30 initialized at local address 0x7f24d332f000
+Message [0]: 20 HAAAAAT 57
+diag> [340:340] #
+Message [1]: 20 HBBBBBT 1000000000
+diag> [340:340] #
+Message [2]: 19 HCCCCT 130
+diag> [340:340] #
+Message [3]: 25 HDDDDDDDDDDT 99
+diag> [340:340] #
+Message [4]: 25 HEEEEEEEEEET 26173894
