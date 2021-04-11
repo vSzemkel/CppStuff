@@ -7,17 +7,18 @@
 // https://codingcompetitions.withgoogle.com/codejam/round/000000000043585d/00000000007549e5
 
 
-static void add_one(std::string& num)
+static std::string add_one(const std::string& num)
 {
-    int d = (int)num.size() - 1;
-    for (; d >= 0; --d)
-        if (num[d] < '9') {
-            ++num[d];
-            break;
+    auto ret = num;
+    for (int d = (int)ret.size() - 1; d >= 0; --d)
+        if (ret[d] < '9') {
+            ++ret[d];
+            return ret;
         } else 
-            num[d] = '0';
-    if (d < 0)
-        num.insert(num.begin(), '1');
+            ret[d] = '0';
+
+    ret.insert(ret.begin(), '1');
+    return ret;
 }
 
 static void solve() {
@@ -29,18 +30,18 @@ static void solve() {
     int ret{0};
     for (int i = 1; i < N; ++i) {
         auto& num = numbers[i];
+        const auto& prev = numbers[i - 1];
         const auto rdigits = (int)num.size();
-        const auto ldigits = (int)numbers[i - 1].size();
-        if (ldigits < rdigits || (ldigits == rdigits && numbers[i - 1] < num))
+        const auto ldigits = (int)prev.size();
+        if (ldigits < rdigits || (ldigits == rdigits && prev < num))
             continue;
         const auto digdiff = ldigits - rdigits;
-        auto bound = num + std::string(digdiff, '9');
+        const auto bound = num + std::string(digdiff, '9');
         num.append(std::string(digdiff, '0'));
-        if (numbers[i - 1] >= num) {
-            if (bound > numbers[i - 1]) {
-                num = numbers[i - 1];
-                add_one(num);
-            } else
+        if (prev >= num) {
+            if (bound > prev)
+                num = add_one(prev);
+            else
                 num.append("0");
         }
         ret += num.size() - rdigits;
