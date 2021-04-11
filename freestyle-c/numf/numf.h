@@ -12,7 +12,7 @@
 #define DEBUGDIAG 0
 #define PROMPT "numf> "
 #define ANSWER(s, ...) printf(s"\n" __VA_OPT__(,) __VA_ARGS__)
-#define DBGPRN(s, ...) if (DEBUGDIAG) { printf("diag> [%i:%i] "s"\n", getpid(), gettid() __VA_OPT__(,) __VA_ARGS__); }
+#define DBGPRN(s, ...) if (DEBUGDIAG) { printf("diag> [%i:%i] "s"\n", getpid(), gettid() __VA_OPT__(,) __VA_ARGS__); fflush(stdout); }
 #define ERREXIT(s, ...) do { int err = errno; fprintf(stderr, s", %s (errno=%i)\n" __VA_OPT__(,) __VA_ARGS__ , strerror(err), err); exit(err); } while (0)
 
 pid_t gettid();                     // declaration to silence warning
