@@ -55,8 +55,9 @@ int64_t partial_sum(const int i, const int j){int64_t ret{0};for(int k=j+1;k>0;k
 
 
 
-static int64_t solve() {
-    return rand_in_range((int)big64);
+static void solve() {
+    int64_t ret{0};
+    std::cout << ret;
 }
 
 int main(int, char**)
@@ -68,8 +69,8 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": " << std::setprecision(15) << solve() << '\n';
-        //std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+        //std::cout << "Case #" << g << ": " << std::setprecision(15) << solve() << '\n';
     }
 }
 
