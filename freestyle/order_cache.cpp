@@ -103,6 +103,9 @@ struct order_hasher_t {
 using order_set_t = std::unordered_set<order_t, order_hasher_t>;
 using index_t = std::unordered_map<std::string, std::vector<std::string>>;
 
+constexpr int large_cache_size = 1000000;
+constexpr auto rand_in_range = [](const int ubound){std::random_device seed;std::mt19937 gen{seed()};std::uniform_int_distribution<int> dist(0,ubound-1);return dist(gen);};
+
 class OrderCache
 {
   public:
@@ -137,8 +140,12 @@ bool OrderCache::add(order_t&& ord) {
         return false;
     {
         std::lock_guard lg{_mx};
-        _user_idx[ord._user_id].push_back(ord._id);
-        _security_idx[ord._security_id].push_back(ord._id);
+        auto& user_idx = _user_idx[ord._user_id];
+        auto insit = std::lower_bound(user_idx.begin(), user_idx.end(), ord._id);
+        user_idx.insert(insit, ord._id);
+        auto& security_idx = _security_idx[ord._security_id];
+        insit = std::lower_bound(security_idx.begin(), security_idx.end(), ord._id);
+        security_idx.insert(insit, ord._id);
         _orders.insert(std::move(ord));
         return true;
     }
@@ -156,11 +163,11 @@ bool OrderCache::cancel_by_id(const std::string& id) {
         std::lock_guard lg{_mx};
         // update _security_idx
         auto& orders_by_sec = _security_idx[ord->_security_id];
-        const auto sit = std::find(orders_by_sec.begin(), orders_by_sec.end(), ord->_id);
+        const auto sit = std::lower_bound(orders_by_sec.begin(), orders_by_sec.end(), ord->_id);
         orders_by_sec.erase(sit);
         // update _user_id
         auto& orders_by_user = _user_idx[ord->_user_id];
-        const auto uit = std::find(orders_by_user.begin(), orders_by_user.end(), ord->_id);
+        const auto uit = std::lower_bound(orders_by_user.begin(), orders_by_user.end(), ord->_id);
         orders_by_user.erase(uit);
         _orders.erase(ord);
         return true;
@@ -185,11 +192,11 @@ int OrderCache::cancel_by_user(const std::string& user) {
         if (ord != _orders.end()) {
             // update _security_idx
             auto& orders_by_sec = _security_idx[ord->_security_id];
-            const auto sit = std::find(orders_by_sec.begin(), orders_by_sec.end(), ord->_id);
+            const auto sit = std::lower_bound(orders_by_sec.begin(), orders_by_sec.end(), ord->_id);
             orders_by_sec.erase(sit);
             // update _user_id
             auto& orders_by_user = _user_idx[user];
-            const auto uit = std::find(orders_by_user.begin(), orders_by_user.end(), ord->_id);
+            const auto uit = std::lower_bound(orders_by_user.begin(), orders_by_user.end(), ord->_id);
             orders_by_user.erase(uit);
             // cancel order
             _orders.erase(ord);
@@ -285,7 +292,6 @@ int64_t OrderCache::match(const std::string& seq) {
 OrderCache g_cache;
 
 int generate_file(const std::string& path) {
-    constexpr int orders = 1000000;
     constexpr int sec_ids = 12;
     constexpr int user_ids = 5;
     constexpr int companies = 20;
@@ -294,9 +300,8 @@ int generate_file(const std::string& path) {
     if (!fout.is_open()) return 0;
 
     const std::string sides[] = {"Buy", "Sell"};
-    const auto rand_in_range = [](const int ubound){std::random_device seed;std::mt19937 gen{seed()};std::uniform_int_distribution<int> dist(0,ubound-1);return dist(gen);};
-    std::cout << "Generating " << orders << " records.." << '\n';
-    for (int i = 0; i < orders; ++i) {
+    std::cout << "Generating " << large_cache_size << " records.." << '\n';
+    for (int i = 0; i < large_cache_size; ++i) {
         std::string id = "ORDER" + std::to_string(i);
         std::string sec_id = "US" + std::to_string(2674959 + rand_in_range(sec_ids));
         std::string side = sides[rand_in_range(2)];
@@ -352,17 +357,31 @@ void basic_tests()
 
     load_from_file("order_cache.in");
     assert(g_cache.match("US5422358DA3") == 2700);
-
+    // measure add performance
     const std::string lfn = "order_cache_large.in";
     const int sec_ids = generate_file(lfn);
+    auto start = std::chrono::high_resolution_clock::now();
     const int cache_size = load_from_file(lfn);
-    const auto start = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> dur = std::chrono::high_resolution_clock::now() - start;
+    std::cout << "Loading " << cache_size << " orders takes: " << dur.count() << " ms.\n";
+    // measure match performance
+    start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < sec_ids; ++i) {
         const std::string company = "US" + std::to_string(2674959 + i);
         std::cout << company + " orders matching size is: " << g_cache.match(company) << '\n';
     }
-    const std::chrono::duration<double, std::milli> dur = std::chrono::high_resolution_clock::now() - start;
+    dur = std::chrono::high_resolution_clock::now() - start;
     std::cout << "For " << cache_size << " orders, avarage match operation execution time: " << dur.count() / sec_ids << " ms.\n";
+    // measure cancel_by_id performance
+    constexpr int cancelling_size = 1000;
+    std::unordered_set<std::string> cancelled;
+    while (cancelled.size() < cancelling_size)
+        cancelled.insert("ORDER" + std::to_string(rand_in_range(cancelling_size)));
+    start = std::chrono::high_resolution_clock::now();
+    for (const auto& ord_id : cancelled)
+        g_cache.cancel_by_id(ord_id);
+    dur = std::chrono::high_resolution_clock::now() - start;
+    std::cout << "Cancelling by id operation avarage execution time: " << dur.count() / cancelling_size << " ms.\n";
 }
 
 int main(int, char**)
