@@ -169,6 +169,7 @@ bool OrderCache::cancel_by_id(const std::string& id) {
         auto& orders_by_user = _user_idx[ord->_user_id];
         const auto uit = std::lower_bound(orders_by_user.begin(), orders_by_user.end(), ord->_id);
         orders_by_user.erase(uit);
+        // cancel order
         _orders.erase(ord);
         return true;
     }
@@ -176,7 +177,7 @@ bool OrderCache::cancel_by_id(const std::string& id) {
     return false;
 }
 
-/** @brief Cancells order by id
+/** @brief Cancells orders of particular user
  *  @param user User ID
  * 
  * Removes the orders from particular User ID
@@ -186,7 +187,7 @@ bool OrderCache::cancel_by_id(const std::string& id) {
 int OrderCache::cancel_by_user(const std::string& user) {
     int ret{0};
     std::lock_guard lg{_mx};
-    const auto candidates = _user_idx[user]; // must copy as erase() clobbers iterator
+    auto& candidates = _user_idx[user];
     for (const auto& id : candidates) {
         const auto ord = _orders.find(id);
         if (ord != _orders.end()) {
@@ -194,15 +195,13 @@ int OrderCache::cancel_by_user(const std::string& user) {
             auto& orders_by_sec = _security_idx[ord->_security_id];
             const auto sit = std::lower_bound(orders_by_sec.begin(), orders_by_sec.end(), ord->_id);
             orders_by_sec.erase(sit);
-            // update _user_id
-            auto& orders_by_user = _user_idx[user];
-            const auto uit = std::lower_bound(orders_by_user.begin(), orders_by_user.end(), ord->_id);
-            orders_by_user.erase(uit);
             // cancel order
             _orders.erase(ord);
             ++ret;
         }
     }
+    // update _user_idx
+    candidates.clear();
 
     return ret;
 }
@@ -218,23 +217,24 @@ int OrderCache::cancel_by_user(const std::string& user) {
 int OrderCache::cancel_by_seq_qt(const std::string& seq, const int quantity) {
     int ret{0};
     std::lock_guard lg{_mx};
-    const auto candidates = _security_idx[seq]; // must copy as erase() clobbers iterator
-    for (const auto& id : candidates) {
+    auto& security_idx = _security_idx[seq];
+    for (auto& id : security_idx) {
         const auto ord = _orders.find(id);
         if (ord != _orders.end() && ord->_quantity >= quantity) {
-            // update _security_idx
-            auto& orders_by_sec = _security_idx[seq];
-            const auto sit = std::find(orders_by_sec.begin(), orders_by_sec.end(), ord->_id);
-            orders_by_sec.erase(sit);
             // update _user_id
             auto& orders_by_user = _user_idx[ord->_user_id];
-            const auto uit = std::find(orders_by_user.begin(), orders_by_user.end(), ord->_id);
+            const auto uit = std::lower_bound(orders_by_user.begin(), orders_by_user.end(), ord->_id);
             orders_by_user.erase(uit);
+            // mark _security_idx for deletion
+            id.clear();
             // cancel order
             _orders.erase(ord);
             ++ret;
         }
     }
+
+    const auto it = std::remove(security_idx.begin(), security_idx.end(), "");
+    security_idx.erase(it, security_idx.end());
 
     return ret;
 }
@@ -403,6 +403,7 @@ Loading orders from order_cache.in
 Orders loaded into the cache
 Loading orders from order_cache_large.in
 Orders loaded into the cache
+Loading 1000000 orders takes: 19050.8 ms.
 US2674959 orders matching size is: 23832300
 US2674960 orders matching size is: 23927300
 US2674961 orders matching size is: 23962650
@@ -415,6 +416,7 @@ US2674967 orders matching size is: 23758400
 US2674968 orders matching size is: 23835350
 US2674969 orders matching size is: 23891150
 US2674970 orders matching size is: 23737350
-For 1000000 orders, avarage match operation execution time: 49.4113 ms.
+For 1000000 orders, avarage match operation execution time: 36.521 ms.
+Cancelling by id operation avarage execution time: 0.201354 ms.
 
 */
