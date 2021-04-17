@@ -83,6 +83,10 @@ struct fraction_t {
         return tf1.num == tf2.num && tf1.denum == tf2.denum;
     }
 
+    friend bool operator<(const fraction_t& f1, const fraction_t& f2) {
+        return (__int128_t)f1.num * f2.denum < (__int128_t)f2.num * f1.denum;
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const fraction_t& f) {
         return os << f.num << '/' << f.denum;
     }
@@ -106,6 +110,7 @@ int main(int, char**)
     frac_t f2{2, 3};
     f2 *= {4, 7};
     assert((f2 == frac_t{8, 21}));
+    assert((f2 < frac_t{9, 21}));
 
     frac_t f3{8, 14};
     f3 /= {4, 7};
