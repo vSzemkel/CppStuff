@@ -9,15 +9,15 @@
 
 static void solve() {
     int L; std::string s; std::cin >> L >> s;
-    int pos{0};
+    int beg{0};
     std::vector<int> data(L, 1);
-    while (pos < L) {
-        int end = pos + 1;
+    while (beg < L) {
+        int end = beg + 1;
         while (end < L && s[end - 1] < s[end]) {
-            data[end] = end - pos + 1;
+            data[end] = end - beg + 1;
             ++end;
         }
-        pos = end;
+        beg = end;
     }
 
     for (int i = 0; i < L; ++i)
@@ -56,5 +56,7 @@ ABACDA
 
 Output:
 
+Case #1: 1 2 1 2 
+Case #2: 1 2 1 2 3 1
 
 */

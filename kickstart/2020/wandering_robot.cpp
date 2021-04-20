@@ -12,6 +12,7 @@ double logFactorials[MAX];
 
 double choose(const int n, const int k) {
     if (k < 0 || k > n) return 0;
+    if (k == 0 && n == 0) return 1;
     return std::pow(2, logFactorials[n] - logFactorials[k] - logFactorials[n - k] - n);
 }
 
@@ -51,7 +52,34 @@ static void solve() {
     std::cout << std::fixed << std::setprecision(6) << ret;
 }
 
-static void solve_swap() {
+static void solve_complement() { // inspired by ecnerwala
+    int64_t CC, RR, L, T, R, B; std::cin >> CC >> RR >> L >> T >> R >> B;
+    --L; --T; --R; --B;
+
+    double ret{0};
+    if (T > 0) {
+        for (int64_t x = L; x <= R; ++x)
+            ret += 0.5 * choose(x + T - 1, x);
+        if (R == CC - 1)
+            for (int64_t y = 0; y < T; ++y)
+                ret += 0.5 * choose(y + CC - 1, y);
+    }
+
+    std::swap(RR, CC);
+    std::swap(L, T);
+    std::swap(R, B);
+    if (T > 0) {
+        for (int64_t x = L; x <= R; ++x)
+            ret += 0.5 * choose(x + T - 1, x);
+        if (R == CC - 1)
+            for (int64_t y = 0; y < T; ++y)
+                ret += 0.5 * choose(y + CC - 1, y);
+    }
+
+    std::cout << std::fixed << std::setprecision(6) << (1 - ret);
+}
+
+static void solve_swap() { // inspired by scottwu
     int64_t CC, RR, L, T, R, B; std::cin >> CC >> RR >> L >> T >> R >> B;
     --L; --T; --R; --B;
 
@@ -173,7 +201,6 @@ clang++.exe -Wall -Wextra -g -O0 -std=c++17 wandering_robot.cpp -o wandering_rob
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address wandering_robot.cpp -o wandering_robot.o
 
 Run:
-py.exe interactive_runner.py py.exe wandering_robot_testing_tool.py 1 -- wandering_robot.exe
 wandering_robot.exe < wandering_robot.in
 
 Input:
