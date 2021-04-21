@@ -19,21 +19,21 @@ constexpr char g_pattern[] =
 constexpr int g_pattern_size = sizeof(g_pattern) - 1;
 
 // globals
-std::vector<uint16_t> g_stats(g_distinct_keys + 1, 0);
+std::vector<uint16_t> g_stats(g_distinct_keys, 0);
 
 int main(int, char**)
 {
     // scan number of occurences
     for (int i = 0; i < g_pattern_size; ++i)
-        g_stats[g_pattern[i] - '0' + 1]++;
+        ++g_stats[g_pattern[i] - '0'];
 
     // count initial index for each symbol
-    std::inclusive_scan(g_stats.begin(), g_stats.end(), g_stats.begin());
+    std::partial_sum(g_stats.begin(), g_stats.end(), g_stats.begin());
 
     // output stable, sorted collection, +1 to null terminate
     std::vector<char> output(g_pattern_size + 1);
-    for (int i = 0; i < g_pattern_size; ++i)
-        output[g_stats[g_pattern[i] - '0']++] = g_pattern[i];
+    for (int i = g_pattern_size - 1; i >= 0 ; --i)
+        output[--g_stats[g_pattern[i] - '0']] = g_pattern[i];
 
     // present result
     printf("Original sequence:\n%s\n\n", g_pattern);

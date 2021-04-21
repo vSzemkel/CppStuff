@@ -6,7 +6,7 @@
 #include <random>
 #include <vector>
 
-constexpr int length = 17;
+constexpr int length = 18;
 constexpr int size = 1000;
 std::vector<int64_t> factor10;
 
@@ -33,11 +33,9 @@ static std::vector<int64_t> counting_sort(const std::vector<int64_t>& data, cons
 
 int main(int, char**) {
     std::vector<int64_t> data(size);
-    const int64_t minval = std::pow(10, length - 1);
-    for (int i = 0; i < size; ++i) {
-        data[i] = minval + rand_in_range(9 * minval);
-        assert(std::floor(log10(data[i])) + 1 == length);
-    }
+    const int64_t maxval = (int64_t)std::pow(10, length);
+    for (auto& d : data)
+        d = rand_in_range(maxval);
 
     auto copy = data;
     factor10.resize(length);
