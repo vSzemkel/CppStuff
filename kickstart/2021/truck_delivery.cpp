@@ -39,7 +39,7 @@ static std::vector<city_t> graph2tree(const std::vector<std::vector<city_t>>& ro
     return parents;
 }
 
-static void solve_set1() {
+static void solve() {
     int N, Q; std::cin >> N >> Q;
     std::vector<std::vector<city_t>> roads(N);
     for (int i = 0; i < N - 1; ++i) {
@@ -56,12 +56,8 @@ static void solve_set1() {
         std::cin >> c >> weight; --c;
         auto road = parents[c];
         while (road.city > 0) {
-            if (weight >= road.limit) {
-                if (gcd == 0)
-                    gcd = road.toll;
-                else
-                    gcd = std::gcd(gcd, road.toll);
-            }
+            if (weight >= road.limit)
+                gcd = std::gcd(gcd, road.toll);
 
             road = parents[road.road_to];
         }
@@ -79,7 +75,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_set1(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 
