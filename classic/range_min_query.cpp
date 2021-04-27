@@ -11,8 +11,8 @@
 
 
 template<typename T, bool maximum_mode = false> // inspired by neal_wu
-struct RMQ {
-    RMQ(const std::vector<T>& v) : _size((int)v.size()) {
+struct rmq_t {
+    rmq_t(const std::vector<T>& v = {}) : _size((int)v.size()) {
         if (_size > 0) {
             _values = v;
             build();
@@ -35,8 +35,12 @@ struct RMQ {
         return _values[query_index(a, b)];
     }
 
-  private:
-    void build() {
+    void build(const std::vector<T>& values = {}) {
+        if (!values.empty()) {
+            _size = (int)values.size();
+            _values = values;
+        }
+
         const int levels = highest_bit(_size) + 1;
 
         _range_low.resize(levels);
@@ -53,6 +57,7 @@ struct RMQ {
         }
     }
 
+  private:
     // Note: when `values[a] == values[b]`, returns b.
     int better_index(const int a, const int b) const {
         return (maximum_mode ? _values[b] < _values[a] : _values[a] < _values[b]) ? a : b;
@@ -75,7 +80,7 @@ int main(int, char**)
     data.resize(size);
     std::generate_n(std::back_inserter(data), size, []{ return rand_in_range(range); });
 
-    RMQ<int, true> rmq{data};
+    rmq_t<int, true> rmq{data};
     for (int i = 0; i < trials; ++i) {
         int lb = rand_in_range(range);
         int rb = rand_in_range(range);
