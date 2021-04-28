@@ -22,49 +22,51 @@ constexpr int64_t angleFullMinute = angleMinutePerNanosecond * nanosecondsPerMin
 constexpr int64_t angleFullSecond = angleSecondPerNanosecond * nanosecondsPerSecond;
 constexpr int64_t angle360 = angleFullSecond * secondsPerMinute;
 
-static bool check(const int64_t h, const int64_t m, const int64_t s)
-{
-    const auto HH = h / angleFullHour;
-    const auto MM = m / angleFullMinute;
-    const auto SS = s / angleFullSecond;
-    const auto FF = s % angleFullSecond;
+static void solve_set2() {
+    std::array<int64_t, 3> C, T;
+    std::cin >> T[0] >> T[1] >> T[2];
+    std::sort(T.begin(), T.end());
 
-    const auto checkedM = MM == minutesPerHour * (h % angleFullHour) / angleFullHour;
-    const auto checkedS = SS == secondsPerMinute * (m % angleFullMinute) / angleFullMinute;
-    const auto checkedN = 0 == nanosecondsPerSecond * (s % angleFullSecond) / angleFullSecond;
-
-    if (HH < 12 && MM < 60 && SS < 60 && checkedM && checkedS && checkedN) {
-        const auto NN = 0;//nanosecondsPerSecond * (T[2] % angleFullSecond) * angleFullSecond;
-        std::cout << HH << ' ' << MM << ' ' << SS << ' ' << NN;
-        return true;
-    }
-
-    return false;
+    for (int h = 0; h < 12; ++h)
+        for (int m = 0; m < 60; ++m)
+            for (int s = 0; s < 60; ++s) {
+                auto ns_count = h * nanosecondsPerHour + m * nanosecondsPerMinute + s * nanosecondsPerSecond;
+                C[0] = ns_count * angleHourPerNanosecond;
+                ns_count -= h * nanosecondsPerHour;
+                C[1] = ns_count * angleMinutePerNanosecond;
+                ns_count -= m * nanosecondsPerMinute;
+                C[2] = ns_count * angleSecondPerNanosecond;
+                do {
+                    const auto C01 = (C[0] - C[1] + angle360) % angle360;
+                    const auto T01 = (T[0] - T[1] + angle360) % angle360;
+                    const auto C12 = (C[1] - C[2] + angle360) % angle360;
+                    const auto T12 = (T[1] - T[2] + angle360) % angle360;
+                    if (C01 == T01 && C12 == T12) {
+                        std::cout << h << ' ' << m << ' ' << s << ' ' << 0;
+                        return;
+                    }
+                } while (std::next_permutation(T.begin(), T.end()));
+            }
 }
 
-static void solve() {
+static void solve_set1() {
     std::array<int64_t, 3> T;
     std::cin >> T[0] >> T[1] >> T[2];
 
-    std::sort(T.begin(), T.end());
-    T[2] -= T[0];
-    T[1] -= T[0];
-    T[0] = 0;
+    do { // assume T is HH:MM:SS
+        const int HH = T[0] / angleFullHour;
+        const int MM = T[1] / angleFullMinute;
+        const int SS = T[2] / angleFullSecond;
 
-    for (int r = 0; r < secondsPerMinute; ++r) {
-        do { // assume T is HH:MM:SS
-            const auto secondsAdjustment = (T[2] / angleFullSecond * angleFullSecond) - T[2];
-            const auto T0 = T[0] + secondsAdjustment;
-            const auto T1 = T[1] + secondsAdjustment;
-            const auto T2 = T[2] + secondsAdjustment;
+        const auto maybeMM = minutesPerHour * (T[0] % angleFullHour) / angleFullHour;
+        const auto maybeSS = secondsPerMinute * (T[1] % angleFullMinute) / angleFullMinute;
 
-            if (check(T0, T1, T2))
-                return;
-        } while (std::next_permutation(T.begin(), T.end()));
-
-        for (auto& a : T)
-            a = (a + angleFullSecond) % angle360;
-    }
+        if (HH < 12 && MM < 60 && SS < 60 && maybeMM == MM && maybeSS == SS) {
+            const int NN = nanosecondsPerSecond * (T[2] % angleFullSecond) * angleFullSecond;
+            std::cout << HH << ' ' << MM << ' ' << SS << ' ' << NN;
+            return;
+        }
+    } while (std::next_permutation(T.begin(), T.end()));
 }
 
 int main(int, char**)
@@ -76,7 +78,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve_set2(); std::cout << '\n';
     }
 }
 
