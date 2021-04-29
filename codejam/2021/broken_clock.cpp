@@ -3,6 +3,7 @@
 #include <array>
 #include <assert.h>
 #include <iostream>
+#include <optional>
 #include <numeric>
 
 // Broken clock
@@ -22,8 +23,163 @@ constexpr int64_t angleFullMinute = angleMinutePerNanosecond * nanosecondsPerMin
 constexpr int64_t angleFullSecond = angleSecondPerNanosecond * nanosecondsPerSecond;
 constexpr int64_t angle360 = angleFullSecond * secondsPerMinute;
 
+template <typename INT_T = int, INT_T M = 998244353>
+class modnum_t {
+  public:
+    modnum_t() : value(0) {}
+    modnum_t(int64_t v) : value(v % M) {
+        if (value < 0) value += M;
+    }
+
+    modnum_t inv() const
+    {
+        modnum_t res;
+        res.value = minv(value, M);
+        return res;
+    }
+
+    modnum_t neg() const
+    {
+        modnum_t res;
+        res.value = value ? M - value : 0;
+        return res;
+    }
+
+    modnum_t operator-() const
+    {
+        return neg();
+    }
+
+    modnum_t operator+() const
+    {
+        return modnum_t(*this);
+    }
+
+    modnum_t& operator+=(const modnum_t& o)
+    {
+        value += o.value;
+        if (value >= M) value -= M;
+        return *this;
+    }
+
+    modnum_t& operator-=(const modnum_t& o)
+    {
+        value -= o.value;
+        if (value < 0) value += M;
+        return *this;
+    }
+
+    modnum_t& operator*=(const modnum_t& o)
+    {
+        value = INT_T(int64_t(value) * int64_t(o.value) % M);
+        return *this;
+    }
+
+    modnum_t& operator/=(const modnum_t& o)
+    {
+        return *this *= o.inv();
+    }
+
+    modnum_t& operator++()
+    {
+        value++;
+        if (value == M) value = 0;
+        return *this;
+    }
+
+    modnum_t& operator--()
+    {
+        if (value == 0) value = M;
+        value--;
+        return *this;
+    }
+
+    friend modnum_t operator++(modnum_t& a, int)
+    {
+        modnum_t r = a;
+        ++a;
+        return r;
+    }
+
+    friend modnum_t operator--(modnum_t& a, int)
+    {
+        modnum_t r = a;
+        --a;
+        return r;
+    }
+
+    friend std::optional<modnum_t> inv(const modnum_t& m) { const auto ret = m.inv(); return ret.value < 0 ? std::nullopt : std::optional{ret}; }
+    friend modnum_t neg(const modnum_t& m) { return m.neg(); }
+
+    friend std::ostream& operator<<(std::ostream& out, const modnum_t& n) { return out << INT_T(n); }
+    friend std::istream& operator>>(std::istream& in, modnum_t& n) { int64_t v; in >> v; n = modnum_t(v); return in; }
+
+    friend bool operator<(const modnum_t& a, const modnum_t& b) { return a.value < b.value; }
+    friend bool operator==(const modnum_t& a, const modnum_t& b) { return a.value == b.value; }
+    friend bool operator!=(const modnum_t& a, const modnum_t& b) { return a.value != b.value; }
+    friend modnum_t operator+(const modnum_t& a, const modnum_t& b) { return modnum_t(a) += b; }
+    friend modnum_t operator-(const modnum_t& a, const modnum_t& b) { return modnum_t(a) -= b; }
+    friend modnum_t operator*(const modnum_t& a, const modnum_t& b) { return modnum_t(a) *= b; }
+    friend modnum_t operator/(const modnum_t& a, const modnum_t& b) { return modnum_t(a) /= b; }
+    friend INT_T operator%(const modnum_t& a, const INT_T b) { return a.value % b; }
+
+    explicit operator int() const { return value; }
+    explicit operator int64_t() const { return value; }
+
+  private:
+    static INT_T minv(INT_T a, const INT_T m) {
+        a %= m;
+        if (a == 0) return -1; // not exists
+        return a == 1 ? 1 : INT_T(m - int64_t(minv(m, a)) * int64_t(m) / a);
+    }
+
+    INT_T value;
+};
+
+using mod_t = modnum_t<int64_t, angle360>;
+
+/* Time to find is equal to HH * angleFullHour + inHourHoursShift
+ * In the last partial hour minutes hand moved (angleMinutePerNanosecond / angleHourPerNanosecond)
+ * more distance then hours hand - whitch is 12
+ * Angle between hours and minutes hands is (HH * angleFullHour + inHourHoursShift) - (12 * inHourHoursShift)
+ * So inHourHoursShift == (HH * angleFullHour - angleHM) / 11 and only valid candidate for HH can pass this
+ */
+static void solve_set3() {
+    std::array<mod_t, 3> T;
+    std::cin >> T[0] >> T[1] >> T[2];
+
+    do {
+        int n{0};
+        auto angleHM = T[1] - T[0];
+        while (n < 12) {
+            if (angleHM % 11 == 0)
+                break;
+            angleHM += angleFullHour;
+            ++n;
+        }
+
+        if (n == 12) continue;
+        const auto inHourHoursShift = int64_t(angleHM) / 11;
+        auto nanoseconds = mod_t{n * angleFullHour} + inHourHoursShift;
+        const auto start = T[0] - nanoseconds;
+
+        if ((start + 12 * inHourHoursShift) != T[1] ) continue;
+        if ((start + 720 * inHourHoursShift) != T[2] ) continue;
+
+        const int h = int64_t(nanoseconds) / angleFullHour;
+        nanoseconds -= h * angleFullHour;
+        const int m = int64_t(nanoseconds) / nanosecondsPerMinute % minutesPerHour;
+        nanoseconds -= m * angleFullMinute;
+        const int s = int64_t(nanoseconds) / nanosecondsPerSecond % secondsPerMinute;
+        nanoseconds -= s * angleFullSecond;
+
+        std::cout << h << ' ' << m << ' ' << s << ' ' << nanoseconds % nanosecondsPerSecond;
+        return;
+    } while (std::next_permutation(T.begin(), T.end()));
+}
+
 static void solve_set2() {
-    std::array<int64_t, 3> C, T;
+    std::array<mod_t, 3> C, T;
     std::cin >> T[0] >> T[1] >> T[2];
     std::sort(T.begin(), T.end());
 
@@ -37,11 +193,7 @@ static void solve_set2() {
                 ns_count -= m * nanosecondsPerMinute;
                 C[2] = ns_count * angleSecondPerNanosecond;
                 do {
-                    const auto C01 = (C[0] - C[1] + angle360) % angle360;
-                    const auto T01 = (T[0] - T[1] + angle360) % angle360;
-                    const auto C12 = (C[1] - C[2] + angle360) % angle360;
-                    const auto T12 = (T[1] - T[2] + angle360) % angle360;
-                    if (C01 == T01 && C12 == T12) {
+                    if (C[0] - C[1] == T[0] - T[1] && C[1] - C[2] == T[1] - T[2]) {
                         std::cout << h << ' ' << m << ' ' << s << ' ' << 0;
                         return;
                     }
@@ -78,7 +230,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_set2(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve_set3(); std::cout << '\n';
     }
 }
 

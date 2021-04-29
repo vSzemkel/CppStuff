@@ -5,7 +5,7 @@
 
 // Modnum - integral datatype implementing modulo arithmetic
 
-template <int M = 998244353>
+template <typename INT_T = int, INT_T M = 998244353>
 class modnum_t {
   public:
     modnum_t() : value(0) {}
@@ -53,7 +53,7 @@ class modnum_t {
 
     modnum_t& operator*=(const modnum_t& o)
     {
-        value = int(int64_t(value) * int64_t(o.value) % M);
+        value = INT_T(int64_t(value) * int64_t(o.value) % M);
         return *this;
     }
 
@@ -93,7 +93,7 @@ class modnum_t {
     friend std::optional<modnum_t> inv(const modnum_t& m) { const auto ret = m.inv(); return ret.value < 0 ? std::nullopt : std::optional{ret}; }
     friend modnum_t neg(const modnum_t& m) { return m.neg(); }
 
-    friend std::ostream& operator<<(std::ostream& out, const modnum_t& n) { return out << int(n); }
+    friend std::ostream& operator<<(std::ostream& out, const modnum_t& n) { return out << INT_T(n); }
     friend std::istream& operator>>(std::istream& in, modnum_t& n) { int64_t v; in >> v; n = modnum_t(v); return in; }
 
     friend bool operator<(const modnum_t& a, const modnum_t& b) { return a.value < b.value; }
@@ -103,24 +103,26 @@ class modnum_t {
     friend modnum_t operator-(const modnum_t& a, const modnum_t& b) { return modnum_t(a) -= b; }
     friend modnum_t operator*(const modnum_t& a, const modnum_t& b) { return modnum_t(a) *= b; }
     friend modnum_t operator/(const modnum_t& a, const modnum_t& b) { return modnum_t(a) /= b; }
+    friend INT_T operator%(const modnum_t& a, const INT_T b) { return a.value % b; }
 
     explicit operator int() const { return value; }
+    explicit operator int64_t() const { return value; }
 
   private:
-    static int minv(int a, const int m) {
+    static INT_T minv(INT_T a, const INT_T m) {
         a %= m;
         if (a == 0) return -1; // not exists
-        return a == 1 ? 1 : int(m - int64_t(minv(m, a)) * int64_t(m) / a);
+        return a == 1 ? 1 : INT_T(m - int64_t(minv(m, a)) * int64_t(m) / a);
     }
 
-    int value;
+    INT_T value;
 };
 
 int main(int, char**)
 {
-    modnum_t<20> m = 13;
+    modnum_t<int, 20> m = 13;
     assert((int)inv(m).value() == 17); // 13 * 17 == 1 (mod 20)
-    modnum_t<20> m2 = 15;
+    modnum_t<int, 20> m2 = 15;
     assert(!inv(m2).has_value());
 
     assert((int)neg(m2) == 5);

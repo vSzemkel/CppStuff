@@ -14,7 +14,7 @@ static int sock_init()
     bzero((char*)&serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(port);
-    memcpy(server->h_addr, &serv_addr.sin_addr.s_addr, server->h_length);
+    memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
     if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
         ERREXIT("connect");
 

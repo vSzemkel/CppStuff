@@ -53,7 +53,7 @@ static void deliver(const int sfd)
         ERREXIT("accept");
     for (int i = 0; i < g_msg_count; ++i) {
         g_magazine.get(msgbuf);
-        write(cli_fd, msg, msg->size);
+        send(cli_fd, msg, msg->size, 0);
     }
     close(cli_fd);
 }

@@ -379,10 +379,6 @@ Compile:
 clang++.exe -Wall -Wextra -g -O0 -std=c++17 desctree.cpp -o desctree.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address desctree.cpp -o desctree.o
 
-Run:
-py.exe interactive_runner.py py.exe desctree_testing_tool.py 1 -- desctree.exe
-desctree.exe < desctree.in
-
 Output:
 
 Nodes count: 10
