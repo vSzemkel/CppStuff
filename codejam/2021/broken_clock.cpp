@@ -138,12 +138,62 @@ class modnum_t {
 
 using mod_t = modnum_t<int64_t, angle360>;
 
+constexpr int64_t MAX = angle360;
+
+int64_t add(int64_t a, int64_t b)
+{
+    a += b;
+    while (a >= MAX)
+        a -= MAX;
+    return a;
+}
+
+int64_t modmul(int64_t a, int64_t b)
+{
+    int64_t r{0};
+    while (b) {
+        if (b & 1) r = add(r, a);
+        b >>= 1;
+        a = add(a, a);
+    }
+    return r;
+}
+
 /* Time to find is equal to HH * angleFullHour + inHourHoursShift
- * In the last partial hour minutes hand moved (angleMinutePerNanosecond / angleHourPerNanosecond)
- * more distance then hours hand - whitch is 12
+ * In the last partial hour, minutes hand moved (angleMinutePerNanosecond / angleHourPerNanosecond)
+ * more distance then hours hand - which is equal to 12
  * Angle between hours and minutes hands is (HH * angleFullHour + inHourHoursShift) - (12 * inHourHoursShift)
  * So inHourHoursShift == (HH * angleFullHour - angleHM) / 11 and only valid candidate for HH can pass this
  */
+
+constexpr int64_t INV11 = 15709090909091LL; // INV11 * 11 == 1 mod angle360
+
+static void solve() {
+    std::array<mod_t, 3> T;
+    std::cin >> T[0] >> T[1] >> T[2];
+
+    do {
+        auto angleHM = T[1] - T[0];
+        const auto inHourHoursShift = modmul(int64_t(angleHM), INV11);
+        const auto fullHoursShift = mod_t{11 * inHourHoursShift} - angleHM;
+        auto nanoseconds = fullHoursShift + inHourHoursShift;
+
+        const auto start = T[0] - nanoseconds;
+        if ((start + 12 * inHourHoursShift) != T[1] ) continue;
+        if ((start + 720 * inHourHoursShift) != T[2] ) continue;
+
+        const int h = int64_t(nanoseconds) / angleFullHour;
+        nanoseconds -= h * angleFullHour;
+        const int m = int64_t(nanoseconds) / nanosecondsPerMinute % minutesPerHour;
+        nanoseconds -= m * angleFullMinute;
+        const int s = int64_t(nanoseconds) / nanosecondsPerSecond % secondsPerMinute;
+        nanoseconds -= s * angleFullSecond;
+
+        std::cout << h << ' ' << m << ' ' << s << ' ' << nanoseconds % nanosecondsPerSecond;
+        return;
+    } while (std::next_permutation(T.begin(), T.end()));
+}
+
 static void solve_set3() {
     std::array<mod_t, 3> T;
     std::cin >> T[0] >> T[1] >> T[2];
@@ -230,7 +280,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_set3(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 
