@@ -23,7 +23,7 @@ constexpr int64_t angleFullMinute = angleMinutePerNanosecond * nanosecondsPerMin
 constexpr int64_t angleFullSecond = angleSecondPerNanosecond * nanosecondsPerSecond;
 constexpr int64_t angle360 = angleFullSecond * secondsPerMinute;
 
-template <typename INT_T = int, INT_T M = 998244353>
+template <int64_t M = 998244353>
 class modnum_t {
   public:
     modnum_t() : value(0) {}
@@ -71,7 +71,7 @@ class modnum_t {
 
     modnum_t& operator*=(const modnum_t& o)
     {
-        value = INT_T(int64_t(value) * int64_t(o.value) % M);
+        value = modmul(value, o.value) % M;
         return *this;
     }
 
@@ -111,7 +111,7 @@ class modnum_t {
     friend std::optional<modnum_t> inv(const modnum_t& m) { const auto ret = m.inv(); return ret.value < 0 ? std::nullopt : std::optional{ret}; }
     friend modnum_t neg(const modnum_t& m) { return m.neg(); }
 
-    friend std::ostream& operator<<(std::ostream& out, const modnum_t& n) { return out << INT_T(n); }
+    friend std::ostream& operator<<(std::ostream& out, const modnum_t& n) { return out << int64_t(n); }
     friend std::istream& operator>>(std::istream& in, modnum_t& n) { int64_t v; in >> v; n = modnum_t(v); return in; }
 
     friend bool operator<(const modnum_t& a, const modnum_t& b) { return a.value < b.value; }
@@ -121,43 +121,41 @@ class modnum_t {
     friend modnum_t operator-(const modnum_t& a, const modnum_t& b) { return modnum_t(a) -= b; }
     friend modnum_t operator*(const modnum_t& a, const modnum_t& b) { return modnum_t(a) *= b; }
     friend modnum_t operator/(const modnum_t& a, const modnum_t& b) { return modnum_t(a) /= b; }
-    friend INT_T operator%(const modnum_t& a, const INT_T b) { return a.value % b; }
+    friend int64_t operator%(const modnum_t& a, const int64_t b) { return a.value % b; }
 
-    explicit operator int() const { return value; }
     explicit operator int64_t() const { return value; }
 
   private:
-    static INT_T minv(INT_T a, const INT_T m) {
+    static int64_t add(int64_t a, int64_t b)
+    {
+        a += b;
+        while (a >= M)
+            a -= M;
+        return a;
+    }
+
+    static int64_t modmul(int64_t a, int64_t b)
+    {
+        int64_t r{0};
+        while (b) {
+            if (b & 1) r = add(r, a);
+            b >>= 1;
+            a = add(a, a);
+        }
+        return r;
+    }
+
+    static int64_t minv(int64_t a, const int64_t m) {
         a %= m;
         if (a == 0) return -1; // not exists
-        return a == 1 ? 1 : INT_T(m - int64_t(minv(m, a)) * int64_t(m) / a);
+        return a == 1 ? 1 : int64_t(m - int64_t(minv(m, a)) * int64_t(m) / a);
     }
 
-    INT_T value;
+    int64_t value;
 };
 
-using mod_t = modnum_t<int64_t, angle360>;
-
-constexpr int64_t MAX = angle360;
-
-int64_t add(int64_t a, int64_t b)
-{
-    a += b;
-    while (a >= MAX)
-        a -= MAX;
-    return a;
-}
-
-int64_t modmul(int64_t a, int64_t b)
-{
-    int64_t r{0};
-    while (b) {
-        if (b & 1) r = add(r, a);
-        b >>= 1;
-        a = add(a, a);
-    }
-    return r;
-}
+using mod_t = modnum_t<angle360>;
+static const int64_t INV11 = int64_t(mod_t{1} / 11);
 
 /* Time to find is equal to HH * angleFullHour + inHourHoursShift
  * In the last partial hour, minutes hand moved (angleMinutePerNanosecond / angleHourPerNanosecond)
@@ -166,15 +164,13 @@ int64_t modmul(int64_t a, int64_t b)
  * So inHourHoursShift == (HH * angleFullHour - angleHM) / 11 and only valid candidate for HH can pass this
  */
 
-constexpr int64_t INV11 = 15709090909091LL; // INV11 * 11 == 1 mod angle360
-
 static void solve() {
     std::array<mod_t, 3> T;
     std::cin >> T[0] >> T[1] >> T[2];
 
     do {
         auto angleHM = T[1] - T[0];
-        const auto inHourHoursShift = modmul(int64_t(angleHM), INV11);
+        const auto inHourHoursShift = angleHM * INV11;
         const auto fullHoursShift = mod_t{11 * inHourHoursShift} - angleHM;
         auto nanoseconds = fullHoursShift + inHourHoursShift;
 
