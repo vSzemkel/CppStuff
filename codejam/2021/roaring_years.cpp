@@ -20,14 +20,12 @@ static bool is_roaring(const int64_t year) {
         while (true) {
             if (int64_t(year / pow10[digits - pref]) != start)
                 break;
-            int64_t next = chunk + 1;
+            const int64_t next = ++chunk;
             const int next_digits = dig_cnt(next);
             pref += next_digits;
-            if (pref <= digits) {
-                start = start * pow10[next_digits] + next;
-                chunk = next;
-            } else
+            if (pref > digits)
                 break;
+            start = start * pow10[next_digits] + next;
         }
 
         if (start == year)
@@ -66,15 +64,13 @@ static void init() {
             int len{p + 1};
             int64_t chunk{start}, roar{start};
             while (true) {
-                int64_t next = chunk + 1;
+                const int64_t next = ++chunk;
                 const int next_digits = dig_cnt(next);
                 len += next_digits;
-                if (len < 19) {
-                    roar = roar * pow10[next_digits] + next;
-                    roars.push_back(roar);
-                    chunk = next;
-                } else
+                if (len >= 19)
                     break;
+                roar = roar * pow10[next_digits] + next;
+                roars.push_back(roar);
             }
         }
     }
@@ -95,6 +91,37 @@ static void solve() {
     std::cout << ret;
 }
 
+static void solve_nqiii() { // original author: nqiiii
+    int64_t Y; std::cin >> Y;
+    constexpr auto construct = [](int64_t base, int rep){
+        auto ret = base, chunk = base;
+        while (rep > 1) {
+            const int64_t next = ++chunk;
+            const int next_digits = dig_cnt(next);
+            if (2 * MAX / pow10[next_digits] < ret)
+                return 2 * MAX;
+            ret = ret * pow10[next_digits] + next;
+            --rep;
+        }
+        return ret;
+    };
+
+    int64_t ans = 2 * MAX;
+    for (int rep = 2; rep <= 18; ++rep) {
+        int64_t lb{0}, ub{pow10[9]};
+        while (lb != ub) {
+            const auto mid = (lb + ub) / 2;
+            if (construct(mid, rep) > Y)
+                ub = mid;
+            else
+                lb = mid + 1;
+        }
+        ans = std::min(ans, construct(lb, rep));
+    }
+
+    std::cout << ans;
+}
+
 int main(int, char**)
 {
     std::ios_base::sync_with_stdio(false);
@@ -106,7 +133,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve_nqiii(); std::cout << '\n';
     }
 }
 
