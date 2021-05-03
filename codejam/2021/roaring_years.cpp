@@ -10,7 +10,7 @@
 static const int64_t MAX = std::pow(10, 18);
 std::vector<int64_t> roars, pow10(19);
 
-const auto dig_cnt = [](const int64_t n){return int(std::floor(std::log10(n))) + 1;};
+const auto dig_cnt = [](const int64_t n){return int(std::log10(n)) + 1;};
 
 static bool is_roaring(const int64_t year) {
     const int digits = dig_cnt(year);
@@ -133,7 +133,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_nqiii(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 

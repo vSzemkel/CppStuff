@@ -46,7 +46,7 @@ template <typename T> void fill2(std::vector<std::vector<T>>& cont, int& rows, i
 template <typename T> void fill2sq(std::vector<std::vector<T>>& cont, int& size){std::cin>>size;cont.resize(size);for(auto& r:cont) r=fill<T>(size);};
 template <typename K, typename V> std::map<K, V> fillmap(size_t size){std::map<K, V> cont;for(int i=0;i<size;++i){int k,v;std::cin>>k>>v;cont[k]=v;}return cont;};
 template <typename T> T init2(const int rows, const int cols){T cont(rows,typename T::value_type(cols));return cont;};
-const auto dig_cnt = [](const int64_t n){return int(std::floor(std::log10(n))) + 1;};
+const auto dig_cnt = [](const int64_t n){return int(std::log10(n)) + 1;};
 const auto bin_coeff = [](const int n, const int k){return (int)(1/((n+1)*std::beta(n-k+1,k+1)));};
 const auto rand_in_range = [](const int64_t ubound){std::random_device seed;std::mt19937 gen{seed()};std::uniform_int_distribution<int64_t> dist(0,ubound-1);return dist(gen);};
 size_t next_max(const int off) {return std::lower_bound(g_input.begin()+off+1,g_input.end(),0,[](const auto& n,auto){const auto pred=&n-1;return *pred<=n;})-g_input.begin()-1;}
