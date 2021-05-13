@@ -80,7 +80,7 @@ int main(int, char**)
 
 Compile:
 clang++.exe -Wall -Wextra -g -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address $TASKNAME$.cpp -o $TASKNAME$.o
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address $TASKNAME$.cpp -o $TASKNAME$
 
 Run:
 py.exe interactive_runner.py py.exe $TASKNAME$_testing_tool.py 1 -- $TASKNAME$.exe

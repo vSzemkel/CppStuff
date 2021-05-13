@@ -1,14 +1,20 @@
 
-#include <algorithm>
 #include <array>
-#include <assert.h>
+#include <algorithm>
+#include <cassert>
+#include <functional>
 #include <iostream>
+#include <map>
 #include <numeric>
-#include <utility>
+#include <unordered_map>
 #include <vector>
 
-// Described tree - datastructure implementing elementary tree operations
-// Inspired by work of neal_wu
+// Truck delivery
+// https://codingcompetitions.withgoogle.com/kickstart/round/0000000000435a5b/000000000077a885
+
+static int highest_bit(const int x) {
+    return x == 0 ? -1 : 31 - __builtin_clz(x);
+}
 
 template<typename T, bool maximum_mode = false> // inspired by neal_wu
 struct rmq_t {
@@ -17,10 +23,6 @@ struct rmq_t {
             _values = v;
             build();
         }
-    }
-
-    static int highest_bit(const int x) {
-        return x == 0 ? -1 : 31 - __builtin_clz(x);
     }
 
     // Note: breaks ties by choosing the largest index.
@@ -315,57 +317,268 @@ struct desctree_t {
     bool _built{};
 };
 
-constexpr int N = 10;
-desctree_t g_tree(N);
+// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0200r0.html
+template<class Fun> class y_combinator_result {
+    Fun fun_;
+public:
+    template<class T> explicit y_combinator_result(T &&fun): fun_(std::forward<T>(fun)) {}
+    template<class ...Args> decltype(auto) operator()(Args &&...args) { return fun_(std::ref(*this), std::forward<Args>(args)...); }
+};
+template<class Fun> decltype(auto) y_combinator(Fun &&fun) { return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun)); }
 
-static void init()
-{
-    g_tree.add_edge(0, 1);
-    g_tree.add_edge(2, 0);
-    g_tree.add_edge(1, 3);
-    g_tree.add_edge(3, 6);
-    g_tree.add_edge(7, 3);
-    g_tree.add_edge(7, 9);
-    g_tree.add_edge(4, 2);
-    g_tree.add_edge(2, 5);
-    g_tree.add_edge(5, 8);
-}
+struct segment_change_t {
 
-static void test()
-{
-    std::vector<int> subtree_of_1;
-    for (int i = g_tree._dfs_rank[1]; i < g_tree._dfs_rank_end[1]; ++i)
-        subtree_of_1.push_back(g_tree._dfs_list[i]);
-    assert((subtree_of_1 == std::vector<int>{1, 3, 7, 9, 6}));
+    segment_change_t(int64_t v = 0) : _value(v) {}
 
-    for (int i = 0; i < N; ++i)
-        assert(g_tree._subtree_size[i] == g_tree._dfs_rank_end[i] - g_tree._dfs_rank[i]);
+    void reset() { _value = 0; }
+    bool has_change() const { return _value != 0; }
 
-    assert(g_tree.on_path(3, 9, 0));
-    assert(!g_tree.on_path(4, 0, 9));
+    // Return the combined result of applying this segment change followed by `other`.
+    segment_change_t combine(const segment_change_t &other) const {
+        return segment_change_t(std::gcd(_value, other._value));
+    }
 
-    const auto ct = g_tree.compress_tree({6, 9});
-    assert(ct.size() == 3);
+    int64_t _value;
+};
 
-    const auto diameter = g_tree.get_diameter();
-    std::cout << "Nodes count: " << g_tree._subtree_size[0] << '\n';
-    std::cout << "Diameter: " << diameter.first << " (" << diameter.second[0] << ", " << diameter.second[1] << ")\n";
-    std::cout << "Root paths sum: " << g_tree._paths[0] << '\n';
-    std::cout << "Subtrees paths sum: " << g_tree._subtree_paths[0] << '\n';
-    std::cout << "Degree of node 3: " << g_tree.degree(2) << '\n';
-    std::cout << "Sum of paths to 3: " << g_tree.get_paths_len_to(2) << '\n';
-    std::cout << "Child ancestor of 0 on path to 8: " << g_tree.child_ancestor(0, 8) << '\n';
-    std::cout << "3rd node on path from 1 to 8: " << g_tree.get_kth_node_on_path(1, 8, 3) << '\n';
-    std::cout << "2nd ancestor of 7: " << g_tree.get_kth_ancestor(7, 2) << '\n';
-    std::cout << "Common node of 4, 5, 8: " << g_tree.get_common_node(4, 5, 8) << '\n';
-    std::cout << "Lowest common ancestor of 6 and 9: " << g_tree.get_lca(6, 9) << '\n';
-    std::cout << "Distance between 5 and 7: " << g_tree.get_dist(5, 7) << '\n';
+struct segment_t {
 
-    std::cout << "\nDFS order: ";
-    for (const auto n : g_tree._dfs_list) std::cout << n << ' ';
-    std::cout << "\nEuler order: ";
-    for (const auto n : g_tree._euler) std::cout << n << ' ';
-    std::cout << std::endl;
+    segment_t(int64_t v = 0) : _value(v) {}
+    bool empty() const { return _value == 0; }
+    void apply(int, const segment_change_t& change) { _value = std::gcd(_value, change._value); }
+    void join(const segment_t& other) { _value = std::gcd(_value, other._value); }
+    void join(const segment_t& a, const segment_t& b) { *this = a; join(b); }
+
+    int64_t _value;
+};
+
+struct segtree_t {
+    segtree_t(const int n = -1) {
+        if (n >= 0)
+            init(n);
+    }
+
+    void init(const int n) {
+        _tree_n = 1;
+
+        while (_tree_n < n)
+            _tree_n *= 2;
+
+        _tree.assign(2 * _tree_n, segment_t{});
+        _changes.assign(_tree_n, segment_change_t{});
+    }
+
+    inline segment_t left(const int pos) { return _tree[2 * pos]; }
+    inline segment_t right(const int pos) { return _tree[2 * pos + 1]; }
+
+    // Builds our tree from an array in O(n).
+    void build(const std::vector<segment_t>& initial) {
+        const int n = int(initial.size());
+        init(n);
+        assert(n <= _tree_n);
+
+        std::copy(initial.begin(), initial.end(), _tree.begin() + _tree_n);
+        for (int pos = _tree_n - 1; pos > 0; --pos)
+            _tree[pos].join(left(pos), right(pos));
+    }
+
+    void apply_and_combine(const int pos, const int length, const segment_change_t& change) {
+        _tree[pos].apply(length, change);
+        if (pos < _tree_n) _changes[pos] = _changes[pos].combine(change);
+    }
+
+    void push_down(const int pos, const int length) {
+        auto& chg = _changes[pos];
+        if (chg.has_change()) {
+            apply_and_combine(2 * pos, length / 2, chg);
+            apply_and_combine(2 * pos + 1, length / 2, chg);
+            chg.reset();
+        }
+    }
+
+    // Calls push_down for all necessary nodes in order to query the range [a, b).
+    void push_all(int a, int b) {
+        assert(0 <= a && a < b && b <= _tree_n);
+        a += _tree_n;
+        b += _tree_n - 1;
+
+        for (int up = highest_bit(_tree_n); up > 0; --up) {
+            const int x = a >> up, y = b >> up;
+            push_down(x, 1 << up);
+            if (x != y) push_down(y, 1 << up);
+        }
+    }
+
+    void join_and_apply(const int pos, const int length) {
+        _tree[pos].join(left(pos), right(pos));
+        _tree[pos].apply(length, _changes[pos]);
+    }
+
+    // Calls join for all necessary nodes after updating the range [a, b).
+    void join_all(int a, int b) {
+        assert(0 <= a && a < b && b <= _tree_n);
+        a += _tree_n;
+        b += _tree_n - 1;
+        int length = 1;
+
+        while (a > 1) {
+            a /= 2;
+            b /= 2;
+            length *= 2;
+            join_and_apply(a, length);
+            if (a != b) join_and_apply(b, length);
+        }
+    }
+
+    template<typename T_range_op>
+    void process_range(int a, int b, bool needs_join, T_range_op &&range_op) {
+        if (a == b) return;
+        push_all(a, b);
+        const int original_a{a}, original_b{b};
+        int length = 1, r_size = 0;
+
+        for (a += _tree_n, b += _tree_n; a < b; a /= 2, b /= 2, length *= 2) {
+            if (a & 1)
+                range_op(a++, length);
+
+            if (b & 1)
+                _right_half[r_size++] = {--b, length};
+        }
+
+        for (int i = r_size - 1; i >= 0; --i)
+            range_op(_right_half[i].first, _right_half[i].second);
+
+        if (needs_join)
+            join_all(original_a, original_b);
+    }
+
+    segment_t query(const int a, const int b) {
+        assert(0 <= a && a <= b && b <= _tree_n);
+        segment_t ans;
+
+        process_range(a, b, false, [&](int pos, int) {
+            ans.join(_tree[pos]);
+        });
+
+        return ans;
+    }
+
+    void update(const int a, const int b, const segment_change_t& change) {
+        assert(0 <= a && a <= b && b <= _tree_n);
+
+        process_range(a, b, true, [&](int pos, int length) {
+            apply_and_combine(pos, length, change);
+        });
+    }
+
+    std::vector<segment_t> to_array() {
+        for (int i = 1; i < _tree_n; ++i)
+            push_down(i, _tree_n >> highest_bit(i));
+
+        std::vector<segment_t> ret(_tree_n);
+        std::copy(_tree.begin() + _tree_n, _tree.end(), ret.begin());
+
+        return ret;
+    }
+
+    void update_single(int index, const segment_t& seg) {
+        assert(0 <= index && index < _tree_n);
+        int pos = _tree_n + index;
+
+        for (int up = highest_bit(_tree_n); up > 0; --up)
+            push_down(pos >> up, 1 << up);
+
+        _tree[pos] = seg;
+
+        while (pos > 1) {
+            pos /= 2;
+            _tree[pos].join(left(pos), right(pos));
+        }
+    }
+
+    // Finds the last subarray starting at `first` that satisifes `should_join` via binary search in O(log n).
+    template<typename T_bool>
+    int find_last_subarray(T_bool &&should_join, const int n, int first = 0) {
+        assert(0 <= first && first <= n);
+        segment_t current;
+
+        // Check the degenerate case.
+        if (!should_join(current, current))
+            return first - 1;
+
+        return y_combinator([&](auto search, const int pos, const int start, const int end) -> int {
+            if (end <= first) {
+                return end;
+            } else if (first <= start && end <= n && should_join(current, _tree[pos])) {
+                current.join(_tree[pos]);
+                return end;
+            } else if (end - start == 1) {
+                return start;
+            }
+
+            push_down(pos, end - start);
+            const int mid = (start + end) / 2;
+            const int left = search(2 * pos, start, mid);
+            return left < mid ? left : search(2 * pos + 1, mid, end);
+        })(1, 0, _tree_n);
+    }
+
+    int _tree_n{0};
+    std::pair<int, int> _right_half[32];
+    std::vector<segment_t> _tree;
+    std::vector<segment_change_t> _changes;
+};
+
+struct event_t {
+    int city;
+    int64_t weight;
+    int ord_no;
+    bool operator<(const event_t& other) { return weight < other.weight; }
+};
+
+struct edge_t {
+    int c1;
+    int c2;
+    int limit;
+    int64_t toll;
+    bool operator<(const edge_t& other) { return limit < other.limit; }
+};
+
+static void solve() {
+    int N, Q; std::cin >> N >> Q;
+    std::vector<edge_t> roads(N - 1);
+    desctree_t lca(N);
+    for (auto& e : roads) {
+        std::cin >> e.c1 >> e.c2 >> e.limit >> e.toll;
+        lca.add_edge(--e.c1, --e.c2);
+    }
+    std::sort(roads.begin(), roads.end());
+    lca.build();
+
+    int pos{0};
+    std::vector<int64_t> answers(Q);
+    std::vector<event_t> queries(Q);
+    for (auto& q : queries) {
+        std::cin >> q.city >> q.weight; --q.city;
+        q.ord_no = pos++;
+    }
+    std::sort(queries.begin(), queries.end());
+
+    int r{0}; // how many roads charges the toll for arbitrary query weight
+    segtree_t tree(N);
+
+    for (const event_t& q : queries) {
+        while (r < N - 1 && roads[r].limit <= q.weight) {
+            const int node = lca._depth[roads[r].c1] > lca._depth[roads[r].c2] ? roads[r].c1 : roads[r].c2;
+            tree.update(lca._dfs_rank[node], lca._dfs_rank_end[node], segment_change_t(roads[r].toll));
+            ++r;
+        }
+
+        answers[q.ord_no] = tree.query(lca._dfs_rank[q.city], lca._dfs_rank[q.city] + 1)._value;
+    }
+
+    for (const auto ans : answers)
+        std::cout << ans << " ";
 }
 
 int main(int, char**)
@@ -374,30 +587,46 @@ int main(int, char**)
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
 
-    init();
-    g_tree.build();
-    test();
+    int no_of_cases;
+    std::cin >> no_of_cases;
+    for (int g = 1; g <= no_of_cases; ++g) {
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+    }
 }
 
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++17 desctree.cpp -o desctree.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address desctree.cpp -o desctree.o
+clang++.exe -Wall -Wextra -g -O0 -std=c++17 truck_delivery2.cpp -o truck_delivery.exe
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address truck_delivery2.cpp -o truck_delivery
+
+Run:
+truck_delivery.exe < truck_delivery.in
+
+Input:
+
+2
+7 5
+2 1 2 4
+2 3 7 8
+3 4 6 2
+5 3 9 9
+2 6 1 5
+7 1 5 7
+5 10
+5 8
+4 1
+6 1
+7 6
+3 2
+1 2 2 10
+3 2 3 5
+3 2
+3 3
 
 Output:
 
-Nodes count: 10
-Diameter: 7 (9, 8)
-Root paths sum: 21
-Subtrees paths sum: 39
-Degree of node 3: 3
-Sum of paths to 3: 23
-Child ancestor of 0 on path to 8: 2
-3rd node on path from 1 to 8: 5
-2nd ancestor of 7: 1
-Common node of 4, 5, 8: 5
-Lowest common ancestor of 6 and 9: 3
-Distance between 5 and 7: 5
+Case #1: 1 4 0 5 7 
+Case #2: 10 5
 
 */
