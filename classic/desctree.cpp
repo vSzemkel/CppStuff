@@ -362,9 +362,9 @@ static void test()
     std::cout << "Distance between 5 and 7: " << g_tree.get_dist(5, 7) << '\n';
 
     std::cout << "\nDFS order: ";
-    for (const auto n : g_tree._dfs_list) std::cout << n << ' ';
+    for (const auto n : g_tree._dfs_list) std::cout << n + 1 << ' ';
     std::cout << "\nEuler order: ";
-    for (const auto n : g_tree._euler) std::cout << n << ' ';
+    for (const auto n : g_tree._euler) std::cout << n + 1 << ' ';
     std::cout << std::endl;
 }
 
