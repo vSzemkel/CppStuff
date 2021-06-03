@@ -24,7 +24,7 @@ bool init_input(const std::string& filename)
         else if (line == "Output:")
             break;
         else if (rewrite && !line.empty()) {
-            testdata << line << "\n";
+            testdata << std::move(line) << '\n';
             found = true;
         }
     }
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
             line.replace(pos, g_replace_size, replace_with);
             pos += g_replace_size;
         }
-        dst << line << "\n";
+        dst << std::move(line) << '\n';
     }
     dst.close();
     src.close();
