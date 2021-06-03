@@ -1,5 +1,4 @@
 
-#include <algorithm>
 #include <assert.h>
 #include <iostream>
 #include <map>
@@ -33,16 +32,18 @@ static void solve() {
     std::map<char, std::unordered_set<char>> tiles;
     for (int c = 0; c < C; ++c) {
         std::vector<char> store(1, '$');
+        std::vector<bool> taken('A' + 26);
         for (int r = 0; r < R; ++r) {
             const char p = wall[r][c];
             if (store.back() == p)
                 continue;
-            if (std::find(store.begin() + 1, store.end(), p) != store.end()) {
+            if (taken[p]) {
                 std::cout << -1;
                 return;
             }
             for (const auto t : store)
                 tiles[t].insert(p);
+            taken[p] = true;
             store.push_back(p);
             if (tiles.find(p) == tiles.end())
                 tiles[p] = {};
