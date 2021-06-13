@@ -2,13 +2,15 @@
 #include <algorithm>
 #include <array>
 #include <assert.h>
+#include <iomanip>
 #include <iostream>
 #include <numeric>
 #include <utility>
 #include <vector>
 
-// Described tree - datastructure implementing elementary tree operations
-// Inspired by work of neal_wu
+// Beauty of tree
+// https://codingcompetitions.withgoogle.com/kickstart/round/000000000019ff08/0000000000386edd#problem
+
 
 template<typename T, bool maximum_mode = false> // inspired by neal_wu
 struct rmq_t {
@@ -315,57 +317,96 @@ struct desctree_t {
     bool _built{};
 };
 
-constexpr int N = 10;
-desctree_t g_tree(N);
+static void solve() {
+    int N, A, B; std::cin >> N >> A >> B;
+    std::vector<std::vector<int>> tree(N);
+    for (int i = 1; i < N; ++i) {
+        int p; std::cin >> p;
+        tree[--p].push_back(i);
+    }
 
-static void init()
-{
-    g_tree.add_edge(0, 1);
-    g_tree.add_edge(2, 0);
-    g_tree.add_edge(1, 3);
-    g_tree.add_edge(3, 6);
-    g_tree.add_edge(7, 3);
-    g_tree.add_edge(7, 9);
-    g_tree.add_edge(4, 2);
-    g_tree.add_edge(2, 5);
-    g_tree.add_edge(5, 8);
+    desctree_t dtree(tree);
+    dtree.build();
+
+    double ret{0};
+    std::vector<int> cnt_a(N), cnt_b(N);
+    for (int i = N - 1; i >= 0; --i) {
+        ++cnt_a[i]; ++cnt_b[i];
+        const auto pa = dtree.get_kth_ancestor(i, A);
+        if (pa >= 0) cnt_a[pa] += cnt_a[i];
+        const auto pb = dtree.get_kth_ancestor(i, B);
+        if (pb >= 0) cnt_b[pb] += cnt_b[i];
+
+        const auto va = double(cnt_a[i]) / N;
+        const auto vb = double(cnt_b[i]) / N;
+        ret += va + vb - va * vb;
+    }
+
+    std::cout << ret;
 }
 
-static void test()
-{
-    std::vector<int> subtree_of_1;
-    for (int i = g_tree._dfs_rank[1]; i < g_tree._dfs_rank_end[1]; ++i)
-        subtree_of_1.push_back(g_tree._dfs_list[i]);
-    assert((subtree_of_1 == std::vector<int>{1, 3, 7, 9, 6}));
+static void solve_set1() {
+    int N, A, B; std::cin >> N >> A >> B;
+    std::vector<std::vector<int>> tree(N);
+    for (int i = 1; i < N; ++i) {
+        int p; std::cin >> p;
+        tree[--p].push_back(i);
+    }
 
-    for (int i = 0; i < N; ++i)
-        assert(g_tree._subtree_size[i] == g_tree._dfs_rank_end[i] - g_tree._dfs_rank[i]);
+    desctree_t dtree(tree);
+    dtree.build();
 
-    assert(g_tree.on_path(3, 9, 0));
-    assert(!g_tree.on_path(4, 0, 9));
+    std::vector<int> cnt_a(N), cnt_b(N);
+    for (int a = 0; a < N; ++a) {
+        auto t = a;
+        const auto da = dtree._depth[a];
+        while (t >= 0) {
+            if ((da - dtree._depth[t]) % A == 0) ++cnt_a[t];
+            if ((da - dtree._depth[t]) % B == 0) ++cnt_b[t];
+            t = dtree._parent[t];
+        }
+    }
 
-    const auto ct = g_tree.compress_tree({6, 9});
-    assert(ct.size() == 3);
+    double ret{0};
+    for (int i = 0; i < N; ++i) {
+        const auto va = double(cnt_a[i]) / N;
+        const auto vb = double(cnt_b[i]) / N;
+        ret += va + vb - va * vb;
+    }
 
-    const auto diameter = g_tree.get_diameter();
-    std::cout << "Nodes count: " << g_tree._subtree_size[0] << '\n';
-    std::cout << "Diameter: " << diameter.first << " (" << diameter.second[0] << ", " << diameter.second[1] << ")\n";
-    std::cout << "Root paths sum: " << g_tree._paths[0] << '\n';
-    std::cout << "Subtrees paths sum: " << g_tree._subtree_paths[0] << '\n';
-    std::cout << "Degree of node 3: " << g_tree.degree(2) << '\n';
-    std::cout << "Sum of paths to 3: " << g_tree.get_paths_len_to(2) << '\n';
-    std::cout << "Child ancestor of 0 on path to 8: " << g_tree.child_ancestor(0, 8) << '\n';
-    std::cout << "3rd node on path from 1 to 8: " << g_tree.get_kth_node_on_path(1, 8, 3) << '\n';
-    std::cout << "2nd ancestor of 7: " << g_tree.get_kth_ancestor(7, 2) << '\n';
-    std::cout << "Common node of 4, 5, 8: " << g_tree.get_common_node(4, 5, 8) << '\n';
-    std::cout << "Lowest common ancestor of 6 and 9: " << g_tree.get_lca(6, 9) << '\n';
-    std::cout << "Distance between 5 and 7: " << g_tree.get_dist(5, 7) << '\n';
+    std::cout << ret;
+}
 
-    std::cout << "\nDFS order: ";
-    for (const auto n : g_tree._dfs_list) std::cout << n + 1 << ' ';
-    std::cout << "\nEuler order: ";
-    for (const auto n : g_tree._euler) std::cout << n + 1 << ' ';
-    std::cout << std::endl;
+static void solve_slow() {
+    int N, A, B; std::cin >> N >> A >> B;
+    std::vector<std::vector<int>> tree(N);
+    for (int i = 1; i < N; ++i) {
+        int p; std::cin >> p;
+        tree[--p].push_back(i);
+    }
+
+    desctree_t dtree(tree);
+    dtree.build();
+
+    int64_t ret{0};
+    const auto lcm = std::lcm(A, B);
+    for (int a = 0; a < N; ++a)
+        for (int b = 0; b < N; ++b) {
+            const auto da = dtree._depth[a];
+            const auto db = dtree._depth[b];
+            ret += 2 + (da / A) + (db / B);
+            const auto lca = (a == b) ? a : dtree.get_lca(a, b);
+            auto dca = dtree._depth[lca];
+            while (dca >= 0) {
+                if (((da - dca) % A) == 0 && ((db - dca) % B) == 0)
+                    break;
+                --dca;
+            }
+            if (dca >= 0)
+                ret -= 1 + (dca / lcm);
+        }
+
+    std::cout << double(ret) / (N * N);
 }
 
 int main(int, char**)
@@ -374,30 +415,36 @@ int main(int, char**)
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
 
-    init();
-    g_tree.build();
-    test();
+    int no_of_cases;
+    std::cin >> no_of_cases;
+    for (int g = 1; g <= no_of_cases; ++g) {
+        std::cout << "Case #" << g << ": " << std::fixed << std::setprecision(9); solve(); std::cout << '\n';
+    }
 }
 
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++17 desctree.cpp -o desctree.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address desctree.cpp -o desctree.o
+clang++.exe -Wall -Wextra -g -O0 -std=c++17 beauty_of_tree.cpp -o beauty_of_tree.exe
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address beauty_of_tree.cpp -o beauty_of_tree
+
+Run:
+beauty_of_tree.exe < beauty_of_tree.in
+
+Input:
+
+3
+8 2 3
+1 1 3 4 4 3 4
+10 3 4
+1 1 1 1 1 1 1 1 1
+4 3 1
+1 2 3
 
 Output:
 
-Nodes count: 10
-Diameter: 7 (9, 8)
-Root paths sum: 21
-Subtrees paths sum: 39
-Degree of node 3: 3
-Sum of paths to 3: 23
-Child ancestor of 0 on path to 8: 2
-3rd node on path from 1 to 8: 5
-2nd ancestor of 7: 1
-Common node of 4, 5, 8: 5
-Lowest common ancestor of 6 and 9: 3
-Distance between 5 and 7: 5
+Case #1: 2.656250000
+Case #2: 1.900000000
+Case #3: 2.875000000
 
 */
