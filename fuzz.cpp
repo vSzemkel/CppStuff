@@ -18,14 +18,14 @@ void fuzz()
         for (int i = 0; i < g_size; ++i)
             g_input[i] = 1 + rand_in_range(1000);
         g_input[g_size / 2] = 300'000'000'000;
-        int s1 = solve();
-        int s2 = solve_slow();
+        const auto  s1 = solve();
+        const auto  s2 = solve_slow();
         if (s1 != s2) {
             ++errors;
-            std::cout << s1 << " " << s2 << "\n";
+            std::cout << s1 << ' ' << s2 << '\n';
             for (int i = 0; i < g_size; ++i)
-                std::cout << g_input[i] << " ";
-            std::cout << "\n";
+                std::cout << g_input[i] << ' ';
+            std::cout << std::endl;
         }
     }
 
