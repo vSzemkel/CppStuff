@@ -90,6 +90,7 @@ struct desctree_t {
         _postorder.resize(n);
         _dfs_list.resize(n);
         _heavy_root.resize(n);
+        _root_path.resize(n);
         _subtree_paths.resize(n);
         _paths.resize(n);
     }
@@ -106,6 +107,12 @@ struct desctree_t {
     void dfs(const int node, const int par) {
         _parent[node] = par;
         _depth[node] = par < 0 ? 0 : _depth[par] + 1;
+
+        // Path to root node
+        auto& rp = _root_path[node];
+        rp.push_back(node);
+        if (par >= 0)
+            rp.insert(rp.end(), _root_path[par].begin(),  _root_path[par].end());
 
         // Erase the edge to parent.
         auto& ngb = _adj[node];
@@ -304,7 +311,7 @@ struct desctree_t {
   // private:
     int _size{};
     int _tour, _post_tour;
-    std::vector<std::vector<int>> _adj;
+    std::vector<std::vector<int>> _adj, _root_path;
     std::vector<int> _parent, _depth, _subtree_size;
     std::vector<int> _euler, _euler_first_rank;
     std::vector<int> _dfs_rank, _dfs_rank_end, _postorder;
@@ -365,6 +372,8 @@ static void test()
     for (const auto n : g_tree._dfs_list) std::cout << n + 1 << ' ';
     std::cout << "\nEuler order: ";
     for (const auto n : g_tree._euler) std::cout << n + 1 << ' ';
+    std::cout << "\nRoot path from node 7: ";
+    for (const auto n : g_tree._root_path[6]) std::cout << n + 1 << ' ';
     std::cout << std::endl;
 }
 

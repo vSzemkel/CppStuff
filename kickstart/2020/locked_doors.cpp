@@ -65,11 +65,10 @@ static void solve_set1_faster() {
             continue;
         }
 
-        int ans{S};
-        int l = S - 1;
         int r = S;
-        int counter = K;
-        while (--counter > 0) {
+        int l = S - 1;
+        int ans{S}, counter{K};
+        while (--counter > 0)
             if (l >= 0 && doors[l] < doors[r]) {
                 int bound = (r > N - 1) ? l - 1 : left_greater[r];
                 if (bound == -1) bound = -1;
@@ -91,10 +90,9 @@ static void solve_set1_faster() {
                 r = bound;
                 ans = r;
             }
-        }
 
         ++ans;
-        std::cout << ans << ' ';
+        std::cout << ' ' << ans;
         cache.add({S, K}, ans);
     }
 }
@@ -121,7 +119,7 @@ static void solve_set1() {
             }
         }
 
-        std::cout << ans + 1 << ' ';
+        std::cout << ' ' << ans + 1;
     }
 }
 
@@ -134,7 +132,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+        std::cout << "Case #" << g << ":"; solve_set1_faster(); std::cout << '\n';
     }
 }
 

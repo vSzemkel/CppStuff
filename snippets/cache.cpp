@@ -27,6 +27,12 @@ int main(int, char**)
     assert(cache.find({2,5}) == std::nullopt);
     cache.add({2, 5}, 177);
     assert(cache.find({2,5}) == 177);
+
+    const auto cached = cache.find({2, 5});
+    if (cached != std::nullopt) {
+        std::cout << cached.value() << ' ';
+        continue;
+    }
 }
 
 /*
