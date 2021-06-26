@@ -1,4 +1,7 @@
 
+#include <array>
+#include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -24,6 +27,106 @@ struct cache_t {
   private:
     std::map<K, V> _cache;
 };
+
+std::vector<std::vector<int>> root_path;
+std::vector<std::array<int, 2>> treap;
+std::vector<int> doors, sizes;
+
+static int dfs(const int node, const int par) {
+    auto& rp = root_path[node];
+    rp.push_back(node);
+    if (par >= 0)
+        rp.insert(rp.end(), root_path[par].begin(),  root_path[par].end());
+
+    auto& size = sizes[node];
+    size = 1;
+    auto& childs = treap[node];
+    if (childs[0] >= 0) size += dfs(childs[0], node);
+    if (childs[1] >= 0) size += dfs(childs[1], node);
+
+    return size;
+}
+
+static void solve() {
+    int N, Q; std::cin >> N >> Q;
+    doors.resize(N - 1);
+    for (auto& d : doors)
+        std::cin >> d;
+
+    std::vector<int> left_greater(N - 1), right_greater(N - 1), stack;
+    for (int i = 0; i < N - 1; ++i) {
+        while (!stack.empty() && doors[stack.back()] < doors[i]) {
+            right_greater[stack.back()] = i;
+            stack.pop_back();
+        }
+        stack.push_back(i);
+    }
+    while (!stack.empty()) {
+        right_greater[stack.back()] = -1;
+        stack.pop_back();
+    }
+    for (int i = N - 2; i >= 0; --i) {
+        while (!stack.empty() && doors[stack.back()] < doors[i]) {
+            left_greater[stack.back()] = i;
+            stack.pop_back();
+        }
+        stack.push_back(i);
+    }
+    while (!stack.empty()) {
+        left_greater[stack.back()] = -1;
+        stack.pop_back();
+    }
+    // build the treap
+    treap.assign(N - 1, {-1, -1});
+    for (int i = 0; i < N - 1; ++i) {
+        const int l = left_greater[i];
+        const int r = right_greater[i];
+        if (l < 0 && r >= 0)
+            treap[r][0] = i;
+        if (r < 0 && l >= 0)
+            treap[l][1] = i;
+        if (l >= 0 && r >= 0) {
+            if (doors[l] < doors[r])
+                treap[l][1] = i;
+            else
+                treap[r][0] = i;
+        }
+    }
+    // compute sizes and paths
+    sizes.resize(N - 1);
+    root_path.assign(N - 1, {});
+    const auto root = std::max_element(doors.begin(), doors.end()) - doors.begin();
+    dfs(root, -1);
+
+    for (int q = 0; q < Q; ++q) {
+        int S, K; std::cin >> S >> K; --S;
+        int ans{S};
+        if (--K > 0) {
+            bool right{true};
+            int first_door{S};
+            if (S > 0 && doors[S - 1] < doors[S]) {
+                right = false;
+                --first_door;
+            }
+            if (K <= sizes[first_door])
+                ans = S + (right ? K : -K);
+            else {
+                const auto& path = root_path[first_door];
+                const auto it = std::lower_bound(path.begin(), path.end(), K, [](const int n1, const int k){
+                    return sizes[n1] < k;
+                });
+                assert(it != path.end());
+                const auto query_root = *it;
+                if (S <= query_root) // coming from left subtree
+                    ans = query_root + K - sizes[treap[query_root][0]];
+                else
+                    ans = query_root - (K - sizes[treap[query_root][1]]) + 1;
+            }
+        }
+
+        std::cout << ' ' << ans + 1;
+    }
+}
 
 static void solve_set1_faster() {
     int N, Q; std::cin >> N >> Q;
@@ -61,7 +164,7 @@ static void solve_set1_faster() {
         int S, K; std::cin >> S >> K; --S;
         const auto cached = cache.find({S, K});
         if (cached != std::nullopt) {
-            std::cout << cached.value() << ' ';
+            std::cout << ' ' << cached.value();
             continue;
         }
 
@@ -132,7 +235,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ":"; solve_set1_faster(); std::cout << '\n';
+        std::cout << "Case #" << g << ":"; solve(); std::cout << '\n';
     }
 }
 
@@ -147,7 +250,7 @@ locked_doors.exe < locked_doors.in
 
 Input:
 
-2
+3
 5 4
 90 30 40 60
 3 4
@@ -158,10 +261,16 @@ Input:
 6 2 4 5 9 30 7 1 8
 6 8
 6 8
+14 3
+3 8 4 11 9 5 1 13 12 6 10 7 2
+12 2
+1 6
+6 5
 
 Output:
 
 Case #1: 5 3 5 2
 Case #2: 8 8
+Case #3: 13 6 4
 
 */
