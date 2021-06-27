@@ -36,11 +36,10 @@ static int dfs(const int node, const int par) {
     auto& rp = root_path[node];
     rp.push_back(node);
     if (par >= 0)
-        rp.insert(rp.end(), root_path[par].begin(),  root_path[par].end());
+        rp.insert(rp.end(), root_path[par].begin(), root_path[par].end());
 
-    auto& size = sizes[node];
-    size = 1;
     auto& childs = treap[node];
+    auto& size = sizes[node] = 1;
     if (childs[0] >= 0) size += dfs(childs[0], node);
     if (childs[1] >= 0) size += dfs(childs[1], node);
 
@@ -52,7 +51,7 @@ static void solve() {
     doors.resize(N - 1);
     for (auto& d : doors)
         std::cin >> d;
-
+    // find next greater neighbour
     std::vector<int> left_greater(N - 1), right_greater(N - 1), stack;
     for (int i = 0; i < N - 1; ++i) {
         while (!stack.empty() && doors[stack.back()] < doors[i]) {
@@ -117,7 +116,7 @@ static void solve() {
                 });
                 assert(it != path.end());
                 const auto query_root = *it;
-                if (S <= query_root) // coming from left subtree
+                if (first_door < query_root) // coming from left subtree
                     ans = query_root + K - sizes[treap[query_root][0]];
                 else
                     ans = query_root - (K - sizes[treap[query_root][1]]) + 1;
