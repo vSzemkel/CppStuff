@@ -5,6 +5,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <numeric>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -30,27 +31,21 @@ struct cache_t {
 
 std::vector<std::vector<int>> root_path;
 std::vector<std::array<int, 2>> treap;
-std::vector<int> doors, sizes;
-
-static int dfs(const int node, const int par) {
-    auto& rp = root_path[node];
-    rp.push_back(node);
-    if (par >= 0)
-        rp.insert(rp.end(), root_path[par].begin(), root_path[par].end());
-
-    auto& childs = treap[node];
-    auto& size = sizes[node] = 1;
-    if (childs[0] >= 0) size += dfs(childs[0], node);
-    if (childs[1] >= 0) size += dfs(childs[1], node);
-
-    return size;
-}
+std::vector<int> doors, sizes, parent;
 
 static void solve() {
     int N, Q; std::cin >> N >> Q;
     doors.resize(N - 1);
     for (auto& d : doors)
         std::cin >> d;
+    // build orber table and normalize
+    std::vector<int> doors_ord(N - 1);
+    std::iota(doors_ord.begin(), doors_ord.end(), 0);
+    std::sort(doors_ord.begin(), doors_ord.end(), [](const int i, const int j){
+        return doors[i] < doors[j];
+    });
+    for (int i = 0; i < N - 1; ++i)
+        doors[doors_ord[i]] = i + 1;
     // find next greater neighbour
     std::vector<int> left_greater(N - 1), right_greater(N - 1), stack;
     for (int i = 0; i < N - 1; ++i) {
@@ -76,26 +71,46 @@ static void solve() {
         stack.pop_back();
     }
     // build the treap
+    parent.resize(N - 1, -1);
     treap.assign(N - 1, {-1, -1});
     for (int i = 0; i < N - 1; ++i) {
         const int l = left_greater[i];
         const int r = right_greater[i];
-        if (l < 0 && r >= 0)
+        if (l < 0 && r >= 0) {
             treap[r][0] = i;
-        if (r < 0 && l >= 0)
+            parent[i] = r;
+        }
+        if (r < 0 && l >= 0) {
             treap[l][1] = i;
+            parent[i] = l;
+        }
         if (l >= 0 && r >= 0) {
-            if (doors[l] < doors[r])
+            if (doors[l] < doors[r]) {
                 treap[l][1] = i;
-            else
+                parent[i] = l;
+            } else {
                 treap[r][0] = i;
+                parent[i] = r;
+            }
         }
     }
-    // compute sizes and paths
+    // compute sizes
     sizes.resize(N - 1);
+    for (const int d : doors_ord) {
+        const auto& tnode = treap[d];
+        sizes[d] = 1 + (tnode[0] < 0 ? 0 : sizes[tnode[0]]) + (tnode[1] < 0 ? 0 : sizes[tnode[1]]);
+    }
+    // and paths
     root_path.assign(N - 1, {});
-    const auto root = std::max_element(doors.begin(), doors.end()) - doors.begin();
-    dfs(root, -1);
+    const int root = doors_ord.back();
+    root_path[root].push_back(root);
+    for (int i = N - 3; i >= 0; --i) {
+        const int node = doors_ord[i];
+        auto& rp = root_path[node];
+        const auto& parent_path = root_path[parent[node]];
+        rp.push_back(node);
+        rp.insert(rp.end(), parent_path.begin(), parent_path.end());
+    }
 
     for (int q = 0; q < Q; ++q) {
         int S, K; std::cin >> S >> K; --S;
