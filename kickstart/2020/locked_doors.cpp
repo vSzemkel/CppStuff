@@ -29,11 +29,122 @@ struct cache_t {
     std::map<K, V> _cache;
 };
 
-std::vector<std::vector<int>> root_path;
+std::vector<std::vector<int>> ancestors, root_path;
 std::vector<std::array<int, 2>> treap;
 std::vector<int> doors, sizes, parent;
 
 static void solve() {
+    int N, Q; std::cin >> N >> Q;
+    doors.resize(N - 1);
+    for (auto& d : doors)
+        std::cin >> d;
+    // build orber table and normalize
+    std::vector<int> doors_ord(N - 1);
+    std::iota(doors_ord.begin(), doors_ord.end(), 0);
+    std::sort(doors_ord.begin(), doors_ord.end(), [](const int i, const int j){
+        return doors[i] < doors[j];
+    });
+    for (int i = 0; i < N - 1; ++i)
+        doors[doors_ord[i]] = i + 1;
+    // find next greater neighbour
+    std::vector<int> left_greater(N - 1), right_greater(N - 1), stack;
+    for (int i = 0; i < N - 1; ++i) {
+        while (!stack.empty() && doors[stack.back()] < doors[i]) {
+            right_greater[stack.back()] = i;
+            stack.pop_back();
+        }
+        stack.push_back(i);
+    }
+    while (!stack.empty()) {
+        right_greater[stack.back()] = -1;
+        stack.pop_back();
+    }
+    for (int i = N - 2; i >= 0; --i) {
+        while (!stack.empty() && doors[stack.back()] < doors[i]) {
+            left_greater[stack.back()] = i;
+            stack.pop_back();
+        }
+        stack.push_back(i);
+    }
+    while (!stack.empty()) {
+        left_greater[stack.back()] = -1;
+        stack.pop_back();
+    }
+    // initialize ancestors
+    int lg2size{0}, counter{N - 1};
+    const int root = doors_ord.back();
+    while (counter > 0) { counter >>= 1; ++lg2size; }
+    ancestors.assign(N - 1, std::vector<int>(lg2size, root));
+    // build the treap
+    treap.assign(N - 1, {-1, -1});
+    for (int i = 0; i < N - 1; ++i) {
+        const int l = left_greater[i];
+        const int r = right_greater[i];
+        if (l < 0 && r >= 0) {
+            treap[r][0] = i;
+            ancestors[i][0] = r;
+        }
+        if (r < 0 && l >= 0) {
+            treap[l][1] = i;
+            ancestors[i][0] = l;
+        }
+        if (l >= 0 && r >= 0) {
+            if (doors[l] < doors[r]) {
+                treap[l][1] = i;
+                ancestors[i][0] = l;
+            } else {
+                treap[r][0] = i;
+                ancestors[i][0] = r;
+            }
+        }
+    }
+    // fill ancestors
+    for (int j = 1; j < lg2size; ++j)
+        for (int i = 0; i < N - 1; ++i)
+            ancestors[i][j] = ancestors[ancestors[i][j - 1]][j - 1];
+    // compute sizes
+    sizes.resize(N - 1);
+    for (const int d : doors_ord) {
+        const auto& tnode = treap[d];
+        sizes[d] = 1 + (tnode[0] < 0 ? 0 : sizes[tnode[0]]) + (tnode[1] < 0 ? 0 : sizes[tnode[1]]);
+    }
+
+    doors.push_back(std::numeric_limits<int>::max());
+    for (int q = 0; q < Q; ++q) {
+        int S, K; std::cin >> S >> K; --S;
+        int ans{S};
+        if (--K > 0) {
+            bool right{true};
+            int first_door{S};
+            if (S > 0 && doors[S - 1] < doors[S]) {
+                right = false;
+                --first_door;
+            }
+            if (K <= sizes[first_door])
+                ans = S + (right ? K : -K);
+            else {
+                int query_root = first_door, len = lg2size - 1;
+                while (true) {
+                    const int candidate = ancestors[query_root][len];
+                    if (sizes[candidate] < K)
+                        query_root = candidate;
+                    if (len == 0)
+                        break;
+                    --len;
+                }
+                query_root = ancestors[query_root][0];
+                if (first_door < query_root) // coming from left subtree
+                    ans = query_root + K - sizes[treap[query_root][0]];
+                else
+                    ans = query_root - (K - sizes[treap[query_root][1]]) + 1;
+            }
+        }
+
+        std::cout << ' ' << ans + 1;
+    }
+}
+
+static void solve_mle() {
     int N, Q; std::cin >> N >> Q;
     doors.resize(N - 1);
     for (auto& d : doors)
