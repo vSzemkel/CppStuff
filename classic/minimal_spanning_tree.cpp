@@ -1,5 +1,4 @@
 
-#include <algorithm>
 #include <iostream>
 #include <limits>
 #include <queue>
@@ -13,21 +12,18 @@ struct edge_t {
     char parent;
     char label;
     int weight;
-    bool operator<(const edge_t& other) { return weight < other.weight; }
+    friend bool operator<(const edge_t& lhs, const edge_t& rhs) { return lhs.weight > rhs.weight; }
 };
 
 constexpr int g_vertex_count = 13;
 using connection_t = std::pair<char, int>; // {label, weight}
 using graph_t = std::vector<std::vector<connection_t>>; // {label, weight}
-using comp_t = bool(*)(const edge_t&, const edge_t&);
-using queue_t = std::priority_queue<edge_t, std::vector<edge_t>, comp_t>;
 
 // globals
 graph_t g_graph;
 int g_weight{};
 std::vector<std::vector<connection_t>> g_tree;
 std::vector<bool> g_visited(g_vertex_count);
-const comp_t comp = [](const edge_t& e1, const edge_t& e2){ return e1.weight > e2.weight; };
 
 void add_edge(const char n1, const char n2, const int len)
 {
@@ -61,7 +57,7 @@ void init_graph()
 
 void prim(const char start)
 {
-    queue_t q(comp);
+    std::priority_queue<edge_t> q;
     q.push(edge_t{start, start, 0});
     while (!q.empty()) {
         const auto e = q.top(); q.pop();
@@ -87,7 +83,7 @@ int main(int argc, char* argv[])
         std::cout << "\nThe graph is not coherent\n";
     else {
         std::cout << "\nEdges of minimal spanning tree of a weight " << g_weight << ":\n";
-        for (int p = 0; p < int(g_tree.size()); ++p)
+        for (int p = 0; p < g_vertex_count; ++p)
             if (!g_tree[p].empty())
             for (const auto& e : g_tree[p])
                 if ('A' + p != e.first)
@@ -95,7 +91,7 @@ int main(int argc, char* argv[])
     }
 }
 
-/*    clang++.exe -Wall -g -std=c++17 minimal_spanning_tree.cpp.cpp -o minimal_spanning_tree.cpp.exe
+/*    clang++.exe -Wall -g -std=c++17 minimal_spanning_tree.cpp -o minimal_spanning_tree.exe
 
 Output:
 
