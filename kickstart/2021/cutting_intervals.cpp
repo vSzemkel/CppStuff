@@ -11,16 +11,68 @@
 // Cutting Intervals
 // https://codingcompetitions.withgoogle.com/kickstart/round/00000000004361e3/000000000082b933
 
+constexpr int8_t START = 1;
+constexpr int8_t FINISH = -1;
+using event_t = std::pair<int64_t, int8_t>; // {event position, 1 for start and -1 for finish}
+
 struct segment_t {
     segment_t(const int64_t s) : start_pos(s) {};
+    segment_t(const int64_t s, const int sd) : start_pos(s), segment_depth(sd) {};
     int64_t start_pos;
-    int start_depth{0};
+    int start_depth{0}; // for solve_tle
     int segment_depth{0};
     friend bool operator<(const segment_t& lhs, const segment_t& rhs){ return lhs.start_pos < rhs.start_pos; }
     friend bool operator==(const segment_t& lhs, const segment_t& rhs){ return lhs.start_pos == rhs.start_pos; }
 };
 
-static void solve() {
+static void solve() { // TLE
+    // read input
+    int N; int64_t C; std::cin >> N >> C;
+    std::vector<event_t> events;
+    events.reserve(2 * N);
+    for (int i = 0; i < N; ++i) {
+        int64_t b, e; std::cin >> b >> e;
+        events.emplace_back(b, 1);
+        events.emplace_back(e - 1, -1); // e - 1 is the trick here
+    }
+    std::sort(events.begin(), events.end());
+    // initialize points
+    int pos{0};
+    std::vector<segment_t> points;
+    while (pos < 2 * N) {
+        int64_t start = events[pos].first;
+        int delta = events[pos].second;
+        ++pos;
+        while (pos < 2 * N && events[pos].first == start) {
+            delta += events[pos].second;
+            ++pos;
+        }
+        if (points.empty())
+            points.emplace_back(start, delta);
+        else
+            points.emplace_back(start, points.back().segment_depth + delta);
+    }
+    // load priority queue
+    std::priority_queue<std::pair<int, int64_t>> cuts; // {depth, count}
+    for (int i = 1; i < int(points.size()); ++i) {
+        const auto cnt = points[i].start_pos - points[i - 1].start_pos;
+        if (cnt > 0)
+            cuts.push({points[i - 1].segment_depth, cnt});
+    }
+    // compute result
+    int64_t ret{N};
+    while (!cuts.empty() && C > 0) {
+        const auto& c = cuts.top();
+        const int64_t count = std::min(c.second, C);
+        ret += c.first * count;
+        cuts.pop();
+        C -= count;
+    }
+
+    std::cout << ret;
+}
+
+static void solve_tle() { // TLE
     int N; int64_t C; std::cin >> N >> C;
     std::vector<std::array<int64_t, 2>> segments(N);
     for (auto& s : segments)
@@ -38,13 +90,10 @@ static void solve() {
     // initialize points
     for (const auto& s : segments) {
         const auto start = std::lower_bound(points.begin(), points.end(), segment_t{s[0]});
-        auto it = start;
+        ++start->segment_depth;
+        auto it = start + 1;
         while (it != points.end() && it->start_pos < s[1]) {
             ++it->segment_depth;
-            ++it;
-        }
-        it = start + 1;
-        while (it != points.end() && it->start_pos < s[1]) {
             ++it->start_depth;
             ++it;
         }
