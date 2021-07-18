@@ -3,6 +3,7 @@
 #include <array>
 #include <iostream>
 #include <numeric>
+#include <map>
 #include <queue>
 #include <unordered_map>
 #include <utility>
@@ -11,8 +12,38 @@
 // Cutting Intervals
 // https://codingcompetitions.withgoogle.com/kickstart/round/00000000004361e3/000000000082b933
 
-constexpr int8_t START = 1;
-constexpr int8_t FINISH = -1;
+
+static void solve() {
+    // read input
+    int N; int64_t C; std::cin >> N >> C;
+    std::map<int64_t, int> events; // {start, delta}
+    for (int i = 0; i < N; ++i) {
+        int64_t b, e; std::cin >> b >> e;
+        ++events[b];
+        --events[e - 1]; // e - 1 is the trick here
+    }
+    // load priority queue
+    int depth{0};
+    int64_t prev{0};
+    std::priority_queue<std::pair<int, int64_t>> cuts; // {depth, count}
+    for (const auto& ev : events) {
+        cuts.push({depth, ev.first - prev});
+        depth += ev.second;
+        prev = ev.first;
+    }
+    // compute result
+    int64_t ret{N};
+    while (!cuts.empty() && C > 0) {
+        const auto& c = cuts.top();
+        const int64_t count = std::min(c.second, C);
+        ret += c.first * count;
+        cuts.pop();
+        C -= count;
+    }
+
+    std::cout << ret;
+}
+
 using event_t = std::pair<int64_t, int8_t>; // {event position, 1 for start and -1 for finish}
 
 struct segment_t {
@@ -25,7 +56,7 @@ struct segment_t {
     friend bool operator==(const segment_t& lhs, const segment_t& rhs){ return lhs.start_pos == rhs.start_pos; }
 };
 
-static void solve() { // TLE
+static void solve_clumsy() {
     // read input
     int N; int64_t C; std::cin >> N >> C;
     std::vector<event_t> events;
