@@ -1,6 +1,7 @@
 #include <bits/extc++.h>
 
 // requires: __gnu_pbds::priority_queue
+// usage sample: /codejam/2021/retiling.cpp
 
 template <typename flow_t = int, typename cost_t = long long>
 struct MFMC // by ecnerwala

@@ -22,6 +22,8 @@ static std::vector<int64_t> generate(const int64_t n) {
 
 static std::vector<int64_t> factorize(int64_t n) {
     std::vector<int64_t> factorization;
+    if (n < 1) return factorization;
+
     for (int d : {2, 3, 5}) {
         while (n % d == 0) {
             factorization.push_back(d);
@@ -38,7 +40,7 @@ static std::vector<int64_t> factorize(int64_t n) {
         i = (i + 1) % 8;
     }
 
-    if (n > 1)
+    if (n > 1 || factorization.empty())
         factorization.push_back(n);
 
     return factorization;
@@ -51,6 +53,9 @@ int main(int, char**)
 
     const int64_t n = 2LL * 7 * 7 * 13 * 37 * 107 * 499 * 1039 * 7013;
     assert(factorize(n) == (std::vector<int64_t>{2, 7, 7, 13, 37, 107, 499, 1039, 7013}));
+    assert(factorize(1'000'000'007) == (std::vector<int64_t>{1'000'000'007}));
+    assert(factorize(1) == (std::vector<int64_t>{1}));
+    assert(factorize(0).empty());
 }
 
 /* Compile:

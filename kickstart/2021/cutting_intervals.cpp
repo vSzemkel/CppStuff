@@ -1,5 +1,4 @@
 
-#include <algorithm>
 #include <array>
 #include <iostream>
 #include <numeric>
@@ -112,7 +111,7 @@ static void solve_tle() { // TLE
     std::vector<segment_t> points;
     points.reserve(2 * N);
     for (auto& s : segments) {
-        points.emplace_back(s[0]);
+        points.emplace_back(s[0]); // here we loose important info - is this start or finish
         points.emplace_back(s[1]);
     }
     std::sort(points.begin(), points.end());
@@ -152,11 +151,10 @@ static void solve_tle() { // TLE
 
 static void solve_set1() {
     int N; int64_t C; std::cin >> N >> C;
-    std::array<int64_t, 2> s;
     std::unordered_map<int64_t, int> scores;
     for (int i = 0; i < N; ++i) {
-        std::cin >> s[0] >> s[1];
-        for (auto i = s[0] + 1; i < s[1]; ++i)
+        int64_t b, e; std::cin >> b >> e;
+        for (auto i = b + 1; i < e; ++i)
             ++scores[i];
     }
 

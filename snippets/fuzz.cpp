@@ -37,5 +37,5 @@ void fuzz()
         }
     }
 
-    std::cout << "In " << trials << " trials encountered " << errors << " errors.\n";
+    std::cout << "In " << g_trials << " trials encountered " << errors << " errors.\n";
 }
