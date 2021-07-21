@@ -15,43 +15,43 @@ struct simple_segment_tree_t
   public:
     simple_segment_tree_t(const std::vector<T>& input) {
         const int input_size = (int)input.size();
-        while (offset < input_size) offset *= 2;
-        nodes.resize(2 * offset);
-        std::copy(input.begin(), input.end(), nodes.begin() + offset);
-        for (int n = offset - 1; n > 0; --n)
-            nodes[n] = join(nodes[2 * n], nodes[2 * n + 1]);
+        while (_offset < input_size) _offset *= 2;
+        _nodes.assign(2 * _offset, SEED);
+        std::copy(input.begin(), input.end(), _nodes.begin() + _offset);
+        for (int n = _offset - 1; n > 0; --n)
+            _nodes[n] = join(_nodes[2 * n], _nodes[2 * n + 1]);
     }
 
     T query(int lower, int upper) const { // range [lower, upper)
-        T ret{};
-        for (lower += offset, upper += offset; lower < upper; lower >>= 1, upper >>= 1) { 
+        T ret{SEED};
+        for (lower += _offset, upper += _offset; lower < upper; lower >>= 1, upper >>= 1) { 
             if (lower & 1)
-                ret = join(ret, nodes[lower++]); 
+                ret = join(ret, _nodes[lower++]); 
             if (upper & 1)
-                ret = join(ret, nodes[--upper]);
+                ret = join(ret, _nodes[--upper]);
         }
 
         return ret;
     }
 
     void update(int pos, const T val) {
-        pos += offset;
-        nodes[pos] = val;
+        pos += _offset;
+        _nodes[pos] = val;
         while (pos > 1) {
             pos /= 2;
-            nodes[pos] = join(nodes[2 * pos], nodes[2 * pos + 1]);
+            _nodes[pos] = join(_nodes[2 * pos], _nodes[2 * pos + 1]);
         }
     }
 
-    static const int MIN32 = std::numeric_limits<int>::min();
+    static const T SEED{std::numeric_limits<int>::min()}; // TO DO: change value accordingly
 
   private:
     static T join(const T& lhs, const T& rhs) {
-        return std::max(lhs, rhs); // TO DO: change join implementation
+        return std::max(lhs, rhs); // TO DO: change join implementation accordingly
     }
 
-    std::vector<T> nodes;
-    int offset{1};
+    std::vector<T> _nodes;
+    int _offset{1};
 };
 
 void fuzz()
@@ -71,7 +71,7 @@ void fuzz()
         int upper = rand_in_range(size);
         if (lower > upper) std::swap(lower, upper);
 
-        int ret{simple_segment_tree_t<>::MIN32};
+        int ret{simple_segment_tree_t<>::SEED};
         for (int i = lower; i < upper; ++i)
             ret = std::max(ret, input[i]);
         assert(ret == mst.query(lower, upper));
