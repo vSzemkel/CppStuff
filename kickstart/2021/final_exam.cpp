@@ -17,7 +17,8 @@ static void solve() {
 
     for (int i = 0; i < M; ++i) {
         int64_t s; std::cin >> s;
-        auto it = std::lower_bound(segments.begin(), segments.end(), std::pair{s, s});
+        // std::lower_bound here fails with TLE, it is slower then std::set::lower_bound
+        auto it = segments.lower_bound(std::pair{s, s});
         if (it == segments.begin()) {
             const int64_t b{it->first}, e{it->second};
             if (b < e)
