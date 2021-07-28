@@ -16,7 +16,7 @@ constexpr int BASE2 = BASE * BASE;
 constexpr int TOLLERANCE = 2;
 constexpr int WINDOW = 2 * TOLLERANCE + 1;
 
-// Without loose of generality we can replace each number X on the lock with X-1
+// Without lose of generality we can replace each number X on the lock with X-1
 
 int main(int, char**)
 {
