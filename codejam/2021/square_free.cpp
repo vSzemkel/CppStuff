@@ -2,17 +2,20 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <utility>
+#include <tuple>
 #include <vector>
 
 // Square Free
 // https://codingcompetitions.withgoogle.com/codejam/round/0000000000436142/0000000000813e1a#analysis
 
 
-int R, C, MAXLEN;
+int R, C, MAXLEN, SIZE;
 std::vector<std::string> board;
+std::vector<int> rlimits, climits, rsums, csums;
 
-static bool is_square_free() {
+static std::optional<std::tuple<int, int, int>> is_square_free() {
     std::vector<std::vector<std::pair<int, int>>> memo; // {count of '\' above, count of '/' above}
     memo.assign(R, std::vector<std::pair<int, int>>(C));
 
@@ -32,29 +35,65 @@ static bool is_square_free() {
         }
         // search for square
         const int bound = std::min(MAXLEN, (r + 1) / 2);
-        for (int l = 1; l <= bound; ++l)
-            for (int c = bound; c <= C - bound; ++c)
-                if (board[r][c - 1] != '/' && board[r][c] == '/') {
-                    const int len = std::min(memo[r][c - 1].first, memo[r][c].second);
-                    for (int k = 1; k <= len; ++k)
-                        if (memo[r - k][c - k].second >= k && memo[r - k][c + k - 1].first >= k)
-                            return false;
-                }
+        for (int len = 1; len <= bound; ++len)
+            for (int c = len; c <= C - len; ++c)
+                if (memo[r][c - 1].first >= len && memo[r][c].second >= len
+                 && memo[r - len][c - len].second >= len && memo[r - len][c + len - 1].first >= len)
+                    return std::tuple{r, c, len};
     }
 
-    return true;
+    return std::nullopt;
+}
+
+static bool generate(const int pos) {
+    if (pos == SIZE) 
+        return rsums == rlimits && csums == climits;
+
+    const int r = pos / C;
+    const int c = pos % C;
+
+    if (rsums[r] < rlimits[r] && csums[c] < climits[c]) {
+        ++rsums[r];
+        ++csums[c];
+        board[r][c] = '/';
+        if (generate(pos + 1))
+            return true;
+        --rsums[r];
+        --csums[c];
+    } 
+    
+    board[r][c] = '\\';
+    return generate(pos + 1);
 }
 
 static void solve() {
     std::cin >> R >> C;
+    SIZE = R * C;
     MAXLEN = std::min(R, C);
-    std::vector<int> rlimits(R);
+    rlimits.assign(R, 0); rsums.assign(R, 0);
     for (auto& r : rlimits) std::cin >> r;
-    std::vector<int> climits(C);
+    climits.assign(C, 0); csums.assign(C, 0);
     for (auto& c : climits) std::cin >> c;
-    board.resize(R);
+    board.assign(R, std::string(C, ' '));
 
-    //std::cout << std::boolalpha << is_square_free() << '\n';
+    if (!generate(0)) {
+        std::cout << "IMPOSSIBLE\n";
+        return;
+    }
+
+    std::optional<std::tuple<int, int, int>> config;
+    while ((config = is_square_free()) != std::nullopt) {
+        const auto& cfg = config.value();
+        const int r = std::get<0>(cfg);
+        const int c = std::get<1>(cfg);
+        const int u = r - 2 * std::get<2>(cfg) + 1;
+        std::swap(board[r][c - 1], board[r][c]);
+        std::swap(board[u][c - 1], board[u][c]);
+    }
+
+    std::cout << "POSSIBLE\n";
+    for (const auto& s : board)
+        std::cout << s << '\n';
 }
 
 int main(int, char**)
@@ -97,5 +136,21 @@ Input:
 
 Output:
 
+Case #1: POSSIBLE
+/\//
+//\\
+//\/
+\///
+
+Case #2: IMPOSSIBLE
+
+Case #3: POSSIBLE
+\\/
+//\
+
+Case #4: POSSIBLE
+/\/
+\\\
+/\/
 
 */
