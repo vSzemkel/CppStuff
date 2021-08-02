@@ -35,10 +35,9 @@ class flow_graph_t
     }
 
     void clear_flow() {
-        for (const auto& e : edges) {
-            e.flow = 0;
-        }
         flow = 0;
+        for (const auto& e : edges)
+            e.flow = 0;
     }
 
     int add(int from, int to, T forward_cap, T backward_cap = T{}) {
