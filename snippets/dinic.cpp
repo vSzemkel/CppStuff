@@ -17,7 +17,7 @@ class flow_graph_t
     struct edge_t {
         int from;
         int to;
-        T cost;
+        T capacity;
         T flow;
     };
 
@@ -77,7 +77,7 @@ class dinic_t
             for (int id : g.g[i]) {
                 const auto& e = g.edges[id];
                 const auto& back = g.edges[id ^ 1];
-                if (back.cost - back.flow > g.eps && d[e.to] == -1) {
+                if (back.capacity - back.flow > g.eps && d[e.to] == -1) {
                     d[e.to] = d[i] + 1;
                     if (e.to == g.st) {
                         return true;
@@ -97,8 +97,8 @@ class dinic_t
         while (j >= 0) {
             int id = g.g[v][j];
             const auto& e = g.edges[id];
-            if (e.cost - e.flow > g.eps && d[e.to] == d[v] - 1) {
-                T t = dfs(e.to, std::min(e.cost - e.flow, w));
+            if (e.capacity - e.flow > g.eps && d[e.to] == d[v] - 1) {
+                T t = dfs(e.to, std::min(e.capacity - e.flow, w));
                 if (t > g.eps) {
                     g.edges[id].flow += t;
                     g.edges[id ^ 1].flow -= t;

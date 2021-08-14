@@ -39,7 +39,7 @@ void print_intersection(const section_t& s1, const section_t& s2)
             std::cout << " are connected in " << val.first;
         else
             std::cout << " overlap in " << print_section(val);
-        std::cout << "\n";
+        std::cout << '\n';
     } else
         std::cout << " do not intersect\n";
 }
