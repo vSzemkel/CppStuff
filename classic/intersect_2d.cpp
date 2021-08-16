@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <format>
 #include <optional>
 #include <string>
 
@@ -33,9 +34,7 @@ std::optional<point_t<T>> find_intersection(const section_t<T>& s1, const sectio
 template <typename T = float>
 std::string print_section(const section_t<T>& s)
 {
-    char buf[64];
-    sprintf_s(buf, sizeof(buf), "[%0.1f, %0.1f]---[%0.1f, %0.1f]", s.first.x, s.first.y, s.second.x, s.second.y);
-    return buf;
+    return std::format("[{:.1f}, {:.1f}]---[{:.1f}, {:.1f}]", s.first.x, s.first.y, s.second.x, s.second.y);
 }
 
 template <typename T = float>
@@ -59,7 +58,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-/* clang++.exe -Wall -g -std=c++17 intersect_2d.cpp -o intersect_2d.exe
+/* clang++.exe -Wall -g -std=c++20 intersect_2d.cpp -o intersect_2d.exe
 
 Output:
 

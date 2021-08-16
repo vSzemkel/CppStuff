@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <format>
 #include <optional>
 #include <string>
 
@@ -25,9 +26,7 @@ std::optional<section_t> find_intersection(section_t s1, section_t s2, bool norm
 
 std::string print_section(const section_t& s)
 {
-    char buf[32];
-    sprintf_s(buf, sizeof(buf), "[%i, %i]", s.first, s.second);
-    return buf;
+    return std::format("[{}, {}]", s.first, s.second);
 }
 
 void print_intersection(const section_t& s1, const section_t& s2)
@@ -53,7 +52,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-/* clang++.exe -Wall -g -std=c++17 intersect_1d.cpp -o intersect_1d.exe
+/* clang++.exe -Wall -g -std=c++20 intersect_1d.cpp -o intersect_1d.exe
 
 Output:
 
