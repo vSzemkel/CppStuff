@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <array>
 #include <assert.h>
 #include <iostream>
 #include <string>
@@ -10,6 +11,35 @@
 // Shuffled anagrams
 // https://codingcompetitions.withgoogle.com/kickstart/round/000000000043585c/000000000085a152
 
+
+static void solve_smart() { // by Aeren
+    std::string S; std::cin >> S;
+    const int size = int(S.size());
+    std::array<std::vector<int>, 26> pos;
+    std::array<int, 26> cnt{};
+    for (int i = 0; i < size; ++i) {
+        const int letter = S[i] - 'a';
+        ++cnt[letter];
+        pos[letter].push_back(i);
+    }
+
+    if (*std::max_element(cnt.begin(), cnt.end()) > size / 2) {
+        std::cout << "IMPOSSIBLE";
+        return;
+    }
+
+    // sorted letters positions
+    std::vector<int> srtind;
+    for (const auto& lp : pos)
+        srtind.insert(srtind.end(), lp.begin(), lp.end());
+
+    // letters in srtind[i] and srtind[(i + size / 2) % size] differs
+    std::string ret(size, '-');
+    for (int i = 0; i < size; ++i)
+        ret[srtind[i]] = S[srtind[(i + size / 2) % size]];
+
+    std::cout << ret;
+}
 
 static void solve() {
     std::string S; std::cin >> S;
