@@ -1,7 +1,7 @@
 
+#include <array>
 #include <iostream>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 // Palindromic crossword
@@ -9,11 +9,12 @@
 
 int R, C;
 std::vector<std::string> board;
-std::unordered_map<char, std::vector<int>> wall;
+constexpr int N{0}, E{1}, S{2}, W{3};
+std::array<std::vector<int>, 4> wall;
 static int drill_v(const int r, const int c, const int val);
 
-const auto row_peer_off = [](const int cell) { return wall['S'][cell] - wall['N'][cell]; };
-const auto col_peer_off = [](const int cell) { return wall['E'][cell] - wall['W'][cell]; };
+const auto row_peer_off = [](const int cell) { return wall[S][cell] - wall[N][cell]; };
+const auto col_peer_off = [](const int cell) { return wall[E][cell] - wall[W][cell]; };
 
 static int drill_h(const int r, const int c, const int val) {
     const int next_c = c + col_peer_off(r * C + c);
@@ -43,23 +44,18 @@ static void solve() {
     for (auto& r : board) std::cin >> r;
 
     const int size = R * C;
-    wall = {
-        {'N', std::vector<int>(size, 1)},
-        {'S', std::vector<int>(size, 1)},
-        {'E', std::vector<int>(size, 1)},
-        {'W', std::vector<int>(size, 1)}
-    };
+    wall.fill(std::vector<int>(size, 1));
     for (int r = 0; r < R; ++r)
         for (int c = 0; c < C; ++c) {
             const auto cell = r * C + c;
             if (board[r][c] == '#') {
-                wall['N'][cell] = wall['W'][cell] = wall['S'][cell] = wall['E'][cell] = 0;
+                wall[N][cell] = wall[W][cell] = wall[S][cell] = wall[E][cell] = 0;
                 continue;
             }
             if (c > 0)
-                wall['W'][cell] = wall['W'][cell - 1] + 1;
+                wall[W][cell] = wall[W][cell - 1] + 1;
             if (r > 0)
-                wall['N'][cell] = wall['N'][cell - C] + 1;
+                wall[N][cell] = wall[N][cell - C] + 1;
         }
     for (int r = R - 1; r >= 0; --r)
         for (int c = C - 1; c >= 0; --c) {
@@ -67,9 +63,9 @@ static void solve() {
             if (board[r][c] == '#')
                 continue;
             if (c < C - 1)
-                wall['E'][cell] = wall['E'][cell + 1] + 1;
+                wall[E][cell] = wall[E][cell + 1] + 1;
             if (r < R - 1)
-                wall['S'][cell] = wall['S'][cell + C] + 1;
+                wall[S][cell] = wall[S][cell + C] + 1;
         }
 
     int ret{0};
