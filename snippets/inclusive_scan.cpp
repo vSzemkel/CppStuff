@@ -1,4 +1,6 @@
 
+#include <numeric>
+
 std::vector<int64_t> g_input, g_partial;
 
 const auto range_sum = [](const int i, const int j){return g_partial[j + 1] - g_partial[i];};

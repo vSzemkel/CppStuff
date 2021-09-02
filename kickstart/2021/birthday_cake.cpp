@@ -70,6 +70,10 @@ static void solve() {
     const auto inner_rows = (rows - 1) / K;
     ret += inner_cols * inner_rows + rows * cols - 1;
 
+    // version for non geniuses
+    // all + cut off two edges of KxK squares - number od pieces created cutting KxK squares
+    // ret += rows * cols - 1 + 2 * (inner_cols * inner_rows) - (inner_cols * inner_rows);
+
     std::cout << ret;
 }
 
@@ -97,8 +101,18 @@ birthday_cake.exe < birthday_cake.in
 
 Input:
 
+3
+2 3 4
+2 1 2 2
+3 3 1
+2 2 2 2
+100000 100000 56873
+48372 58691 61197 81020 
 
 Output:
 
+Case #1: 3
+Case #2: 5
+Case #3: 286404583
 
 */
