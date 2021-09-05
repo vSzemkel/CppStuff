@@ -44,14 +44,14 @@ int main(int, char**)
             int c = a + (N - 1) * b;
             if (c > max)
                 break;
-            int len{2};
-            while (len < N) {
+            int z = N - 2;
+            while (z) {
                 if (!checker[c])
                     break;
                 c -= b;
-                ++len;
+                --z;
             }
-            if (len == N)
+            if (z == 0)
                 ret.emplace_back(b, a);
         }
     }
