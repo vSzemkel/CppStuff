@@ -1,6 +1,8 @@
 
 #include <algorithm>
 #include <iostream>
+#include <map>
+#include <random>
 #include <utility>
 #include <vector>
 
@@ -10,6 +12,68 @@
 
 int B, S, N;
 std::vector<std::pair<int, int>> slides;
+
+static void solve() { // by tourist & ecnerwala
+    std::cin >> B >> S >> N;
+    // assign randoms to buildings
+    uint64_t total{0};
+    std::mt19937_64 rng{};
+    std::vector<uint64_t> bids(B);
+    for (auto& b : bids) {
+        b = rng();
+        total ^= b;
+    }
+    // build initial state
+    slides.resize(S);
+    std::map<std::pair<uint64_t, uint64_t>, int> slide_inverse_ids;
+    for (int i = 0; i < S; ++i) {
+        int from, to; std::cin >> from >> to;
+        --from, --to;
+        slides[i] = {from, to};
+        slide_inverse_ids[{total ^ bids[from], total ^ bids[to]}] = i;
+    }
+
+    std::vector<uint64_t> aux(B);
+    for (int i = 0; i < B; ++i)
+        aux[i] = total ^ bids[i];
+    std::sort(aux.begin(), aux.end());
+
+    std::vector<std::vector<uint64_t>> pref_x(S + 1, {0});
+    std::vector<std::vector<uint64_t>> pref_y(S + 1, {0});
+    for (int m = 1; m <= S; ++m)
+        for (int s = m - 1; s < S; s += m) {
+            const auto nx = pref_x[m].back() ^ bids[slides[s].first];
+            pref_x[m].push_back(nx);
+            const auto ny = pref_y[m].back() ^ bids[slides[s].second];
+            pref_y[m].push_back(ny);
+        }
+    // applay operations
+    int enabled{0};
+    uint64_t hx{0}, hy{0};
+    for (int z = N; z; --z) {
+        char op; int l, r, m;
+        std::cin >> op >> l >> r >> m;
+        const int from = (l - 1) / m;
+        const int to = r / m;
+        const int delta = to - from;
+        enabled += (op == 'E' ? delta : -delta);
+
+        hx ^= pref_x[m][to] ^ pref_x[m][from];
+        hy ^= pref_y[m][to] ^ pref_y[m][from];
+        if (enabled == B - 1) {
+            const auto itx = std::lower_bound(aux.begin(), aux.end(), hx);
+            const auto ity = std::lower_bound(aux.begin(), aux.end(), hy);
+            const auto res = slide_inverse_ids.find({hx, hy});
+            if (itx != aux.end() && ity != aux.end() && res != slide_inverse_ids.end()) {
+                std::cout << ' ' << res->second + 1;
+                continue;
+            }
+        }
+
+        std::cout << " X";
+    }
+}
+
 std::vector<std::vector<std::pair<int, bool>>> graph; // {edge_to, enabled}
 
 static void check_set1() {
@@ -92,7 +156,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ":"; solve_set1(); std::cout << '\n';
+        std::cout << "Case #" << g << ":"; solve(); std::cout << '\n';
     }
 }
 
@@ -139,5 +203,7 @@ E 3 4 1
 
 Output:
 
+Case #1: 3 X 2 X 3
+Case #2: 3 X 1 1 X X X 3 X 5
 
 */
