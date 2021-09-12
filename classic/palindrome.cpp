@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <string>
 
+// see generating palindromes: /usaco/pprime
+
 bool is_palindrome(const std::string& s)
 {
     int l = 0, r = s.size() - 1;
@@ -18,6 +20,16 @@ static int numlen(const int64_t n) {
         ++len;
     }
     return len;
+}
+
+static int numrev(int64_t n) {
+    int64_t m{0};
+    while (n) {
+        m *= 10;
+        m += n % 10;
+        n /= 10;
+    }
+    return m;
 }
 
 static bool is_num_palindrome(int64_t n) {
