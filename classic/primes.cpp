@@ -5,7 +5,7 @@
 
 // Primes - generation and factorization
 
-static std::vector<int64_t> generate(const int64_t n) {
+static std::vector<int64_t> generate(const int64_t n) { // generate all less then n
     std::vector<bool> taken(n);
     const auto sqrt = (int64_t)std::sqrt(n);
     for (int i = 2; i <= sqrt; ++i)

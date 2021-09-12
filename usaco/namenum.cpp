@@ -72,7 +72,7 @@ void for_huge_dict()
                 if (it != dict.end() && it->find(prefix) == 0)
                     new_ones.push_back(prefix);
             }
-        candidates = new_ones;
+        candidates = std::move(new_ones);
     }
 
     std::vector<std::string> ret;

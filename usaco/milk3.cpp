@@ -14,7 +14,7 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=jQSbbGN9Z6f&S=milk3
 std::ifstream task_in("milk3.in");
 std::ofstream task_out("milk3.out");
 
-constexpr const int MAX = 20;
+constexpr const int MAX = 20 + 1;
 
 std::array<int, 3> LIMITS;
 std::vector<std::array<int, 3>> pending;

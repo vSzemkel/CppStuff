@@ -6,3 +6,14 @@ for (int i = 0; i < length; ++i) {
 
 assert(0 <= n && n < std::floor(log10(n)) + 1);
 nth_digit = d / factor10[n] % 10 // n == 0 for less significant
+
+// number of digits for non negative integral
+static int numlen(const int64_t n) {
+    int len{0}; 
+    int64_t probe{1};
+    while (probe < n) {
+        probe *= 10;
+        ++len;
+    }
+    return len;
+}
