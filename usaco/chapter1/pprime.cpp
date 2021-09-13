@@ -14,7 +14,7 @@ std::ofstream task_out("pprime.out");
 static int is_prime(const int64_t n) {
     if (n <= 3) return true;
     if (n % 2 == 0 || n % 3 == 0) return false;
-    for (int64_t i = 5; i * i <= n; ++i)
+    for (int64_t i = 5; i * i <= n; i += 2)
         if (n % i == 0)
             return false;
     return true;
@@ -53,7 +53,7 @@ int main(int, char**)
 {
     task_in >> from >> to;
 
-    for (int pp : {5, 7, 11}) // is_num_palindrome(n) && factorize(n).size() == 1
+    for (int pp : {5, 7, 11}) // is_num_palindrome(n) && is_prime(n)
         if (from <= pp && pp <= to)
             task_out << pp << '\n';
     from = std::max(from, 101);

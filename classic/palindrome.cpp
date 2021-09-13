@@ -36,9 +36,12 @@ static bool is_num_palindrome(int64_t n) {
     if (n < 10) return true;
     int len = numlen(n);
 
-    int64_t m{0};
     bool odd = len & 1;
+    if (!odd && (n % 11) != 0)
+        return false;
+
     len /= 2;
+    int64_t m{0};
     for (int z = len; z; --z) {
         m *= 10;
         m += n % 10;
@@ -53,7 +56,7 @@ static bool is_num_palindrome(int64_t n) {
 
 int main(int, char**)
 {
-    for (int64_t i = 0; i < 10'000'000; ++i)
+    for (int64_t i = 0; i < 50'000'000; ++i)
         if (is_num_palindrome(i) != is_palindrome(std::to_string(i)))
             assert(false);
 }
