@@ -5,6 +5,15 @@
 
 // Primes - generation and factorization
 
+static int is_prime(const int64_t n) {
+    if (n <= 3) return true;
+    if (n % 2 == 0 || n % 3 == 0) return false;
+    for (int64_t i = 5; i * i <= n; ++i)
+        if (n % i == 0)
+            return false;
+    return true;
+}
+
 static std::vector<int64_t> generate(const int64_t n) { // generate all less then n
     std::vector<bool> taken(n);
     const auto sqrt = (int64_t)std::sqrt(n);

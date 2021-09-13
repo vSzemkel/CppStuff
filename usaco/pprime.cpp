@@ -11,30 +11,13 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=LfpaKE1rATy&S=pprime
 std::ifstream task_in("pprime.in");
 std::ofstream task_out("pprime.out");
 
-static std::vector<int64_t> factorize(int64_t n) {
-    std::vector<int64_t> factorization;
-    if (n < 1) return factorization;
-
-    for (int d : {2, 3, 5}) {
-        while (n % d == 0) {
-            factorization.push_back(d);
-            n /= d;
-        }
-    }
-
-    int i{0}, increments[] = {6, 4, 2, 4, 2, 4, 6, 2};
-    for (int64_t d = 7; d * d <= n; d += increments[i]) {
-        while (n % d == 0) {
-            factorization.push_back(d);
-            n /= d;
-        }
-        i = (i + 1) % 8;
-    }
-
-    if (n > 1 || factorization.empty())
-        factorization.push_back(n);
-
-    return factorization;
+static int is_prime(const int64_t n) {
+    if (n <= 3) return true;
+    if (n % 2 == 0 || n % 3 == 0) return false;
+    for (int64_t i = 5; i * i <= n; ++i)
+        if (n % i == 0)
+            return false;
+    return true;
 }
 
 static int numlen(const int64_t n) {
@@ -62,7 +45,7 @@ int from, to;
 static void finish(int n, const int shift, const int tail) {
     n *= 10 * shift;
     n += tail;
-    if (from <= n && n <= to && factorize(n).size() == 1)
+    if (from <= n && n <= to && is_prime(n))
         task_out << n << '\n';
 }
 
