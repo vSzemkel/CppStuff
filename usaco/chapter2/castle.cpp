@@ -6,30 +6,8 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=TAd8FDVE2eC&S=castle
 */
 
 #include <algorithm>
-#include <array>
-#include <assert.h>
-#include <bitset>
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <fstream>
-#include <functional>
-#include <limits>
 #include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <stdlib.h>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -37,35 +15,41 @@ std::ifstream task_in("castle.in");
 std::ofstream task_out("castle.out");
 
 int C, R;
-constexpr auto fn_col = [](const int cell){ return cell % C; };
-constexpr auto fn_row = [](const int cell){ return cell / C; };
+auto fn_col = [](const int cell){ return cell % C; };
+auto fn_row = [](const int cell){ return cell / C; };
+auto order = [](const int a1, const int a2) { // prefer W, E
+    const int r1 = fn_row(a1);
+    const int c1 = fn_col(a1);
+    const int r2 = fn_row(a2);
+    const int c2 = fn_col(a2);
+    return c1 < c2 || (c1 == c2 && r1 > r2);
+};
 
-std::vector<int> adjacents(const int pos, const int border)
+std::vector<std::pair<int, bool>> adjacents(const int pos, const int border) // {neighbour, is_begind_wall}
 {
     const int row = fn_row(pos);
     const int col = fn_col(pos);
 
-    std::vector<int> adj;
+    std::vector<std::pair<int, bool>> adj;
     if (col > 0)
-        adj.push_back(border & 1 ? 1 - pos : pos - 1); // W
+        adj.emplace_back(pos - 1, border & 1); // W
     if (col < C - 1)
-        adj.push_back(border & 4 ? -1 - pos : pos + 1); // E
+        adj.emplace_back(pos + 1, border & 4); // E
     if (row > 0)
-        adj.push_back(border & 2 ? C - pos : pos - C); // N
+        adj.emplace_back(pos - C, border & 2); // N
     if (row < R - 1)
-        adj.push_back(border & 8 ? -C - pos: pos + C); // S
+        adj.emplace_back(pos + C, border & 8); // S
 
     return adj;
 }
-
 
 int main(int, char**)
 {
     task_in >> C >> R;
     const int size = R * C;
     std::vector<bool> visited(size);
-    std::set<std::pair<int, int>> adjacent; // {region1, region2}
     std::vector<int> dfs, sizes, board(size), region(size, -1);
+    std::map<std::pair<int, int>, std::vector<int>> adjacent; // {region1, region2} => [r1 cells]
     for (auto& c : board)
         task_in >> c;
 
@@ -79,11 +63,10 @@ int main(int, char**)
             while (!dfs.empty()) {
                 const int cur = dfs.back();
                 dfs.pop_back();
-                for (const int next : adjacents(cur, board[cur])) {
-                    if (next < 0) {
-                        int neigh = -next;
-                        if (visited[neigh] && region[neigh] != rgn)
-                            adjacent.emplace(region[neigh], rgn);
+                for (const auto& [next, wall] : adjacents(cur, board[cur])) {
+                    if (wall) {
+                        if (visited[next] && region[next] != rgn)
+                            adjacent[{region[next], rgn}].push_back(next);
                         continue;
                     }
                     if (!visited[next]) {
@@ -99,19 +82,52 @@ int main(int, char**)
             ++rgn;
         }
 
-    int regA, regB, unionsize{-1};
-    for (const auto& a : adjacent) {
+    std::vector<int> border;
+    int regB{-1}, cellA{-1}, unionsize{-1};
+    for (const auto& [a, b] : adjacent) {
         const int total = sizes[a.first] + sizes[a.second];
-        if (unionsize < total) {
+        if (unionsize < total || (unionsize == total && order(b.front(), cellA))) {
             unionsize = total;
-            regA = a.first;
             regB = a.second;
+            cellA = b.front();
+            border = std::move(b);
         }
     }
 
     task_out << rgn << '\n';
     task_out << maxroom << '\n';
     task_out << unionsize << '\n';
+
+    int roomA = *std::min_element(border.begin(), border.end(), order);
+
+    char wall{'N'};
+    int r = fn_row(roomA);
+    int c = fn_col(roomA);
+    while (true) {
+        if (r > 0 && region[roomA - C] == regB)
+            break;
+        if (r < R - 1 && region[roomA + C] == regB) {
+            ++r;
+            break;
+        }
+        wall = 'E';
+        if (c < C - 1 && region[roomA + 1] == regB)
+            break;
+        if (c > 0 && region[roomA - 1] == regB) {
+            --c;
+            break;
+        }
+    }
+
+    if (wall == 'E' && r > 0) {
+        const int win_cell = r * C + c;
+        const int win_reg = region[win_cell];
+        const int can_reg = region[win_cell - C];
+        if (can_reg != win_reg && sizes[can_reg] + sizes[win_reg] == unionsize)
+            wall = 'N';
+    }
+
+    task_out << r + 1 << ' ' << c + 1 << ' ' << wall << '\n';
 }
 
 /*
