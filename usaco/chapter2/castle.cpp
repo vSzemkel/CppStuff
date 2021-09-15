@@ -25,6 +25,92 @@ auto order = [](const int a1, const int a2) { // prefer W, E
     return c1 < c2 || (c1 == c2 && r1 > r2);
 };
 
+std::vector<int> adjacents_smart(const int pos, const int border) // {neighbour, is_begind_wall}
+{
+    const int row = fn_row(pos);
+    const int col = fn_col(pos);
+
+    std::vector<int> adj;
+    if (col > 0 && (border & 1) == 0)
+        adj.push_back(pos - 1); // W
+    if (col < C - 1 && (border & 4) == 0)
+        adj.push_back(pos + 1); // E
+    if (row > 0 && (border & 2) == 0)
+        adj.push_back(pos - C); // N
+    if (row < R - 1 && (border & 8) == 0)
+        adj.push_back(pos + C); // S
+
+    return adj;
+}
+
+void smart(int, char**)
+{
+    task_in >> C >> R;
+    const int size = R * C;
+    std::vector<bool> visited(size);
+    std::vector<int> dfs, sizes, board(size), region(size, -1);
+    std::map<std::pair<int, int>, std::vector<int>> adjacent; // {region1, region2} => [r1 cells]
+    for (auto& c : board)
+        task_in >> c;
+
+    int rgn{0}, maxroom{0};
+    for (int i = 0; i < size; ++i)
+        if (!visited[i]) {
+            int cnt{1};
+            region[i] = rgn;
+            visited[i] = true;
+            dfs.assign(1, i);
+            while (!dfs.empty()) {
+                const int cur = dfs.back();
+                dfs.pop_back();
+                for (const auto next : adjacents_smart(cur, board[cur]))
+                    if (!visited[next]) {
+                        region[next] = rgn;
+                        visited[next] = true;
+                        dfs.push_back(next);
+                        ++cnt;
+                    }
+            }
+            sizes.push_back(cnt);
+            maxroom = std::max(maxroom, cnt);
+            ++rgn;
+        }
+
+    char wall;
+    int ret_r, ret_c, unionsize{-1};
+    for (int c = 0; c < C; ++c)
+        for (int r = R - 1; r >= 0; --r) {
+            const int win_cell = r * C + c;
+            const int win_reg = region[win_cell];
+            const int win_size = sizes[win_reg]; 
+            if (r > 0) {
+                const int can_reg = region[win_cell - C];
+                const int can_size = sizes[can_reg] + win_size;
+                if (can_reg != win_reg && can_size > unionsize) {
+                    ret_r = r;
+                    ret_c = c;
+                    wall = 'N';
+                    unionsize = can_size;
+                }
+            }
+            if (c < C - 1) {
+                const int can_reg = region[win_cell + 1];
+                const int can_size = sizes[can_reg] + win_size;
+                if (can_reg != win_reg && can_size > unionsize) {
+                    ret_r = r;
+                    ret_c = c;
+                    wall = 'E';
+                    unionsize = can_size;
+                }
+            }
+        }
+
+    task_out << rgn << '\n';
+    task_out << maxroom << '\n';
+    task_out << unionsize << '\n';
+    task_out << ret_r + 1 << ' ' << ret_c + 1 << ' ' << wall << '\n';
+}
+
 std::vector<std::pair<int, bool>> adjacents(const int pos, const int border) // {neighbour, is_begind_wall}
 {
     const int row = fn_row(pos);
