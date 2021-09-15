@@ -33,7 +33,7 @@ auto adjacents(const int pos)
     const int col = fn_col(pos);
 
     g_adj.clear();
-    if (col > 0) 
+    if (col > 0)
         g_adj.push_back(pos - 1);
     if (col < g_cols - 1)
         g_adj.push_back(pos + 1);

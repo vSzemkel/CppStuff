@@ -12,3 +12,27 @@ static int64_t advance(const int64_t pos, const char dir)
     }
     return -1;
 }
+
+/**********************************************************************/
+
+constexpr auto fn_col = [](const int cell){ return cell % g_cols; };
+constexpr auto fn_row = [](const int cell){ return cell / g_cols; };
+
+// collect 2 to 4 adjacent cells to pos
+auto adjacents(const int pos)
+{
+    const int row = fn_row(pos);
+    const int col = fn_col(pos);
+
+    g_adj.clear();
+    if (col > 0)
+        g_adj.push_back(pos - 1);
+    if (col < g_cols - 1)
+        g_adj.push_back(pos + 1);
+    if (row > 0)
+        g_adj.push_back(pos - g_cols);
+    if (row < g_rows - 1)
+        g_adj.push_back(pos + g_cols);
+
+    return g_adj;
+}

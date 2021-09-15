@@ -25,7 +25,7 @@ auto order = [](const int a1, const int a2) { // prefer W, E
     return c1 < c2 || (c1 == c2 && r1 > r2);
 };
 
-std::vector<int> adjacents_smart(const int pos, const int border) // {neighbour, is_begind_wall}
+std::vector<int> adjacents_greedy(const int pos, const int border) // {neighbour, is_behind_wall}
 {
     const int row = fn_row(pos);
     const int col = fn_col(pos);
@@ -43,7 +43,7 @@ std::vector<int> adjacents_smart(const int pos, const int border) // {neighbour,
     return adj;
 }
 
-void smart(int, char**)
+void greedy(int, char**)
 {
     task_in >> C >> R;
     const int size = R * C;
@@ -63,7 +63,7 @@ void smart(int, char**)
             while (!dfs.empty()) {
                 const int cur = dfs.back();
                 dfs.pop_back();
-                for (const auto next : adjacents_smart(cur, board[cur]))
+                for (const auto next : adjacents_greedy(cur, board[cur]))
                     if (!visited[next]) {
                         region[next] = rgn;
                         visited[next] = true;
@@ -71,8 +71,9 @@ void smart(int, char**)
                         ++cnt;
                     }
             }
-            sizes.push_back(cnt);
+
             maxroom = std::max(maxroom, cnt);
+            sizes.push_back(cnt);
             ++rgn;
         }
 
@@ -163,8 +164,9 @@ int main(int, char**)
                     }
                 }
             }
-            sizes.push_back(cnt);
+
             maxroom = std::max(maxroom, cnt);
+            sizes.push_back(cnt);
             ++rgn;
         }
 
