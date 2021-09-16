@@ -136,7 +136,7 @@ int main(int, char**)
     const int size = R * C;
     std::vector<bool> visited(size);
     std::vector<int> dfs, sizes, board(size), region(size, -1);
-    std::map<std::pair<int, int>, std::vector<int>> adjacent; // {region1, region2} => [r1 cells]
+    std::map<std::pair<int, int>, std::vector<int>> adjacent; // {region1, region2} => [r1 cells on border with r2]
     for (auto& c : board)
         task_in >> c;
 
@@ -170,38 +170,39 @@ int main(int, char**)
             ++rgn;
         }
 
-    std::vector<int> border;
+    std::vector<int> borderA;
     int regB{-1}, cellA{-1}, unionsize{-1};
     for (const auto& [a, b] : adjacent) {
         const int total = sizes[a.first] + sizes[a.second];
-        if (unionsize < total || (unionsize == total && order(b.front(), cellA))) {
-            unionsize = total;
-            regB = a.second;
-            cellA = b.front();
-            border = std::move(b);
-        }
+        if (total < unionsize)
+            continue;
+        const int cell = *std::min_element(b.begin(), b.end(), order);
+        if (total == unionsize && order(cellA, cell))
+            continue;
+        cellA = cell;
+        regB = a.second;
+        unionsize = total;
+        borderA = std::move(b);
     }
 
     task_out << rgn << '\n';
     task_out << maxroom << '\n';
     task_out << unionsize << '\n';
 
-    int roomA = *std::min_element(border.begin(), border.end(), order);
-
     char wall{'N'};
-    int r = fn_row(roomA);
-    int c = fn_col(roomA);
+    int r = fn_row(cellA);
+    int c = fn_col(cellA);
     while (true) {
-        if (r > 0 && region[roomA - C] == regB)
+        if (r > 0 && region[cellA - C] == regB)
             break;
-        if (r < R - 1 && region[roomA + C] == regB) {
+        if (r < R - 1 && region[cellA + C] == regB) {
             ++r;
             break;
         }
         wall = 'E';
-        if (c < C - 1 && region[roomA + 1] == regB)
+        if (c < C - 1 && region[cellA + 1] == regB)
             break;
-        if (c > 0 && region[roomA - 1] == regB) {
+        if (c > 0 && region[cellA - 1] == regB) {
             --c;
             break;
         }

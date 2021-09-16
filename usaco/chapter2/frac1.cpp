@@ -113,7 +113,7 @@ struct fraction_t {
     T num, denum;
 };
 
-int main(int, char**)
+void greedy(int, char**)
 {
     int N; task_in >> N;
     std::vector<fraction_t<int>> frac;
@@ -130,6 +130,25 @@ int main(int, char**)
 
     for (const auto& f : frac)
         task_out << f << '\n';
+    task_out << "1/1\n";
+}
+
+int N;
+
+void div_conq(const fraction_t<int>& b, const fraction_t<int>& e) {
+    if (b.denum + e.denum > N)
+        return;
+    const fraction_t<int> mid{b.num + e.num, b.denum + e.denum};
+    div_conq(b, mid);
+    task_out << mid << '\n';
+    div_conq(mid, e);
+}
+
+int main(int, char**)
+{
+    task_in >> N;
+    task_out << "0/1\n";
+    div_conq(fraction_t<int>{0, 1}, fraction_t<int>{1, 1});
     task_out << "1/1\n";
 }
 

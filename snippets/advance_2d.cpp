@@ -1,3 +1,14 @@
+
+constexpr const int cW = 1;
+constexpr const int cN = 2;
+constexpr const int cE = 4;
+constexpr const int cS = 8;
+
+std::ostream& operator<<(std::ostream& os, const int course) {
+    return os << "-WN-E---S"[course];
+}
+
+
 int64_t g_rows, g_cols;
 const auto col = [](const int64_t pos) noexcept { return pos % g_cols; };
 const auto row = [](const int64_t pos) noexcept { return pos / g_cols; };
