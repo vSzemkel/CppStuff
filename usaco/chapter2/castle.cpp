@@ -170,7 +170,6 @@ int main(int, char**)
             ++rgn;
         }
 
-    std::vector<int> borderA;
     int regB{-1}, cellA{-1}, unionsize{-1};
     for (const auto& [a, b] : adjacent) {
         const int total = sizes[a.first] + sizes[a.second];
@@ -182,7 +181,6 @@ int main(int, char**)
         cellA = cell;
         regB = a.second;
         unionsize = total;
-        borderA = std::move(b);
     }
 
     task_out << rgn << '\n';
