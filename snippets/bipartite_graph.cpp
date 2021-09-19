@@ -1,4 +1,6 @@
 
+// see: \codejam\2021\retiling.cpp
+
 using bipartite_t = std::vector<std::vector<bool>>;
 
     int M{0}, G{0}, flips{0};
