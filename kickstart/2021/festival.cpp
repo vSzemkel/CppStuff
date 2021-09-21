@@ -98,7 +98,7 @@ static void solve_with_multiset() { // 15x faster
             hi.insert(hp);
             if (int64_t(hi.size()) > K) {
                 const auto first = hi.begin();
-                int val = *first;
+                const auto val = *first;
                 hi.erase(first);
                 lo.insert(val);
                 sum_hi -= val;
@@ -122,8 +122,8 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        //std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
-        std::cout << "Case #" << g << ": "; solve_with_multiset(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+        //std::cout << "Case #" << g << ": "; solve_with_multiset(); std::cout << '\n';
     }
 }
 
