@@ -23,6 +23,7 @@ struct point_t {
     T sqrLen() const { return dot(*this); }
     auto len() const { return std::sqrt(dot(*this)); }
     auto polar() const { return std::atan2(y, x); }
+    point_t unit() { return *this / len(); }
     point_t conj() const { return {x, -y}; }
     point_t perp() const { return {-y, x}; }
     point_t dir(const double ang) const { return {std::cos(ang), std::sin(ang)}; }
@@ -42,7 +43,6 @@ struct point_t {
     }
 
     point_t foot(const line_t<T>& l) const {
-        auto aa = reflect(l);
         return (*this + reflect(l)) / T{2};
     }
 
@@ -125,6 +125,10 @@ int main(int, char**)
     point_t<double> foot{3, 2}, tf{5, -1};
     line_t<double> l2{point_t<double>{0, 0}, point_t<double>{6, 4}};
     assert(tf.foot(l2) == foot);
+
+    point_t<double> u{76, 50};
+    const auto u2 = u.unit();
+    assert(std::abs(u2.len() - 1) < EPS && std::abs(u2.cross(u)) < EPS);
 }
 
 /*
