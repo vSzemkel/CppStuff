@@ -74,12 +74,8 @@ static void solve()
     std::cin >> blue;
 
     // deduplicate, translate, throw away farthest
-    std::sort(points.begin(), points.end());
-    auto ne = std::unique(points.begin(), points.end());
+    auto ne = std::remove(points.begin(), points.end(), blue);
     points.erase(ne, points.end());
-    const auto bit = std::lower_bound(points.begin(), points.end(), blue);
-    if (bit != points.end() && *bit == blue)
-        points.erase(bit);
     std::transform(points.begin(), points.end(), points.begin(), [&blue](const auto& p){
         return p - blue;
     });
