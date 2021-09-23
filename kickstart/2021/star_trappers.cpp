@@ -1,30 +1,9 @@
 
 #include <algorithm>
 #include <array>
-#include <assert.h>
-#include <bitset>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <stdlib.h>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 // Star trappers
@@ -82,6 +61,7 @@ static bool polar_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.po
 template <typename T = int64_t>
 static bool polar_radius_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_radius_cmp(p2); };
 
+constexpr const double EPS = 1e-9;
 constexpr const double INF = 1e18;
 
 static void solve()
@@ -98,24 +78,23 @@ static void solve()
     auto ne = std::unique(points.begin(), points.end());
     points.erase(ne, points.end());
     const auto bit = std::lower_bound(points.begin(), points.end(), blue);
-    if (bit != points.end() && *bit == blue) {
+    if (bit != points.end() && *bit == blue)
         points.erase(bit);
-        N = int(points.size());
-    }
     std::transform(points.begin(), points.end(), points.begin(), [&blue](const auto& p){
         return p - blue;
     });
     blue = {0, 0};
     std::sort(points.begin(), points.end(), polar_radius_cmp<>);
-    double last_polar = points[N - 1].get_polar() + 1;
+    double last_polar = points.back().get_polar();
     for (int i = N - 1; i > 0; --i) {
         auto prev_polar = points[i - 1].get_polar();
-        if (prev_polar == last_polar)
+        if (std::abs(prev_polar - last_polar) < EPS) // prev_polar == last_polar will do here
             points[i].x = INF;
         last_polar = prev_polar;
     }
     ne = std::remove_if(points.begin(), points.end(), [](const auto& p){ return p.x == INF; });
     points.erase(ne, points.end());
+    N = int(points.size());
 
     double ret{INF};
     // check all triangles
@@ -131,7 +110,7 @@ static void solve()
                 }
             }
 
-    // check all 4-poligons
+    // check all 4-poligons with diagonals crossing at origin
     std::vector<std::array<int, 2>> pairs;
     for (int i = 0; i < N; ++i)
         for (int j = i + 1; j < N; ++j)
@@ -146,7 +125,10 @@ static void solve()
             ret = std::min(ret, cur);
         }
 
-    std::cout << (ret == INF ? "IMPOSSIBLE" : std::to_string(ret));
+    if (ret == INF)
+        std::cout << "IMPOSSIBLE";
+    else
+        std::cout << ret;
 }
 
 int main(int, char**)

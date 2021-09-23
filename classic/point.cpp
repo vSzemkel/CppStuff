@@ -3,6 +3,8 @@
 #include <cmath>
 #include <iostream>
 
+// see: /kickstart/2021/star_trappers.cpp
+
 template <typename T = int64_t>
 struct point_t {
     point_t(T _x = T{}, T _y = T{}) : x(_x), y(_y) {}
@@ -53,6 +55,9 @@ template <typename T = int64_t>
 static bool polar_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_cmp(p2); };
 template <typename T = int64_t>
 static bool polar_radius_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_radius_cmp(p2); };
+
+constexpr const double EPS = 1e-9;
+constexpr const double INF = 1e18;
 
 int main(int, char**)
 {
