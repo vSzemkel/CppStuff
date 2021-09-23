@@ -12,6 +12,7 @@ struct point_t {
     T dot(const point_t& a, const point_t& b) const { return (a - *this).dot(b - *this); }
     T sqrLen() const { return dot(*this); }
     auto len() const { return std::sqrt(dot(*this)); }
+    auto get_polar() const { return std::atan2(y, x); }
     point_t operator+(const point_t& p) const { return point_t{x + p.x, y + p.y}; }
     point_t operator-(const point_t& p) const { return point_t{x - p.x, y - p.y}; }
     bool operator==(const point_t& other) const { return x == other.x && y == other.y; }
@@ -37,14 +38,21 @@ struct point_t {
         return std::abs(result) == 3;
     }
 
-    friend bool polar_cmp(const point_t& p1, const point_t& p2) { 
-        const auto polar1 = std::atan2(p1.y, p1.x);
-        const auto polar2 = std::atan2(p2.y, p2.x);
-        return polar1 > polar2 || (polar1 == polar2 && p1.sqrLen() > p2.sqrLen());
+    bool polar_cmp(const point_t& other) const { return get_polar() > other.get_polar(); };
+
+    bool polar_radius_cmp(const point_t& other) const {
+        const auto p1 = get_polar();
+        const auto p2 = other.get_polar();
+        return p1 > p2 || (p1 == p2 && sqrLen() < other.sqrLen());
     };
 
     T x, y;
 };
+
+template <typename T = int64_t>
+static bool polar_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_cmp(p2); };
+template <typename T = int64_t>
+static bool polar_radius_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_radius_cmp(p2); };
 
 int main(int, char**)
 {
