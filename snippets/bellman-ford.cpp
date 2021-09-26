@@ -1,3 +1,5 @@
+    // see: /kickstart/2021/star_trappers.cpp
+
     for (int i = 0; i < letters ; ++i)
         costs[i][i] = 0;
 

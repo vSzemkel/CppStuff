@@ -64,35 +64,13 @@ static bool polar_radius_cmp(const point_t<T>& p1, const point_t<T>& p2) { retur
 constexpr const double EPS = 1e-9;
 constexpr const double INF = 1e18;
 
-static void solve()
+int N;
+double ret;
+point_t<> blue;
+std::vector<point_t<>> points;
+
+static void finish1()
 {
-    int N; std::cin >> N;
-    std::vector<point_t<>> points(N);
-    for (auto& p : points)
-        std::cin >> p;
-    point_t<> blue;
-    std::cin >> blue;
-
-    // deduplicate, translate, throw away farthest
-    auto ne = std::remove(points.begin(), points.end(), blue);
-    points.erase(ne, points.end());
-    std::transform(points.begin(), points.end(), points.begin(), [&blue](const auto& p){
-        return p - blue;
-    });
-    blue = {0, 0};
-    std::sort(points.begin(), points.end(), polar_radius_cmp<>);
-    double last_polar = points.back().get_polar();
-    for (int i = N - 1; i > 0; --i) {
-        auto prev_polar = points[i - 1].get_polar();
-        if (std::abs(prev_polar - last_polar) < EPS) // prev_polar == last_polar will do here
-            points[i].x = INF;
-        last_polar = prev_polar;
-    }
-    ne = std::remove_if(points.begin(), points.end(), [](const auto& p){ return p.x == INF; });
-    points.erase(ne, points.end());
-    N = int(points.size());
-
-    double ret{INF};
     // check all triangles
     for (int i = 0; i < N; ++i)
         for (int j = i + 1; j < N; ++j)
@@ -120,6 +98,55 @@ static void solve()
                            + (points[pairs[i][1]] - points[pairs[j][0]]).len() + (points[pairs[i][1]] - points[pairs[j][1]]).len();
             ret = std::min(ret, cur);
         }
+}
+
+static void finish2() // by Benq
+{
+    std::vector<std::vector<double>> dist(N, std::vector(N, INF));
+    for (int i = 0; i < N; ++i)
+        for (int j = 0; j < N; ++j)
+            if (points[i].cross(points[j]) > 0)
+                dist[i][j] = std::min(dist[i][j], (points[i] - points[j]).len());
+
+    for (int k = 0; k < N; ++k)
+        for (int i = 0; i < N; ++i)
+            for (int j = 0; j < N; ++j)
+                dist[i][j] = std::min(dist[i][j], dist[i][k] + dist[k][j]);
+
+    for (int i = 0; i < N; ++i)
+        ret = std::min(ret, dist[i][i]);
+}
+
+static void solve()
+{
+    std::cin >> N;
+    points.resize(N);
+    for (auto& p : points)
+        std::cin >> p;
+    point_t<> blue;
+    std::cin >> blue;
+
+    // deduplicate, translate, throw away farthest
+    auto ne = std::remove(points.begin(), points.end(), blue);
+    points.erase(ne, points.end());
+    std::transform(points.begin(), points.end(), points.begin(), [&blue](const auto& p){
+        return p - blue;
+    });
+    blue = {0, 0};
+    std::sort(points.begin(), points.end(), polar_radius_cmp<>);
+    double last_polar = points.back().get_polar();
+    for (int i = N - 1; i > 0; --i) {
+        auto prev_polar = points[i - 1].get_polar();
+        if (std::abs(prev_polar - last_polar) < EPS) // prev_polar == last_polar will do here
+            points[i].x = INF;
+        last_polar = prev_polar;
+    }
+    ne = std::remove_if(points.begin(), points.end(), [](const auto& p){ return p.x == INF; });
+    points.erase(ne, points.end());
+    N = int(points.size());
+
+    ret = INF;
+    finish1();
 
     if (ret == INF)
         std::cout << "IMPOSSIBLE";

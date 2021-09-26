@@ -27,6 +27,7 @@ struct point_t {
     point_t conj() const { return {x, -y}; }
     point_t perp() const { return {-y, x}; }
     point_t dir(const double ang) const { return {std::cos(ang), std::sin(ang)}; }
+    point_t rotate(const double ang) const { return { *this * point_t{std::cos(ang), std::sin(ang)}}; }
     point_t operator-() const { return point_t{-x, -y}; }
     point_t operator*(const T m) const { return point_t{x * m, y * m}; }
     point_t operator/(const T d) const { return point_t{x / d, y / d}; }
@@ -129,6 +130,15 @@ int main(int, char**)
     point_t<double> u{76, 50};
     const auto u2 = u.unit();
     assert(std::abs(u2.len() - 1) < EPS && std::abs(u2.cross(u)) < EPS);
+
+    #define M_PI 3.14159265358979323846
+    point_t<double> r{100, 0};
+    const auto r2 = r.rotate(M_PI / 4);
+    const auto r3 = r.rotate(M_PI / -4);
+    const auto r4 = r.rotate(M_PI / 2);
+    assert(r2.x == r2.y && r2.x > 0 && r2.y > 0);
+    assert(r3.x == r2.x && r3.y == -r2.y && r3.x > 0 && r3.y < 0);
+    assert(std::abs(r4.x) < EPS && std::abs(r4.y - r.x) < EPS);
 }
 
 /*
