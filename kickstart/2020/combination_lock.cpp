@@ -126,34 +126,42 @@ int64_t combination_lock3(const std::vector<int64_t>& input) // O(W2)
     return ret;
 }
 
+std::vector<int64_t> samples;
+
+static int local_minimum(const int left, const int right)
+{
+    const int lval = set_all_to(samples, samples[left]);
+    const int rval = set_all_to(samples, samples[right]);
+    if (right - left < 2)
+        return lval < rval ? left : right;
+
+    const int mid = (left + right) / 2;
+    const int mval = set_all_to(samples, samples[mid]);
+    if (lval < mval && mval < rval)
+        return local_minimum(left, mid);
+    if (lval > mval && mval > rval)
+        return local_minimum(mid, right);
+
+    const int lcan = local_minimum(left, mid);
+    const int rcan = local_minimum(mid, right);
+    if (lcan == rcan)
+        return mid;
+    return lcan != mid ? lcan : rcan;
+}
+
 // [3 4 8 9 11 14] -> [21 21 19 19 21 21] logn_min_elem fails
 int64_t combination_lock4(const std::vector<int64_t>& input) // O(WlogW) for nerds
 {
-    // auto debug = input;
-    // std::transform(input.begin(), input.end(), debug.begin(), [&input](auto w){ return set_all_to(input, w);});
+    samples = input;
+    std::sort(samples.begin(), samples.end());
+    const auto ue = std::unique(samples.begin(), samples.end());
+    const auto size = ue - samples.begin();
+    if (size < 2) return 0;
 
-    auto uniq_input = input;
-    std::sort(uniq_input.begin(), uniq_input.end());
-    const auto uniq_end = std::unique(uniq_input.begin(), uniq_input.end());
-    if (uniq_input.size() < 2) return 0;
-
-    auto pocz = uniq_input.begin();
-    auto ret = set_all_to(input, uniq_input[0]);
-    if (ret < set_all_to(input, uniq_input[1])) {
-        pocz = std::lower_bound(pocz + 1, uniq_end, 0,
-        [&input](const auto& n, auto) {
-            const auto pred = &n - 1;
-            return set_all_to(input, *pred) <= set_all_to(input, n);
-        }) - 1;
-    }
-    const auto ind = std::lower_bound(pocz + 1, uniq_end, 0,
-        [&input](const auto& n, auto) {
-            const auto pred = &n - 1;
-            return set_all_to(input, *pred) >= set_all_to(input, n);
-        }) - 1;
-
-    ret = std::min(ret, set_all_to(input, *ind));
-    return std::min(ret, set_all_to(input, input.back()));
+    const int can = local_minimum(0, size - 1);
+    auto ret = set_all_to(input, samples.front());
+    ret = std::min(ret, set_all_to(input, samples[can]));
+    return std::min(ret, set_all_to(input, samples.back()));
 }
 
 void fuze()
@@ -165,13 +173,13 @@ void fuze()
         std::vector<int64_t> input(10);
         for (auto& w : input) w = 1 + rand_in_range(g_N);
 
-        const auto slow = combination_lock2(input);
-        const auto fast = combination_lock(input);
+        const auto slow = combination_lock4(input);
+        const auto fast = combination_lock2(input);
         if (fast != slow && input.size() < minfail) {
             minfail = input.size();
             std::cout << minfail << " " << g_N << " [" << fast << ", " << slow << "]\n";
-            for (auto w : input) std::cout << w << " ";
-            std::cout << "\n";
+            for (auto w : input) std::cout << w << ' ';
+            std::cout << '\n';
         }
     }
 }
@@ -187,12 +195,18 @@ int main(int argc, char* argv[])
         std::cin >> wheels >> g_N;
         input.resize(wheels);
         for (auto& c : input) std::cin >> c;
-        std::cout << "Case #" << g << ": " << combination_lock2(input) << "\n";
-        std::cout << "Case #" << g << ": " << combination_lock(input) << "\n";
+        std::cout << "Case #" << g << ": " << combination_lock4(input) << '\n';
+        std::cout << "Case #" << g << ": " << combination_lock2(input) << '\n';
+        std::cout << "Case #" << g << ": " << combination_lock(input) << '\n';
     }
 }
 
-/* clang++.exe -Wall -ggdb3 -O0 -std=c++17 combination_lock.cpp -o combination_lock.exe
+/*
+
+Compile:
+clang++.exe -Wall -ggdb3 -O0 -std=c++17 combination_lock.cpp -o combination_lock.exe
+
+Run:
 combination_lock.exe < combination_lock.in
 
 Input:
