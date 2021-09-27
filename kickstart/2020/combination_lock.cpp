@@ -7,7 +7,9 @@
 #include <random>
 #include <stdlib.h>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 // Combination Lock
@@ -24,13 +26,13 @@ const auto rand_in_range = [](const int ubound) {
 
 int distance(const int a, const int b)
 {
-    const int c = abs(a - b);
+    const int c = std::abs(a - b);
     return std::min(c, g_N - c);
 }
 
 bool crossing(const int wheel, const int target)
 {
-    const int c = abs(wheel - target);
+    const int c = std::abs(wheel - target);
     return g_N - c < c;
 }
 
@@ -42,10 +44,24 @@ int64_t set_all_to(const std::vector<int64_t>& input, const int target)
     return ret;
 }
 
+std::unordered_map<int, int64_t> cache;
+int64_t set_all_to_cached(const std::vector<int64_t>& input, const int target)
+{
+    const auto cached = cache.find(target);
+    if (cached != cache.end())
+        return cached->second;
+
+    int64_t ret{0};
+    for (const auto& w : input)
+        ret += distance(w, target);
+
+    cache[target] = ret;
+    return ret;
+}
+
 int64_t combination_lock(std::vector<int64_t>& input) // O(WlogW) for geniuses
 {
     int64_t switch_pos{0}, prev{0}, cur{0};
-    std::sort(input.begin(), input.end());
     for (const auto w : input) {
         cur += distance(w, g_N);
         if (2 * w < g_N) ++switch_pos;
@@ -77,11 +93,10 @@ int64_t combination_lock(std::vector<int64_t>& input) // O(WlogW) for geniuses
     return ret;
 }
 
-int64_t combination_lock2(std::vector<int64_t>& input) // O(WlogW) for cyborgs
+int64_t combination_lock2(const std::vector<int64_t>& input) // O(WlogW) for cyborgs
 {
     std::vector<int64_t> partial = { 0 };
-    std::sort(input.begin(), input.end());
-    std::inclusive_scan(input.begin(), input.end(), std::back_inserter(partial));
+    std::partial_sum(input.begin(), input.end(), std::back_inserter(partial));
     const auto weight = [&partial](const int64_t i, const int64_t j) -> int64_t { 
         return partial[j + 1] - partial[i];
     };
@@ -116,52 +131,45 @@ int64_t combination_lock2(std::vector<int64_t>& input) // O(WlogW) for cyborgs
     return ret;
 }
 
-int64_t combination_lock3(const std::vector<int64_t>& input) // O(W2)
+static std::pair<int, int64_t> sinusoid_min(const std::vector<int64_t>& input, const std::pair<int, int64_t> left, const std::pair<int, int64_t> right) // {index, value}
 {
-    int64_t ret = input.size() * g_N;
-    std::unordered_set<int64_t> targets(input.begin(), input.end());
-    for (const auto target : targets)
-        ret = std::min(ret, set_all_to(input, target));
+    if (right.first - left.first < 2)
+        return left.second < right.second ? left : right;
 
-    return ret;
+    const int mid = (left.first + right.first) / 2;
+    const int64_t mval = set_all_to_cached(input, input[mid]);
+    const auto middle = std::make_pair(mid, mval);
+    if (left.second < mval && mval < right.second)
+        return sinusoid_min(input, left, middle);
+    if (left.second > mval && mval > right.second)
+        return sinusoid_min(input, middle, right);
+
+    const auto lcan = sinusoid_min(input, left, middle);
+    const auto rcan = sinusoid_min(input, middle, right);
+    return lcan.second < rcan.second ? lcan : rcan;
 }
 
-std::vector<int64_t> samples;
-
-static int local_minimum(const int left, const int right)
+int64_t combination_lock3(const std::vector<int64_t>& input) // WRONG, it has 2 local minimums in cycle
 {
-    const int lval = set_all_to(samples, samples[left]);
-    const int rval = set_all_to(samples, samples[right]);
-    if (right - left < 2)
-        return lval < rval ? left : right;
-
-    const int mid = (left + right) / 2;
-    const int mval = set_all_to(samples, samples[mid]);
-    if (lval < mval && mval < rval)
-        return local_minimum(left, mid);
-    if (lval > mval && mval > rval)
-        return local_minimum(mid, right);
-
-    const int lcan = local_minimum(left, mid);
-    const int rcan = local_minimum(mid, right);
-    if (lcan == rcan)
-        return mid;
-    return lcan != mid ? lcan : rcan;
-}
-
-// [3 4 8 9 11 14] -> [21 21 19 19 21 21] logn_min_elem fails
-int64_t combination_lock4(const std::vector<int64_t>& input) // O(WlogW) for nerds
-{
-    samples = input;
-    std::sort(samples.begin(), samples.end());
-    const auto ue = std::unique(samples.begin(), samples.end());
-    const auto size = ue - samples.begin();
+    cache.clear();
+    const auto size = int(input.size());
     if (size < 2) return 0;
 
-    const int can = local_minimum(0, size - 1);
-    auto ret = set_all_to(input, samples.front());
-    ret = std::min(ret, set_all_to(input, samples[can]));
-    return std::min(ret, set_all_to(input, samples.back()));
+    const auto can = sinusoid_min(input, {0, set_all_to_cached(input, input.front())}, {size - 1, set_all_to_cached(input, input.back())});
+    return can.second;
+}
+
+int64_t combination_lock4(const std::vector<int64_t>& input) // O(W2)
+{
+    int last{-1};
+    int64_t ret = input.size() * g_N;
+    for (const auto target : input) {
+        if (target == last) continue;
+        ret = std::min(ret, set_all_to(input, target));
+        last = target;
+    }
+
+    return ret;
 }
 
 void fuze()
@@ -172,9 +180,10 @@ void fuze()
         g_N = 10;
         std::vector<int64_t> input(10);
         for (auto& w : input) w = 1 + rand_in_range(g_N);
+        std::sort(input.begin(), input.end()); // Sort for all solutions
 
-        const auto slow = combination_lock4(input);
-        const auto fast = combination_lock2(input);
+        const auto slow = combination_lock3(input);
+        const auto fast = combination_lock(input);
         if (fast != slow && input.size() < minfail) {
             minfail = input.size();
             std::cout << minfail << " " << g_N << " [" << fast << ", " << slow << "]\n";
@@ -186,7 +195,7 @@ void fuze()
 
 int main(int argc, char* argv[])
 {
-    fuze(); return 1;
+    //fuze(); return 1;
     // parse console input
     int no_of_cases, wheels;
     std::vector<int64_t> input;
@@ -195,9 +204,8 @@ int main(int argc, char* argv[])
         std::cin >> wheels >> g_N;
         input.resize(wheels);
         for (auto& c : input) std::cin >> c;
-        std::cout << "Case #" << g << ": " << combination_lock4(input) << '\n';
-        std::cout << "Case #" << g << ": " << combination_lock2(input) << '\n';
-        std::cout << "Case #" << g << ": " << combination_lock(input) << '\n';
+        std::sort(input.begin(), input.end()); // Sort for all solutions
+        std::cout << "Case #" << g << ": " << combination_lock3(input) << '\n';
     }
 }
 
