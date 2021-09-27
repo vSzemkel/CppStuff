@@ -7,7 +7,7 @@
 
 // Local maximum
 // Given a vector find index of any local maximum value
-
+// see: sinusoid_min in \kickstart\2020\combination_lock.cpp
 
 constexpr const int N = 10000;
 std::vector<int> samples;
