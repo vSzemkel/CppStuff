@@ -132,7 +132,7 @@ class string_hasher
         _prefix_hash.resize(_size);
         for (int i = 0; i < _size; ++i)
             _prefix_hash[i] = POWERS[i] * (s[i] - 'A' + 1);
-        std::inclusive_scan(_prefix_hash.begin(), _prefix_hash.end(), _prefix_hash.begin());
+        std::partial_sum(_prefix_hash.begin(), _prefix_hash.end(), _prefix_hash.begin());
     }
 
     int hash(const int begin, const int end) const { // [begin, end)
@@ -174,6 +174,59 @@ class string_hasher
     static inline std::vector<modn_t> POWERS;
 };
 
+template <typename T, int BASE = 31> // 53 for mixed case
+class vector_hasher
+{
+    using modn_t = modnum_t<998244353>;
+  public:
+    vector_hasher(const std::vector<T>& v) : _size((int)v.size()) {
+        assert(!v.empty());
+        init_powers(_size);
+        _prefix_hash.resize(_size);
+        for (int i = 0; i < _size; ++i)
+            _prefix_hash[i] = POWERS[i] * (v[i]);
+        std::partial_sum(_prefix_hash.begin(), _prefix_hash.end(), _prefix_hash.begin());
+    }
+
+    int hash(const int begin, const int end) const { // [begin, end)
+        assert(0 <= begin && begin < end && end <= _size);
+        if (begin == 0) return (int)_prefix_hash[end - 1];
+        return (int)((_prefix_hash[end - 1] - _prefix_hash[begin - 1]) * POWERS[begin].inv());
+    }
+
+    int hash() const {
+        return (int)_prefix_hash.back();
+    }
+
+    friend bool operator==(const vector_hasher& a, const vector_hasher& b) {
+        return a._size == b._size && a._prefix_hash.back() == b._prefix_hash.back();
+    }
+
+    friend bool operator<(const vector_hasher& a, const vector_hasher& b) {
+        return std::make_pair(a._size, a._prefix_hash.back()) < std::make_pair(b._size, b._prefix_hash.back());
+    }
+
+  private:
+    void init_powers(const int len) {
+        int psize = (int)POWERS.size();
+        if (psize < len + 1) {
+            POWERS.reserve(len + 1);
+            if (POWERS.empty()) {
+                POWERS.push_back(1);
+                ++psize;
+            }
+            while (psize < len + 1) {
+                POWERS.push_back(POWERS.back() * BASE);
+                ++psize;
+            }
+        }
+    }
+
+    int _size;
+    std::vector<modn_t> _prefix_hash;
+    static inline std::vector<modn_t> POWERS;
+};
+
 int main(int, char**)
 {
     string_hasher sh1{"ALA MA KOTA BUREGO"};
@@ -188,6 +241,11 @@ int main(int, char**)
     string_hasher sh7{"ABC"};
     string_hasher sh8{"ACC"};
     assert(sh7 < sh8);
+
+    std::vector<int> vi{3, 9, 117};
+    vector_hasher<int> vh{{273, 8, -284, 0, 3, 9, 117, 28}};
+    assert(vh.hash(4, 7) == vector_hasher{vi}.hash());
+
     std::cout << "PASSED\n";
 }
 
