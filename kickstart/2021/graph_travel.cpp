@@ -1,20 +1,68 @@
 
 #include <algorithm>
-#include <array>
+#include <cmath>
 #include <iostream>
+#include <numeric>
 #include <set>
+#include <unordered_map>
 #include <vector>
 
 // Graph travel
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000435bae/0000000000888764
 
 
+constexpr int bits(int x) { return x == 0 ? 0 : 31 - __builtin_clz(x); } // floor(log2(x)) 
+
 int N;
+std::vector<int64_t> L, R, A; // {L, R, A}
+
+static void solve() { // by Benq
+    int M; int64_t K;
+    std::cin >> N >> M >> K;
+    L.resize(N); R.resize(N); A.resize(N);
+    for (int i = 0; i < N; ++i)
+        std::cin >> L[i] >> R[i] >> A[i];
+
+    std::vector<int> edge_mask(N); // i-th node represented as 2**i
+    for (int z = M; z; --z) {
+        int r1, r2; std::cin >> r1 >> r2;
+        edge_mask[r1] |= 1 << r2;
+        edge_mask[r2] |= 1 << r1;
+    }
+
+    const int MAX = 1 << N;
+    std::vector<int64_t> solutions(MAX); // path_count of nodes subset
+    for (int m = 1; m < MAX; m <<= 1)
+        solutions[m] = 1;
+
+    int64_t ans{0};
+    for (int m = 1; m < MAX; ++m) { // for every subset
+        int all_adj{0};
+        int64_t sum{0};
+        for (int nodes = m; nodes; ) {
+            const int n = nodes - (nodes & (nodes - 1));
+            const int bit_no = bits(n);
+            all_adj |= edge_mask[bit_no];
+            sum += A[bit_no];
+            nodes -= n;
+        }
+        if (sum == K)
+            ans += solutions[m];
+        // try to expand it wit any single node
+        for (int ex = 0; ex < N; ++ex) {
+            const int node = 1 << ex;
+            if (!(m & node) && (all_adj & node) && L[ex] <= sum && sum <= R[ex])
+                solutions[m + node] += solutions[m];
+        }
+    }
+
+    std::cout << ans;
+}
+
 std::vector<int> path;
 std::vector<bool> visited;
 std::vector<std::vector<int>> edges;
 std::set<std::vector<int>> solutions;
-std::vector<std::array<int64_t, 3>> rooms; // {L, R, A}
 
 static void compute_set1(const int64_t accu, const int64_t target) {
     if (target == 0)
@@ -24,9 +72,8 @@ static void compute_set1(const int64_t accu, const int64_t target) {
 
     for (int i = 0; i < int(path.size()); ++i) // this approach skips any backward paths
         for (const auto& next : edges[path[i]]) {
-            const auto& room = rooms[next];
-            if (!visited[next] && room[0] <= accu && accu <= room[1]) {
-                const auto delta = room[2];
+            if (!visited[next] && L[next] <= accu && accu <= R[next]) {
+                const auto delta = A[next];
                 visited[next] = true;
                 path.push_back(next);
 
@@ -49,12 +96,12 @@ static void correct_naive_tle(int start, int64_t accu, int64_t target) {
     const auto depth_copy = depth;
     const auto visited_copy = visited;
     for (const auto& next : edges[start]) 
-        if (visited[next] || (rooms[next][0] <= accu && accu <= rooms[next][1])) {
+        if (visited[next] || (L[next] <= accu && accu <= R[next])) {
             int64_t delta{0};
             if (!visited[next]) {
                 visited[next] = true;
                 path.push_back(next);
-                delta = rooms[next][2];
+                delta = A[next];
             }
 
             if (depth < N) {
@@ -71,9 +118,9 @@ static void solve_set1() {
     int M; int64_t K;
     std::cin >> N >> M >> K;
     path.reserve(N); 
-    rooms.resize(N); // {L, R, A}
-    for (auto& r : rooms)
-        std::cin >> r[0] >> r[1] >> r[2];
+    L.resize(N); R.resize(N); A.resize(N);
+    for (int i = 0; i < N; ++i)
+        std::cin >> L[i] >> R[i] >> A[i];
     edges.assign(N, std::vector<int>{});
     for (int z = M; z; --z) {
         int r1, r2; std::cin >> r1 >> r2;
@@ -82,14 +129,11 @@ static void solve_set1() {
     }
     solutions.clear();
 
-    std::vector<bool> visited_anytime(N);
     for (int r = 0; r < N; ++r) {
-        if (visited_anytime[r])
-            continue;
         path.assign(1, r);
         visited.assign(N, false);
         visited[r] = true;
-        const auto& delta = rooms[r][2];
+        const auto& delta = A[r];
         compute_set1(delta, K - delta); 
     }
 
@@ -105,7 +149,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_set1(); std::cout << std::endl;
+        std::cout << "Case #" << g << ": "; solve(); std::cout << std::endl;
     }
 }
 
