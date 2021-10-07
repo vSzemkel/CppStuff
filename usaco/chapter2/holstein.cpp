@@ -15,7 +15,8 @@ std::ifstream task_in("holstein.in");
 std::ofstream task_out("holstein.out");
 
 
-// Recursive varsion gives TLE
+// Recursive version in ./holstein_rq.cpp
+// Recursive version in holstein_rq.cpp is faster
 
 int main(int, char**)
 {
