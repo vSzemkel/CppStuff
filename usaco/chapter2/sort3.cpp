@@ -108,8 +108,8 @@ int main(int, char**)
         ++counts[val];
     }
     ranges[1] = {data.begin(), counts[1]};
-    ranges[2] = {data.begin() + counts[1], counts[2]};
-    ranges[3] = {data.begin() + counts[1] + counts[2], counts[3]};
+    ranges[2] = {ranges[1].end(), counts[2]};
+    ranges[3] = {ranges[2].end(), counts[3]};
 
     // swap all pairs with two correcting positions
     // altervative brilliant idea - sort data_copy and swap if (d[i]!=c[i] && d[j]!=c[j] && d[i]==c[j] && d[j]==c[i])
