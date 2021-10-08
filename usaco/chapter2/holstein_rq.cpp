@@ -24,18 +24,17 @@ std::vector<std::vector<int>> feeds;
  * @next - next feed to try
  **/
 static void solve(const int cur_len, const int next) {
-    if (cur_len >= ans_len)
-        return;
     if (std::all_of(to_find.begin(), to_find.end(), [](const int r){ return r <= 0; })) {
         ans = cur;
         ans_len = cur_len;
         return;
     }
 
-    for (int n = next; n < G; ++n) {
+    const int next_len = cur_len + 1;
+    for (int n = next; n < G && next_len < ans_len; ++n) {
         cur[cur_len] = n;
         std::transform(to_find.begin(), to_find.end(), feeds[n].begin(), to_find.begin(), [](const int r, const int f){ return r - f; });
-        solve(cur_len + 1, n + 1);
+        solve(next_len, n + 1);
         std::transform(to_find.begin(), to_find.end(), feeds[n].begin(), to_find.begin(), [](const int r, const int f){ return r + f; });
     }
 }
