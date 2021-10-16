@@ -1,5 +1,5 @@
 
-// Each node can communicate only with its direct neighbours
+// Each node can communicate only with its direct neigbors
 // Nodes have no unique identifiers. Design Message and receive 
 // to count nodes in this network given:
 //

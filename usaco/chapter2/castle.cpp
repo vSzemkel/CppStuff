@@ -25,7 +25,7 @@ auto order = [](const int a1, const int a2) { // prefer W, E
     return c1 < c2 || (c1 == c2 && r1 > r2);
 };
 
-std::vector<int> adjacents_greedy(const int pos, const int border) // {neighbour, is_behind_wall}
+std::vector<int> adjacents_greedy(const int pos, const int border) // {neigbor, is_behind_wall}
 {
     const int row = fn_row(pos);
     const int col = fn_col(pos);
@@ -112,7 +112,7 @@ void greedy(int, char**)
     task_out << ret_r + 1 << ' ' << ret_c + 1 << ' ' << wall << '\n';
 }
 
-std::vector<std::pair<int, bool>> adjacents(const int pos, const int border) // {neighbour, is_begind_wall}
+std::vector<std::pair<int, bool>> adjacents(const int pos, const int border) // {neigbor, is_begind_wall}
 {
     const int row = fn_row(pos);
     const int col = fn_col(pos);

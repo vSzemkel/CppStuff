@@ -47,9 +47,10 @@ class trie_t {
             return _desc[ind] ? _desc[ind].get()->get(key.substr(1)): NV;
     }
 
+    inline static const V NV = -1;
+
   private:
     inline int char2index(const char c) const { return c - 'A'; }
-    inline static const V NV = -1;
     std::array<std::unique_ptr<trie_t>, N> _desc;
     std::unordered_map<char, V> _store;
 };
@@ -72,6 +73,7 @@ int main(int, char**)
     assert(trie.get("ABRAKADABRA") == 456);
     trie.put("ABRAKADABRA", 789);
     assert(trie.get("ABRAKADABRA") == 789);
+    assert(trie.get("KADA") == trie_t<>::NV);
     std::cout << "PASSED\n";
 }
 

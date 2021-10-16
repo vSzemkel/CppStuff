@@ -31,7 +31,7 @@ static void solve() {
     });
     for (int i = 0; i < N - 1; ++i)
         doors[doors_ord[i]] = i + 1;
-    // find next greater neighbour
+    // find next greater neigbor
     std::vector<int> left_greater(N - 1), right_greater(N - 1), stack;
     for (int i = 0; i < N - 1; ++i) {
         while (!stack.empty() && doors[stack.back()] < doors[i]) {
@@ -232,7 +232,7 @@ static void solve_mle() {
     });
     for (int i = 0; i < N - 1; ++i)
         doors[doors_ord[i]] = i + 1;
-    // find next greater neighbour
+    // find next greater neigbor
     std::vector<int> left_greater(N - 1), right_greater(N - 1), stack;
     for (int i = 0; i < N - 1; ++i) {
         while (!stack.empty() && doors[stack.back()] < doors[i]) {
