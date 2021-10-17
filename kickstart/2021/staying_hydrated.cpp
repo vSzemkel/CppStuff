@@ -8,6 +8,61 @@
 
 const auto INF = std::numeric_limits<int>::max() / 2;
 
+std::vector<int> xl, xr, yb, yt; // l <= r; b <= t
+
+static void tmwilliamlin() {
+    int K; std::cin >> K;
+    std::vector<int> x(2 * K), y(2 * K);
+    for (int i = 0; i < K; ++i)
+        std::cin >> x[2 * i] >> y[2 * i] >> x[2 * i + 1] >> y[2 * i + 1];
+    std::sort(x.begin(), x.end());
+    std::sort(y.begin(), y.end());
+
+    std::cout << x[K - 1] << ' ' << y[K - 1];
+}
+
+// we observe monotonic, increasing function
+// f(x) = number of sections we are non-strictly before of - number of sections we are strictly after
+static void solve() {
+    int K; std::cin >> K;
+    xl.resize(K); xr.resize(K);
+    yb.resize(K); yt.resize(K);
+    int xmin{INF}, ymin{INF}, xmax{-INF}, ymax{-INF};
+    for (int i = 0; i < K; ++i) {
+        std::cin >> xl[i] >> yb[i] >> xr[i] >> yt[i];
+        xmin = std::min(xmin, xl[i]);
+        xmax = std::max(xmax, xr[i]);
+        ymin = std::min(ymin, yb[i]);
+        ymax = std::max(ymax, yt[i]);
+    }
+
+    std::sort(xl.begin(), xl.end());
+    std::sort(xr.begin(), xr.end());
+    std::sort(yb.begin(), yb.end());
+    std::sort(yt.begin(), yt.end());
+
+    const int target = K & 1;
+    int lb{xmin}, ub{xmax + 1};
+    while (lb < ub) {
+        const int mid = lb + (ub - lb) / 2;
+        const int before = xl.end() - std::lower_bound(xl.begin(), xl.end(), mid + 1);
+        const int after = std::lower_bound(xr.begin(), xr.end(), mid + 1) - xr.begin();
+        if (before - after <= 0) ub = mid;
+        else lb = mid + 1;
+    }
+
+    int bb{ymin}, tb{ymax + 1};
+    while (bb < tb) {
+        const int mid = bb + (tb - bb) / 2;
+        const int before = yb.end() - std::lower_bound(yb.begin(), yb.end(), mid + 1);
+        const int after = std::lower_bound(yt.begin(), yt.end(), mid + 1) - yt.begin();
+        if (before - after <= 0) tb = mid;
+        else bb = mid + 1;
+    }
+
+    std::cout << lb << ' ' << bb;
+}
+
 static void solve_set1() { // MLE
     int K; std::cin >> K;
     int xmin{INF}, ymin{INF}, xmax{-INF}, ymax{-INF};
@@ -52,7 +107,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_set1(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; tmwilliamlin(); std::cout << '\n';
     }
 }
 
