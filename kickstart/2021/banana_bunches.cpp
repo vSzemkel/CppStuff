@@ -32,7 +32,7 @@ static void solve_set2() { // TLE on Set3
     }
 
     int64_t ret = INF;
-    std::unordered_map<int64_t, std::map<int64_t, std::pair<std::array<int, 2>, std::array<int, 2>>>> sections; // sum->len->{leftmost, rightmost}
+    std::unordered_map<int64_t, std::map<int64_t, std::array<int, 2>>> sections; // sum->len->{leftmost_start, rightmost_start}
     for (int i = 0; i < N; ++i)
         for (int j = i; j < N; ++j) {
             const auto len = j - i + 1;
@@ -43,15 +43,15 @@ static void solve_set2() { // TLE on Set3
                 break;
             }
 
-            const std::array<int, 2> cur = {i, j};
-            if (sections[rs].find(len) == sections[rs].end())
-                sections[rs][len] = {cur, cur};
+            auto& rsmap = sections[rs];
+            if (rsmap.find(len) == rsmap.end())
+                rsmap[len] = {i, i};
             else {
-                auto& item = sections[rs][len];
-                if (cur < item.first)
-                    item.first = cur;
-                else if (item.second < cur)
-                    item.second = cur;
+                auto& item = rsmap[len];
+                if (i < item[0])
+                    item[0] = i;
+                else if (item[1] < i)
+                    item[1] = i;
             }
         }
 
@@ -59,10 +59,10 @@ static void solve_set2() { // TLE on Set3
         const auto& lsum = sections[l];
         const auto& rsum = sections[K - l];
 
-        for (auto lit = lsum.begin(), rit = rsum.begin(); lit != lsum.end() && rit != rsum.end() && lit->first + rit->first <= K;) {
-            if (lit->second.first[1] + 1 < rit->second.second[0])
+        for (auto lit = lsum.begin(), rit = rsum.begin(); lit != lsum.end() && rit != rsum.end() && lit->first + rit->first < K;) {
+            if (lit->second[0] + lit->first < rit->second[1])
                 ret = std::min(ret, lit->first + rit->first);
-            if (rit->second.first[1] + 1 < lit->second.second[0])
+            if (rit->second[0] + rit->first < lit->second[1])
                 ret = std::min(ret, lit->first + rit->first);
             if (ret < INF)
                 break;
