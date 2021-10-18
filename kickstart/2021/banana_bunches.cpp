@@ -12,10 +12,44 @@
 // Banana Bunches
 // https://codingcompetitions.withgoogle.com/kickstart/round/00000000004362d6/00000000008b44ef
 
-constexpr const int64_t INF = 1e18;
+constexpr const int INF = 1e09;
 
 std::vector<int64_t> trees, partial;
 const auto range_sum = [](const int i, const int j){return partial[j + 1] - partial[i];};
+
+// Consider two ranges [0..j][j+1..N-1]
+// INVARIANT: For each sum we know minimal lenght in right range
+// For each range [i..j] we can update best score in constant time
+// For each range [j..N] we update the invariant
+static void solve() {
+    int64_t N, K;
+    std::cin >> N >> K;
+    trees.resize(N);
+    for (auto& t : trees)
+        std::cin >> t;
+
+    int ret{INF};
+    std::vector<int> best(K + 1, INF);
+    best[0] = 0;
+    for (int j = N - 1; j >= 0; --j) {
+        int64_t prefSum{0}, sufSum{0};
+        for (int i = j; i >= 0; --i) {
+            prefSum += trees[i];
+            if (prefSum <= K)
+                ret = std::min(ret, j - i + 1 + best[K - prefSum]);
+        }
+        for (int k = j; k < N; ++k) {
+            sufSum += trees[k];
+            if (sufSum <= K)
+                best[sufSum] = std::min(best[sufSum], k - j + 1);
+        }
+    }
+
+    if (ret == INF)
+        ret = -1;
+
+    std::cout << ret;
+}
 
 static void solve_set2() { // TLE on Set3
     int64_t N, K;
@@ -31,15 +65,15 @@ static void solve_set2() { // TLE on Set3
         return;
     }
 
-    int64_t ret = INF;
-    std::unordered_map<int64_t, std::map<int64_t, std::array<int, 2>>> sections; // sum->len->{leftmost_start, rightmost_start}
+    int ret = INF;
+    std::unordered_map<int64_t, std::map<int, std::array<int, 2>>> sections; // sum->len->{leftmost_start, rightmost_start}
     for (int i = 0; i < N; ++i)
         for (int j = i; j < N; ++j) {
             const auto len = j - i + 1;
             const auto rs = range_sum(i, j);
             if (rs >= K) {
                 if (rs == K)
-                    ret = std::min(ret, int64_t(len));
+                    ret = std::min(ret, len);
                 break;
             }
 
@@ -90,7 +124,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_set2(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 
