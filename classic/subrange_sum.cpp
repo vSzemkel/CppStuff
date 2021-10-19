@@ -47,29 +47,28 @@ struct subrange_sum_t
     }
 
     int ksum_prefix(const T value) {
-        const auto ub = _size - 1;
-        int l{0}, r{ub};
+        int l{0}, r{_size};
         while (l < r) {
-            const auto mid = (l + r) / 2;
-            if (query(0, mid) < value)
-                l = mid + 1;
-            else
+            const auto mid = l + (r - l) / 2;
+            if (query(mid) >= value)
                 r = mid;
+            else
+                l = mid + 1;
         }
-        return l; // l = min(i) : query(0, i) >= value || l == ub
+        return l; // l = min(i) : query(0, i) >= value || l == _size if total < value
     }
 
     int ksum_sufix(const T value) {
-        const auto ub = _size - 1;
-        int l{0}, r{ub};
+        int l{-1}, r{_size - 1}, total = query(r);
         while (l < r) {
-            const auto mid = (l + r) / 2 + 1;
-            if (query(mid, ub) >= value)
+            const auto mid = l + (r - l + 1) / 2;
+            if (query(mid) <= total - value)
                 l = mid;
             else
                 r = mid - 1;
         }
-        return l; // l = max(i) : query(i, ub) >= value || l == 0
+        if (total >= value && l < _size - 1) ++l;
+        return l; // l = max(i) : query(i, ub) >= value || l == -1 if total < value
     }
 
     int _size;
@@ -83,11 +82,15 @@ template <typename T> void incl_scan(const T& src) { typename T::value_type acc{
 int64_t partial_sum(const int i, const int j) { return g_partial[j + 1] - g_partial[i]; }
 const auto rand_in_range = [](const int ubound){ std::random_device seed; std::mt19937 gen{seed()}; std::uniform_int_distribution<int> dist(0, ubound - 1); return dist(gen); };
 
-
-void print(const std::vector<int64_t>& v)
+template <typename C>
+static void print(const C& v)
 {
-    for (const auto& n : v) std::cout << n << " ";
-    std::cout << "\n";
+    if (v.empty()) return;
+    std::cout << v.front();
+    const int size = int(v.size());
+    for (int i = 1; i < size; ++i)
+        std::cout << ' ' << v[i];
+    std::cout << '\n';
 }
 
 void ecnervala_init(const std::vector<int64_t>& src)
@@ -167,9 +170,16 @@ int main(int argc, char* argv[])
     int preflen2 = g_ss.ksum_prefix(exactsum);
     int suflen2 = g_ss.ksum_sufix(total - exactsum);
     assert(preflen + 1 == preflen2 && preflen2 == suflen2);
+    assert(g_ss.ksum_prefix(0) == 0);
+    assert(g_ss.ksum_sufix(0) == size - 1);
+    assert(g_ss.ksum_prefix(total) == size - 1);
+    assert(g_ss.ksum_sufix(total) == 0);
+    assert(g_ss.ksum_prefix(2 * total) == size);
+    assert(g_ss.ksum_sufix(2 * total) == -1);
+    std::cout << "PASSED\n";
 }
 
 /*
-clang++.exe -Wall -ggdb3 -O0 -std=c++17 prefix_sum.cpp -o prefix_sum.exe
-g++ -Wall -ggdb3 -Og -std=c++17 prefix_sum.cpp -o prefix_sum.o
+clang++.exe -Wall -ggdb3 -O0 -std=c++17 subrange_sum.cpp -o subrange_sum.exe
+g++ -Wall -ggdb3 -Og -std=c++17 subrange_sum.cpp -o subrange_sum.o
 */
