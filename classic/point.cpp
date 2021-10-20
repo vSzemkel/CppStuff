@@ -77,6 +77,8 @@ struct point_t {
         return p1 > p2 || (p1 == p2 && sqrLen() < other.sqrLen());
     };
 
+    inline static T area(const point_t& a, const point_t& b, const point_t& c) { return std::abs(a.cross(b, c)) / 2; };
+
     friend std::ostream& operator<<(std::ostream& out, const point_t& p) { return out << p.x << ' ' << p.y; }
     friend std::istream& operator>>(std::istream& in, point_t& p) { in >> p.x >> p.y; return in; }
 
@@ -139,6 +141,13 @@ int main(int, char**)
     assert(r2.x == r2.y && r2.x > 0 && r2.y > 0);
     assert(r3.x == r2.x && r3.y == -r2.y && r3.x > 0 && r3.y < 0);
     assert(std::abs(r4.x) < EPS && std::abs(r4.y - r.x) < EPS);
+
+    const point_t<double> t1{-2.65, -1.01};
+    const point_t<double> t2{4.17, 2.31};
+    const point_t<double> t3{0.15, 5.81};
+    assert(std::abs(point_t<double>::area(t1, t2, t3) - (t1 - t2).len() * (t3 - t3.foot(line_t<double>{t1, t2})).len() / 2) < EPS);
+
+    std::cout << "PASSED\n";
 }
 
 /*

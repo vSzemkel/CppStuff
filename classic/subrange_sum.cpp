@@ -6,7 +6,7 @@
 #include <random>
 #include <vector>
 
-// Prefix sum operations for huge ranges
+// Prefix sum operations for huge ranges (Fenwick tree)
 // Inspired by ecnervala task solutions on Google coding competitions
 
 template <typename T = int>
