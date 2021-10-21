@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 // see: /kickstart/2021/star_trappers.cpp
 
@@ -89,7 +90,13 @@ template <typename T = int64_t>
 static bool polar_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_cmp(p2); };
 template <typename T = int64_t>
 static bool polar_radius_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_radius_cmp(p2); };
-
+template <class T = double>
+T polygon_area2(const std::vector<point_t<T>>& v) { // doubled area for circuit ordered points
+    T a = v.back().cross(v.front());
+    for (int i = 0; i < int(v.size()) - 1; ++i)
+        a += v[i].cross(v[i + 1]);
+    return std::abs(a);
+}
 
 int main(int, char**)
 {
@@ -147,6 +154,8 @@ int main(int, char**)
     const point_t<double> t3{0.15, 5.81};
     assert(std::abs(point_t<double>::area(t1, t2, t3) - (t1 - t2).len() * (t3 - t3.foot(line_t<double>{t1, t2})).len() / 2) < EPS);
 
+    std::vector<point_t<>> v = {{0, 0}, {2, 0}, {1, 1}, {1, 2}, {0, 2}};
+    assert(polygon_area2(v) == 5);
     std::cout << "PASSED\n";
 }
 
