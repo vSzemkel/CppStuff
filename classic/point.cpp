@@ -15,7 +15,7 @@ template <typename T = int64_t> using line_t = std::array<point_t<T>, 2>;
 template <typename T>
 struct point_t {
     point_t(T _x = T{}, T _y = T{}) : x(_x), y(_y) {}
-    int sgn(const T a) { return (a > EPS) - (a < -EPS); }
+    int sgn(const T a) const { return (a > EPS) - (a < -EPS); }
     T cross(const point_t& p) const { return x * p.y - y * p.x; }
     T cross(const point_t& a, const point_t& b) const { return (a - *this).cross(b - *this); }
     T dot(const point_t& p) const { return x * p.x + y * p.y; }
@@ -23,7 +23,7 @@ struct point_t {
     T sqrLen() const { return dot(*this); }
     auto len() const { return std::sqrt(dot(*this)); }
     auto polar() const { return std::atan2(y, x); }
-    point_t unit() { return *this / len(); }
+    point_t unit() const { return *this / len(); }
     point_t conj() const { return {x, -y}; }
     point_t perp() const { return {-y, x}; }
     point_t dir(const double ang) const { return {std::cos(ang), std::sin(ang)}; }
@@ -47,7 +47,7 @@ struct point_t {
         return (*this + reflect(l)) / T{2};
     }
 
-    bool on_segment(const line_t<T>& l) {
+    bool on_segment(const line_t<T>& l) const {
         return sgn(cross(l[0], l[1])) == 0 && sgn((*this - l[0]).dot(*this - l[1])) <= 0; 
     }
 
@@ -93,14 +93,14 @@ static bool polar_radius_cmp(const point_t<T>& p1, const point_t<T>& p2) { retur
 
 int main(int, char**)
 {
-    point_t<> a{0, 0};
-    point_t<> b{4, 0};
-    point_t<> c{0, 4};
-    point_t<> d{2, 2};
-    point_t<> e{1, 1};
-    point_t<> f{3, 3};
-    point_t<> g{2, -1};
-    point_t<> h{-1, 3};
+    const point_t<> a{0, 0};
+    const point_t<> b{4, 0};
+    const point_t<> c{0, 4};
+    const point_t<> d{2, 2};
+    const point_t<> e{1, 1};
+    const point_t<> f{3, 3};
+    const point_t<> g{2, -1};
+    const point_t<> h{-1, 3};
 
     assert(EPS < INF);
     assert(d.in_triangle(a, b, c));
@@ -117,24 +117,24 @@ int main(int, char**)
     assert(a.turning_left(b, c) == 1);
     assert(b.turning_left(a, c) == -1);
 
-    line_t<> l{point_t<>{1, 1}, point_t<>{11, 3}};
-    point_t<> on_line{6, 2};
+    const line_t<> l{point_t<>{1, 1}, point_t<>{11, 3}};
+    const point_t<> on_line{6, 2};
     assert(on_line.on_segment(l));
-    point_t<> on_line_contin{21, 5};
+    const point_t<> on_line_contin{21, 5};
     assert(!on_line_contin.on_segment(l));
-    point_t<> not_on_line{8, 2};
+    const point_t<> not_on_line{8, 2};
     assert(!not_on_line.on_segment(l));
 
-    point_t<double> foot{3, 2}, tf{5, -1};
-    line_t<double> l2{point_t<double>{0, 0}, point_t<double>{6, 4}};
+    const point_t<double> foot{3, 2}, tf{5, -1};
+    const line_t<double> l2{point_t<double>{0, 0}, point_t<double>{6, 4}};
     assert(tf.foot(l2) == foot);
 
-    point_t<double> u{76, 50};
+    const point_t<double> u{76, 50};
     const auto u2 = u.unit();
     assert(std::abs(u2.len() - 1) < EPS && std::abs(u2.cross(u)) < EPS);
 
     #define M_PI 3.14159265358979323846
-    point_t<double> r{100, 0};
+    const point_t<double> r{100, 0};
     const auto r2 = r.rotate(M_PI / 4);
     const auto r3 = r.rotate(M_PI / -4);
     const auto r4 = r.rotate(M_PI / 2);
