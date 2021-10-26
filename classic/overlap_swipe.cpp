@@ -15,12 +15,95 @@ using editors_t = std::set<std::string>;
 
 void print_window(const int start, const int finish, const editors_t& window)
 {
-    std::cout << "    [" << start << ", " << finish << "] ";
-    for (const auto& s : window) std::cout << s << ", ";
-    std::cout << std::endl;
+    if (!window.empty() && start < finish) {
+        std::cout << "    [" << start << ", " << finish - 1 << "] ";
+        for (const auto& s : window) std::cout << s << ' ';
+        std::cout << std::endl;
+    }
 }
 
-void solution1() // O(N*logM)
+static void solution() // 2N*log(2N)
+{
+    using edition_t = std::tuple<int, bool, std::string>; // { pos, inserting, editor_name }
+    int N; std::cin >> N; // ignore text size
+    std::cin >> N;
+    const int size = 2 * N;
+    std::vector<edition_t> editors(size);
+    for (int i = 0; i < N; ++i) {
+        int start, stop;
+        std::string name;
+        // format: editor_name, start_position, one_after_last_position
+        std::cin >> name >> start >> stop;
+        ++stop;
+        editors[2 * i] = {start, true, name};
+        editors[2 * i + 1] = {stop, false, name};
+    }
+
+    std::sort(editors.begin(), editors.end());
+
+    int prev{0};
+    editors_t cur;
+    for (const auto& [pos, inserting, name] : editors) {
+        print_window(prev, pos, cur);
+        if (inserting)
+            cur.insert(name);
+        else 
+            cur.erase(name);
+        prev = pos;
+    }
+}
+
+void solution_overcomplicated() // O(M*logM) not depending on text size
+{
+    using edition_t = std::tuple<int, int, std::string>; // {start, stop, editor_name }
+    constexpr auto ed_comp = [](const edition_t& ed1, const edition_t& ed2) {
+        return std::get<1>(ed1) > std::get<1>(ed2);
+    };
+
+    int size; std::cin >> size;
+    int N; std::cin >> N;
+    std::vector<edition_t> editors(N); // [start, stop)
+    for (auto& ed : editors) {
+        // format: editor_name, start_position, one_after_last_position
+        std::cin >> std::get<2>(ed) >> std::get<0>(ed) >> std::get<1>(ed);
+        ++std::get<1>(ed);
+    }
+
+    editors_t window;
+    std::priority_queue<edition_t, std::vector<edition_t>, decltype(ed_comp)> pq(ed_comp);
+    std::sort(editors.begin(), editors.end());
+
+    int cur{0};
+    for (const edition_t& ed : editors) {
+        while (!pq.empty() && std::get<1>(pq.top()) <= std::get<0>(ed)) {
+            const auto& fin = pq.top();
+            if (std::get<1>(pq.top()) != std::get<0>(ed) || (!g_coalesce && window.count(std::get<2>(fin)) == 1)) {
+                print_window(cur, std::get<1>(fin), window);
+                cur = std::get<1>(fin);
+            }
+            window.extract(std::get<2>(fin));
+            pq.pop();
+        }
+
+        if (!window.empty()) {
+            print_window(cur, std::get<0>(ed), window);
+            cur = std::get<0>(ed);
+        }
+
+        window.insert(std::get<2>(ed));
+        pq.push(ed);
+    }
+
+    while (!pq.empty()) {
+        const auto& fin = pq.top();
+        print_window(cur, std::get<1>(fin), window);
+        cur = std::get<1>(fin);
+        window.extract(std::get<2>(fin));
+        pq.pop();
+    }
+}
+
+void solution_mle() // O(N*logM) with O(N) memory
 {
     std::vector<editors_t> g_start;
     std::vector<editors_t> g_finish;
@@ -68,65 +151,16 @@ void solution1() // O(N*logM)
     }
 }
 
-void solution2() // O(M*logM) not depending on text size
-{
-    using edition_t = std::tuple<int, int, std::string>; // {start, stop, editor_name }
-    constexpr auto ed_comp = [](const edition_t& ed1, const edition_t& ed2) {
-        return std::get<1>(ed1) > std::get<1>(ed2);
-    };
-
-    int size; std::cin >> size;
-    int N; std::cin >> N;
-    std::vector<edition_t> editors(N); // [start, stop)
-    for (auto& ed : editors)
-        // format: editor_name, start_position, one_after_last_position
-        std::cin >> std::get<2>(ed) >> std::get<0>(ed) >> std::get<1>(ed);
-
-    editors_t window;
-    std::priority_queue<edition_t, std::vector<edition_t>, decltype(ed_comp)> pq(ed_comp);
-    std::sort(editors.begin(), editors.end());
-
-    int cur{0};
-    for (const edition_t& ed : editors) {
-        while (!pq.empty() && std::get<1>(pq.top()) <= std::get<0>(ed)) {
-            const auto& fin = pq.top();
-            if (std::get<1>(pq.top()) != std::get<0>(ed) || (!g_coalesce && window.count(std::get<2>(fin)) == 1)) {
-                print_window(cur, std::get<1>(fin), window);
-                cur = std::get<1>(fin);
-            }
-            window.extract(std::get<2>(fin));
-            pq.pop();
-        }
-
-        if (!window.empty()) {
-            print_window(cur, std::get<0>(ed), window);
-            cur = std::get<0>(ed);
-        }
-
-        window.insert(std::get<2>(ed));
-        pq.push(ed);
-    }
-
-    while (!pq.empty()) {
-        const auto& fin = pq.top();
-        print_window(cur, std::get<1>(fin), window);
-        cur = std::get<1>(fin);
-        window.extract(std::get<2>(fin));
-        pq.pop();
-    }
-}
-
 int main(int, char**)
 {
-    //solution1();
-    solution2();
+    solution();
 
     return 0;
 }
 
 /* 
 clang++.exe -Wall -g -std=c++17 overlap_swipe.cpp -o overlap_swipe.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address overlap_swipe.cpp -o overlap_swipe.o
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address overlap_swipe.cpp -o overlap_swipe
 
 overlap_swipe.exe < overlap_swipe.in
 
@@ -144,27 +178,27 @@ Gabacki 24 49
 Habacki 53 65
 Ibacki 2 22
 Jabacki 32 64
+Kabacki 24 30
 
 Output:
 
-    [0, 2] Dabacki, 
-    [2, 4] Dabacki, Ibacki,
-    [4, 21] Babacki, Dabacki, Ibacki,
-    [21, 22] Dabacki, Ibacki,
-    [22, 24] Dabacki,
-    [24, 32] Dabacki, Gabacki, 
-    [32, 45] Dabacki, Gabacki, Jabacki,
-    [45, 49] Dabacki, Fabacki, Gabacki, Jabacki,
-    [49, 50] Dabacki, Fabacki, Jabacki,
-    [50, 53] Cabacki, Dabacki, Fabacki, Jabacki, 
-    [53, 54] Cabacki, Dabacki, Fabacki, Habacki, Jabacki,
-    [54, 64] Cabacki, Dabacki, Habacki, Jabacki,
-    [64, 65] Cabacki, Dabacki, Habacki,
-    [65, 66] Cabacki, Dabacki, 
-    [66, 67] Cabacki, Dabacki, Ebacki,
-    [67, 70] Cabacki, Dabacki,
-    [70, 77] Cabacki,
-    [77, 80] Abacki, Cabacki,
-    [80, 100] Abacki,
+[0, 1] Dabacki, 
+[2, 3] Dabacki, Ibacki, 
+[4, 21] Babacki, Dabacki, Ibacki, 
+[22, 22] Dabacki, Ibacki, 
+[23, 23] Dabacki, 
+[24, 30] Dabacki, Gabacki, Kabacki, 
+[31, 31] Dabacki, Gabacki, 
+[32, 44] Dabacki, Gabacki, Jabacki, 
+[45, 49] Dabacki, Fabacki, Gabacki, Jabacki, 
+[50, 52] Cabacki, Dabacki, Fabacki, Jabacki, 
+[53, 54] Cabacki, Dabacki, Fabacki, Habacki, Jabacki, 
+[55, 64] Cabacki, Dabacki, Habacki, Jabacki, 
+[65, 65] Cabacki, Dabacki, Habacki, 
+[66, 67] Cabacki, Dabacki, Ebacki, 
+[68, 70] Cabacki, Dabacki, 
+[71, 76] Cabacki, 
+[77, 80] Abacki, Cabacki, 
+[81, 100] Abacki, 
 
 */
