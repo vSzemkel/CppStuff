@@ -1,11 +1,12 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <iostream>
 #include <numeric>
 #include <random>
 #include <vector>
 
-// Local maximum
+// Local maximum (Ternary search)
 // Given a vector find index of any local maximum value
 // see: sinusoid_min in \kickstart\2020\combination_lock.cpp
 
@@ -16,29 +17,29 @@ const auto rand_in_range = [](const int64_t ubound){std::random_device seed;std:
 
 static int local_maximum(const int left, const int right)
 {
-    if (right - left < 2)
-        return samples[left] < samples[right] ? right : left;
+    if (right - left < 4)
+        return std::max_element(samples.begin(), samples.end()) - samples.begin();
 
-    const int mid = (left + right) / 2;
-    if (samples[left] <= samples[mid] && samples[mid] <= samples[right])
-        return local_maximum(mid, right);
-    if (samples[left] >= samples[mid] && samples[mid] >= samples[right])
-        return local_maximum(left, mid);
+    const int slice = (right - left) / 3;
+    const int midl = left + slice;
+    const int midr = midl + slice;
 
-    const int lcan = local_maximum(left, mid);
-    const int rcan = local_maximum(mid, right);
-    if (lcan == rcan)
-        return mid;
-    return lcan != mid ? lcan : rcan;
+    return (samples[midl] < samples[midr]) ? local_maximum(midl, right) : local_maximum(left, midr);
 }
 
 int main(int, char**)
 {
-    samples.resize(N + 1);
-    std::iota(samples.begin(), samples.end(), 0);
+    samples.resize(N);
+    std::iota(samples.begin(), samples.end(), 1);
     std::rotate(samples.begin(), samples.begin() + int(rand_in_range(N)), samples.end());
+
     const int lm = local_maximum(0, N);
-    assert(samples[lm] == N || lm == N);
+    assert(samples[lm] == N);
+    std::reverse(samples.begin(), samples.end());
+    const int rev_lm = local_maximum(0, N);
+    assert(samples[rev_lm] == N);
+    assert(lm + rev_lm == N - 1);
+    std::cout << "PASSED\n";
 }
 
 /*
