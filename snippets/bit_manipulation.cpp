@@ -1,3 +1,5 @@
+// value of the lowest bit
+n & -n
 // turn off lowest bit
 n = n & (n - 1)
 // check if n is a power of 2
@@ -13,4 +15,15 @@ for (int nodes = flag; nodes; ) {
     const int bit_no = bits(n);
     all_adj |= edge_mask[n];
     nodes -= n;
+}
+// all subsets sums
+const int MAX = 1 << N;
+std::vector<int64_t> sums(MAX); // path_count of nodes subset
+for (int m = 1, hi = 0; m < MAX; ++m) {
+    const int pred = m & (m - 1); // m with lowest bit cleared
+    if (pred == 0) {
+        sums[m] = A[hi++];
+        solutions[m] = 1;
+    } else 
+        sums[m] = sums[pred] + A[bits(m - pred)];
 }

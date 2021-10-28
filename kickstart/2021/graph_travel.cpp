@@ -33,11 +33,15 @@ static void solve() { // by Benq
     const int MAX = 1 << N;
     std::vector<int64_t> sums(MAX); // path_count of nodes subset
     std::vector<int64_t> solutions(MAX); // path_count of nodes subset
-    for (int m = 1; m < MAX; m <<= 1) {
-        solutions[m] = 1;
-        sums[m] = A[bits(m)];
+    for (int m = 1, hi = 0; m < MAX; ++m) {
+        const int pred = m & (m - 1); // m with lowest bit cleared
+        if (pred == 0) {
+            sums[m] = A[hi++];
+            solutions[m] = 1;
+        } else 
+            sums[m] = sums[pred] + A[bits(m & -m)];
     }
-
+    
     int64_t ans{0};
     for (int m = 1; m < MAX; ++m) { // for every subset
         int all_adj{0};
@@ -49,15 +53,11 @@ static void solve() { // by Benq
         const auto sum = sums[m];
         if (sum == K)
             ans += solutions[m];
-        // try to expand it wit any single node
+        // try to expand it with any single node
         for (int ex = 0; ex < N; ++ex) {
             const int node = 1 << ex;
-            if (!(m & node)) {
-                if (!sums[m | node])
-                    sums[m | node] = sums[m] + A[ex];
-                if ((all_adj & node) && L[ex] <= sum && sum <= R[ex])
-                    solutions[m | node] += solutions[m];
-            }
+            if (!(m & node) && (all_adj & node) && L[ex] <= sum && sum <= R[ex])
+                solutions[m | node] += solutions[m];
         }
     }
 
