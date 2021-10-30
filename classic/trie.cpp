@@ -1,58 +1,51 @@
 
-#include <array>
 #include <assert.h>
 #include <iostream>
-#include <memory>
 #include <string_view>
 #include <unordered_map>
 
 // Trie data structure
 // https://en.wikipedia.org/wiki/Trie
 
-template <typename V = int, int N = 26>
+template <typename V = int>
 class trie_t {
   public:
+    V get(const std::string_view& key) const {
+        if (key.empty())
+            return _store;
+
+        auto found = _desc.find(key[0]);
+        if (found == _desc.end())
+            return NV;
+
+        return found->second.get(key.substr(1));
+    }
+
     void put(const std::string_view& key, const V value) {
-        assert(!key.empty());
-        if (key.size() == 1)
-            _store[key[0]] = value;
-        else {
-            const auto ind = char2index(key[0]);
-            if (!_desc[ind])
-                _desc[ind] = std::make_unique<trie_t>();
-            _desc[ind].get()->put(key.substr(1), value);
-        }
+        if (key.empty())
+            _store = value;
+        else
+            _desc[key[0]].put(key.substr(1), value);
     }
 
     void pop(const std::string_view& key) {
-        assert(!key.empty());
-        if (key.size() == 1) {
-            const auto found = _store.find(key[0]);
-            if (found != _store.end())
-                _store.erase(found);
+        if (key.empty()) {
+            _store = NV;
             return;
         }
 
-        const auto ind = char2index(key[0]);
-        if (_desc[ind])
-            _desc[ind].get()->pop(key.substr(1));
-    }
+        const auto found = _desc.find(key[0]);
+        if (found == _desc.end())
+            return;
 
-    V get(const std::string_view& key) const {
-        const auto ind = char2index(key[0]);
-        if (key.size() == 1) {
-            const auto found = _store.find(key[0]);
-            return found == _store.end() ? NV : found->second;
-        } else
-            return _desc[ind] ? _desc[ind].get()->get(key.substr(1)): NV;
+        found->second.pop(key.substr(1));
     }
 
     inline static const V NV = -1;
 
   private:
-    inline int char2index(const char c) const { return c - 'A'; }
-    std::array<std::unique_ptr<trie_t>, N> _desc;
-    std::unordered_map<char, V> _store;
+    std::unordered_map<char, trie_t> _desc;
+    V _store{NV};
 };
 
 int main(int, char**)
@@ -74,6 +67,19 @@ int main(int, char**)
     trie.put("ABRAKADABRA", 789);
     assert(trie.get("ABRAKADABRA") == 789);
     assert(trie.get("KADA") == trie_t<>::NV);
+    trie.pop("ABNOTEXISTSAB");
+    
+    trie.put("X", 1);
+    trie.put("XYZ", 3);
+    assert(trie.get("X") == 1);
+    assert(trie.get("XY") == trie_t<>::NV);
+    assert(trie.get("XYZ") == 3);
+    trie.put("XY", 2);
+    assert(trie.get("XY") == 2);
+    trie.pop("XY");
+    assert(trie.get("X") == 1);
+    assert(trie.get("XY") == trie_t<>::NV);
+    assert(trie.get("XYZ") == 3);
     std::cout << "PASSED\n";
 }
 
