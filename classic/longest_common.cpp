@@ -5,10 +5,12 @@
 #include <string_view>
 #include <vector>
 
-// Longest common consecutivesubsequence
+// Longest common factor (consecutive subsequence)
+// Can be done in O((r + c)logk) with Rabin-Karp and binary search
+// see "CP in Python 128" page 59
 
 template<typename T>
-std::span<T> LCCS(std::span<T> t1, std::span<T> t2) {
+std::span<T> LCCS(std::span<T> t1, std::span<T> t2) { // N(rc)
     const int rows = int(t1.size()) + 1;
     const int cols = int(t2.size()) + 1;
     std::span<T> ret{t1.data(), 0};

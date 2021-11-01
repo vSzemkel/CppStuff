@@ -14,7 +14,7 @@ template <int M>
 struct modnum_t {
   public:
     modnum_t() : value(0) {}
-    modnum_t(int64_t v) : value(v % M) {
+    modnum_t(int v) : value(v % M) {
         if (value < 0) value += M;
     }
 
@@ -153,6 +153,13 @@ class string_hasher
         return std::make_pair(a._size, a._prefix_hash.back()) < std::make_pair(b._size, b._prefix_hash.back());
     }
 
+    static modn_t roll(modn_t hash, const char old_char, const char new_char, const int len) {
+        hash -= (old_char - 'A' + 1);
+        hash /= BASE;
+        hash += POWERS[len - 1] * (new_char - 'A' + 1);
+        return hash;
+    }
+
   private:
     void init_powers(const int len) {
         int psize = (int)POWERS.size();
@@ -206,6 +213,13 @@ class vector_hasher
         return std::make_pair(a._size, a._prefix_hash.back()) < std::make_pair(b._size, b._prefix_hash.back());
     }
 
+    static modn_t roll(modn_t hash, const T old_char, const T new_char, const int len) {
+        hash -= old_char;
+        hash /= BASE;
+        hash += POWERS[len - 1] * new_char;
+        return hash;
+    }
+
   private:
     void init_powers(const int len) {
         int psize = (int)POWERS.size();
@@ -234,7 +248,11 @@ int main(int, char**)
     assert(sh1.hash(7, 11) == sh2.hash());
     string_hasher sh3{"clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 polynomial_hasher.cpp -o polynomial_hasher.exe"};
     string_hasher sh4{"polynomial"};
-    assert(sh3.hash(48, 58) == sh4.hash());
+    const auto polynomial_hash = sh4.hash();
+    assert(sh3.hash(48, 58) == polynomial_hash);
+    const auto olynomialx_hash = string_hasher<>::roll(polynomial_hash, 'p', 'x', 10 /* len('polynomial') */);
+    const auto lynomialxy_hash = string_hasher<>::roll(olynomialx_hash, 'o', 'y', 10 /* len('polynomial') */);
+    assert(lynomialxy_hash == string_hasher{"lynomialxy"}.hash());
     string_hasher sh5{"ecnerwala"};
     string_hasher sh6{"ecnerwala"};
     assert(sh5 == sh6);
@@ -245,7 +263,9 @@ int main(int, char**)
     std::vector<int> vi{3, 9, 117};
     vector_hasher<int> vh{{273, 8, -284, 0, 3, 9, 117, 28}};
     assert(vh.hash(4, 7) == vector_hasher{vi}.hash());
-
+    const auto rh = vector_hasher<int>::roll(vh.hash(), 273, 69, 8);
+    vector_hasher<int> vr{{8, -284, 0, 3, 9, 117, 28, 69}};
+    assert(rh == vr.hash());
     std::cout << "PASSED\n";
 }
 

@@ -10,7 +10,7 @@
 static std::vector<int> kmp(const std::string& s) {
     const int n = int(s.size());
     std::vector<int> ret(n);
-    for (int k = 0, i = 1; i < n; ++i) { // k is lenght of already found bound
+    for (int k = 0, i = 1; i < n; ++i) { // k is lenght of already found proper (non identity) bound 
         while (k > 0 && s[k] != s[i])
             k = ret[k]; // books say there should be ret[k-1] - counterexample needed
         if (s[k] == s[i])
