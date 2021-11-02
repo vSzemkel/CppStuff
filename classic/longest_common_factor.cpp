@@ -45,7 +45,7 @@ int main(int, char**)
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++20 longest_common.cpp -o longest_common.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++20 -fsanitize=address longest_common.cpp -o longest_common.o
+clang++.exe -Wall -Wextra -g -O0 -std=c++20 longest_common_factor.cpp -o longest_common_factor.exe
+g++ -Wall -Wextra -ggdb3 -Og -std=c++20 -fsanitize=address longest_common_factor.cpp -o longest_common_factor
 
 */
