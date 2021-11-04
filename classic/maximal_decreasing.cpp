@@ -107,14 +107,4 @@ Compile:
 clang++.exe -Wall -Wextra -g -O0 -std=c++17 maximal_decreasing.cpp -o maximal_decreasing.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address maximal_decreasing.cpp -o maximal_decreasing
 
-Run:
-py.exe interactive_runner.py py.exe maximal_decreasing_testing_tool.py 1 -- maximal_decreasing.exe
-maximal_decreasing.exe < maximal_decreasing.in
-
-Input:
-
-
-Output:
-
-
 */
