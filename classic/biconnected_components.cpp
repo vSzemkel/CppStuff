@@ -5,6 +5,7 @@
 #include <vector>
 
 // Biconnected components
+// Removing any of cut_nodes or cut_edges disconnects the graph
 // Based on the book CP in Python 128, page 101
 
 struct biconnected_components_t {
