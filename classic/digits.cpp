@@ -8,6 +8,7 @@
 // Simple operations on digits
 
 
+constexpr char romdig[9] = { 'I', 'V', 'X', 'L', 'C', 'D', 'M', '-', '-' };
 constexpr char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 constexpr int bases_count = (int)sizeof(digits) - 1;
 std::unordered_map<char, int> digit_value;
@@ -41,7 +42,7 @@ static int64_t to_base10(std::string num, int base)
     return ret;
 }
 
-static int count_digits(int64_t n)
+static int count_digits(int64_t n) // ABCDE -> 5
 {
     int d{1};
     while (true) {
@@ -53,7 +54,15 @@ static int count_digits(int64_t n)
     return d;
 }
 
-static int64_t head_digits(const int64_t n, const int count)
+static int64_t max_factor(const int64_t n) // ABCDE -> 10000
+{
+    int64_t ret{1};
+    while (10 * ret <= n)
+        ret *= 10;
+    return ret;
+}
+
+static int64_t head_digits(const int64_t n, const int count) // ABCDE, 3 -> ABC
 {
     const int all = count_digits(n);
     assert(0 <= count && count <= all);
@@ -61,7 +70,7 @@ static int64_t head_digits(const int64_t n, const int count)
 
 }
 
-static int64_t tail_digits(const int64_t n, const int count)
+static int64_t tail_digits(const int64_t n, const int count) // ABCDE, 2 -> DE
 {
     const int all = count_digits(n);
     assert(0 <= count && count <= all);
