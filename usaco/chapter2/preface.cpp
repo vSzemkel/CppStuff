@@ -11,7 +11,7 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=PgGkyrEPgRl&S=preface
 std::ifstream task_in("preface.in");
 std::ofstream task_out("preface.out");
 
-constexpr char digits[9] = { 'I', 'V', 'X', 'L', 'C', 'D', 'M', '-', '-' };
+constexpr char digits[] = "IVXLCDM--";
 
 static int count_digits(int n) // ABCDE -> 5
 {
@@ -25,7 +25,8 @@ static int count_digits(int n) // ABCDE -> 5
     return d;
 }
 
-static int max_factor(const int n) { // ABCDE -> 10000
+static int max_factor(const int n) // ABCDE -> 10000
+{
     int ret{1};
     while (10 * ret <= n)
         ret *= 10;

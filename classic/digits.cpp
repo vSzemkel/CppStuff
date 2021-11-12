@@ -8,7 +8,7 @@
 // Simple operations on digits
 
 
-constexpr char romdig[9] = { 'I', 'V', 'X', 'L', 'C', 'D', 'M', '-', '-' };
+constexpr char romdig[] = "IVXLCDM--"; // see: /usaco/chapter2/preface.cpp
 constexpr char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 constexpr int bases_count = (int)sizeof(digits) - 1;
 std::unordered_map<char, int> digit_value;
