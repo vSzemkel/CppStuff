@@ -12,6 +12,12 @@ struct digraph_t
     digraph_t(const int size) : _size(size), _order(size), _in(size), _out(size) {
     }
 
+    digraph_t get_reversed() {
+        digraph_t ret{*this};
+        std::swap(ret._in, ret._out);
+        return ret;
+    }
+
     void add_edge(const int from, const int to) {
         assert(0 <= from && from < _size);
         assert(0 <= to && to < _size);
@@ -63,6 +69,9 @@ int main(int, char**)
 
     dg.analyze();
     assert((dg.topological_order() == std::vector{0, 1, 2, 3, 4, 5}));
+    auto rdg = dg.get_reversed();
+    rdg.analyze();
+    assert((rdg.topological_order() == std::vector{5, 4, 2, 3, 1, 0}));
 
     dg.add_edge(4, 1);
     dg.analyze();

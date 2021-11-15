@@ -47,12 +47,10 @@ static void solve() {
 
             if (prev >= 0 && nc(S[prev]) == val) {
                 map[S[prev] - '0'].push_back(prev);
-                //map[(pos + 1) % 10].push_back(prev);
                 ++total;
             }
             if (succ[next] < N && nc(val) == S[succ[next]]) {
                 map[val - '0'].push_back(next);
-                //map[(pos + 2) % 10].push_back(prev);
                 ++total;
             }
         }
