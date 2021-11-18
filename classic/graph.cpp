@@ -45,6 +45,13 @@ struct graph_t
         std::iota(_pred.begin(), _pred.end(), 0);
     }
 
+    void clear() {
+        _size = 0;
+        _index.clear();
+        _label.clear();
+        reset();
+    }
+
     auto get_path_to_label(const T& label) {
         assert(_index.count(label));
         const auto path = get_path_to(_index[label]);
@@ -83,6 +90,45 @@ struct graph_t
     bool found(const int node) {
         assert(0 <= node && node < _size);
         return _pred[node] != node;
+    }
+
+    bool check_maze() { // requires all 0 or 1 costs
+        for (const auto& n : _adj)
+            if (!std::all_of(n.begin(), n.end(), [](const edge_t& e){ return e[1] == 0 || e[1] == 1; }))
+                return false;
+        return true;
+    }
+
+    void maze(const T& from, const T& to) {
+        assert(_index.count(from) && _index.count(to));
+        maze(_index[from], _index[to]);
+    }
+
+    void maze(const int source = 0, const int target = -1) {
+        std::deque<int> dq;
+        dq.push_back(source); // {distance from source, to}
+        _dist[source] = 0;
+        _pred[source] = -1;
+        while (!dq.empty()) {
+            const auto node = dq.front(); dq.pop_front();
+            if (!_seen[node]) {
+                if (node == target)
+                    return;
+                _seen[node] = true;
+                for (const auto& e : _adj[node]) {
+                    const auto next = e[0];
+                    const auto cand = _dist[node] + e[1];
+                    if (!_seen[next] && cand < _dist[next]) {
+                        _dist[next] = cand;
+                        _pred[next] = node;
+                        if (e[1] == 0)
+                            dq.push_front(next);
+                        else
+                            dq.push_back(next);
+                    }
+                }
+            }
+        }
     }
 
     bool check_dijkstra() { // requires non negative costs
@@ -134,8 +180,22 @@ struct graph_t
 
 graph_t<char> g;
 
-void init_graph()
+void init_maze()
 {
+    g.clear();
+    for (const char c : "ABCD")
+        if (c) g.add_node(c);
+
+    g.add_edge('A', 'B', 1);
+    g.add_edge('B', 'C', 0);
+    g.add_edge('C', 'D', 0);
+    g.add_edge('B', 'D', 1);
+    g.reset();
+}
+
+void init_dijkstra()
+{
+    g.clear();
     for (const char c : "ABCDEFGHIJKLM")
         if (c) g.add_node(c);
 
@@ -162,7 +222,12 @@ void init_graph()
 
 int main(int argc, char* argv[])
 {
-    init_graph();
+    init_maze();
+    if (g.check_maze())
+        g.maze('A', 'D');
+    assert((g.get_path_to_label('D') == std::vector{'A', 'B', 'C', 'D'}) && g.get_cost_to_label('D') == 1);
+
+    init_dijkstra();
     if (g.check_dijkstra())
         g.dijkstra('A', 'M');
 
