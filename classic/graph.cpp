@@ -216,7 +216,7 @@ struct graph_t
         bellman_ford(_index[from]);
     }
 
-    void bellman_ford(const int source = 0) {
+    void bellman_ford(const int source = 0) { // negative cost accepted
         _dist[source] = 0;
         _pred[source] = -1;
         for (int z = _size; z; --z) { // one additional round
@@ -234,7 +234,28 @@ struct graph_t
         }
     }
 
-    static constexpr const int INF = 1 << 30;
+    auto floyd_warshall(const bool check_for_neg_cycles = false) { // compute all distances
+        if (check_for_neg_cycles)
+            bellman_ford();
+        if (_has_neg_cycle)
+            return std::vector(0, std::vector<int>(0));
+
+        std::vector<std::vector<int>> dist(_size, std::vector<int>(_size, INF));
+        for (int i = 0; i < _size; ++i) {
+            dist[i][i] = 0;
+            for (const auto& e : _adj[i])
+                dist[i][e[0]] = e[1];
+        }
+
+        for (int k = 0; k < _size; ++k)
+            for (int i = 0; i < _size; ++i)
+                for (int j = 0; j < _size; ++j)
+                    dist[i][j] = std::min(dist[i][j], dist[i][k] + dist[k][j]);
+
+        return dist;
+    }
+
+    static constexpr const int INF = (1 << 30) - 1;
 
   private:
     int _size;
@@ -311,17 +332,23 @@ int main(int argc, char* argv[])
     if (g.check_dijkstra())
         g.dijkstra('A', 'M');
 
-    // present result
     if (!g.found_label('M'))
-        printf("\nPath not found\n");
+        std::cout << "\nPath not found\n";
     else {
         const auto path = g.get_path_to_label('M');
         const auto length = int(path.size());
-        printf("\nFound shortest path from A to M with the length of %i and cost %i\n", length, g.get_cost_to_label('M'));
-        printf("\t%c", path.front());
+        std::cout << "\nFound shortest path from A to M with the length of " << length << " and cost " << g.get_cost_to_label('M') << '\n';
+        std::cout << path.front();
         for (int i = 1; i < length; ++i)
-            printf("->%c", path[i]);
+            std::cout << "->" << path[i];
+        std::cout << '\n';
     }
+
+    const auto dist = g.floyd_warshall();
+    assert(!dist.empty());
+    assert(dist['A' - 'A']['J' - 'A'] == 6);
+    assert(dist['I' - 'A']['E' - 'A'] == 9);
+    std::cout << "PASSED\n";
 }
 
 /*    clang++.exe -Wall -g -std=c++17 graph.cpp -o graph.exe
