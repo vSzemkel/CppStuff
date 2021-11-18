@@ -92,6 +92,9 @@ struct desctree_t {
         _heavy_root.resize(n);
         _subtree_paths.resize(n);
         _paths.resize(n);
+        _lgsz = 0;
+        int sz{n}; while (sz) { sz >>= 1; ++_lgsz; }
+        _bl.assign(n, std::vector<int>(_lgsz));
     }
 
     void add_edge(const int a, const int b) {
@@ -105,7 +108,12 @@ struct desctree_t {
 
     void dfs(const int node, const int par) {
         _parent[node] = par;
-        _depth[node] = par < 0 ? 0 : _depth[par] + 1;
+        _depth[node] = ~par ? _depth[par] + 1 : 0;
+
+        // Build data structure for binary lifting search
+        _bl[node][0] = ~par ? par : node;
+        for (int i = 1; i < _lgsz; ++i)
+            _bl[node][i] = _bl[_bl[node][i - 1]][i - 1];
 
         // Erase the edge to parent.
         auto& ngb = _adj[node];
@@ -303,8 +311,8 @@ struct desctree_t {
 
   // private:
     int _size{};
-    int _tour, _post_tour;
-    std::vector<std::vector<int>> _adj;
+    int _lgsz, _post_tour, _tour;
+    std::vector<std::vector<int>> _adj, _bl;
     std::vector<int> _parent, _depth, _subtree_size;
     std::vector<int> _euler, _euler_first_rank;
     std::vector<int> _dfs_rank, _dfs_rank_end, _postorder;
