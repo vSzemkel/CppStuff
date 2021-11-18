@@ -92,6 +92,33 @@ struct graph_t
         return _pred[node] != node;
     }
 
+    void bfs(const T& from, const T& to) { // no edge cost, no requirements
+        assert(_index.count(from) && _index.count(to));
+        bfs(_index[from], _index[to]);
+    }
+
+    void bfs(const int source = 0, const int target = -1) {
+        std::queue<int> qq;
+        qq.push(source);
+        _dist[source] = 0;
+        _pred[source] = -1;
+        _seen[source] = true;
+        while (!qq.empty()) {
+            const int node = qq.front(); qq.pop();
+            if (node == target)
+                return;
+            for (const auto& e : _adj[node]) {
+                const auto next = e[0];
+                if (!_seen[next]) {
+                    _seen[next] = true;
+                    _pred[next] = node;
+                    _dist[next] = _dist[node] + 1;
+                    qq.push(next);
+                }
+            }
+        }
+    }
+
     bool check_maze() { // requires all 0 or 1 costs
         for (const auto& n : _adj)
             if (!std::all_of(n.begin(), n.end(), [](const edge_t& e){ return e[1] == 0 || e[1] == 1; }))
@@ -106,7 +133,7 @@ struct graph_t
 
     void maze(const int source = 0, const int target = -1) {
         std::deque<int> dq;
-        dq.push_back(source); // {distance from source, to}
+        dq.push_back(source);
         _dist[source] = 0;
         _pred[source] = -1;
         while (!dq.empty()) {
@@ -223,6 +250,10 @@ void init_dijkstra()
 int main(int argc, char* argv[])
 {
     init_maze();
+    g.bfs('A', 'D');
+    assert((g.get_path_to_label('D') == std::vector{'A', 'B', 'D'}) && g.get_cost_to_label('D') == 2);
+
+    g.reset();
     if (g.check_maze())
         g.maze('A', 'D');
     assert((g.get_path_to_label('D') == std::vector{'A', 'B', 'C', 'D'}) && g.get_cost_to_label('D') == 1);
