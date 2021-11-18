@@ -38,7 +38,21 @@ struct graph_t
         _adj[to].push_back({from, cost});
     }
 
+    void modify_edge(const T& from, const T& to, const int cost) {
+        assert(_index.count(from) && _index.count(to));
+        modify_edge(_index[from], _index[to], cost);
+    }
+
+    void modify_edge(const int from, const int to, const int cost) {
+        assert(0 <= from < _size && 0 <= to < _size);
+        auto& fn = _adj[from];
+        const auto it = std::find_if(fn.begin(), fn.end(), [to](const auto& e){ return e[0] == to; });
+        assert(it != fn.end());
+        (*it)[1] = cost;
+    }
+
     void reset() {
+        _has_neg_cycle = false;
         _pred.assign(_size, -1);
         _dist.assign(_size, INF);
         _seen.assign(_size, false);
@@ -47,6 +61,7 @@ struct graph_t
 
     void clear() {
         _size = 0;
+        _adj.clear();
         _index.clear();
         _label.clear();
         reset();
@@ -82,15 +97,17 @@ struct graph_t
         return _dist[node];
     }
 
-    bool found(const T& label) {
+    bool found_label(const T& label) {
         assert(_index.count(label));
         return found(_index[label]);
     }
 
-    bool found(const int node) {
+    bool found(const int node) const {
         assert(0 <= node && node < _size);
         return _pred[node] != node;
     }
+
+    bool has_negative_cycle() const { return _has_neg_cycle; }
 
     void bfs(const T& from, const T& to) { // no edge cost, no requirements
         assert(_index.count(from) && _index.count(to));
@@ -194,10 +211,34 @@ struct graph_t
         }
     }
 
+    void bellman_ford(const T& from) {
+        assert(_index.count(from));
+        bellman_ford(_index[from]);
+    }
+
+    void bellman_ford(const int source = 0) {
+        _dist[source] = 0;
+        _pred[source] = -1;
+        for (int z = _size; z; --z) { // one additional round
+            _has_neg_cycle = false;
+            for (int node = 0; node < _size; ++node)
+                for (const auto& e : _adj[node]) {
+                    const int next = e[0];
+                    const int cand = _dist[node] + e[1];
+                    if (cand < _dist[next]) {
+                        _dist[next] = cand;
+                        _pred[next] = node;
+                        _has_neg_cycle = true;
+                    }
+                }
+        }
+    }
+
     static constexpr const int INF = 1 << 30;
 
   private:
     int _size;
+    bool _has_neg_cycle;
     std::vector<T> _label;
     std::vector<bool> _seen;
     std::vector<int> _pred, _dist;
@@ -258,12 +299,20 @@ int main(int argc, char* argv[])
         g.maze('A', 'D');
     assert((g.get_path_to_label('D') == std::vector{'A', 'B', 'C', 'D'}) && g.get_cost_to_label('D') == 1);
 
+    g.reset();
+    g.bellman_ford('A');
+    assert(!g.has_negative_cycle() && (g.get_path_to_label('D') == std::vector{'A', 'B', 'C', 'D'}) && g.get_cost_to_label('D') == 1);
+    g.reset();
+    g.modify_edge('B', 'D', -1);
+    g.bellman_ford('A');
+    assert(g.has_negative_cycle());
+
     init_dijkstra();
     if (g.check_dijkstra())
         g.dijkstra('A', 'M');
 
     // present result
-    if (!g.found('M'))
+    if (!g.found_label('M'))
         printf("\nPath not found\n");
     else {
         const auto path = g.get_path_to_label('M');
