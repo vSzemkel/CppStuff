@@ -52,7 +52,9 @@ struct graph_t
     }
 
     void reset() {
+        _ccsz = 0;
         _has_neg_cycle = false;
+        _cc.assign(_size, -1);
         _pred.assign(_size, -1);
         _dist.assign(_size, INF);
         _seen.assign(_size, false);
@@ -255,14 +257,38 @@ struct graph_t
         return dist;
     }
 
+    int connected_components() {
+        for (int source = 0; source < _size; ++source)
+            if (!_seen[source]) {
+                std::vector<int> ss;
+                ss.push_back(source);
+                _seen[source] = true;
+                _cc[source] = _ccsz;
+                while (!ss.empty()) {
+                    const int node = ss.back(); ss.pop_back();
+                    for (const auto& e : _adj[node]) {
+                        const auto next = e[0];
+                        if (!_seen[next]) {
+                            _seen[next] = true;
+                            _cc[next] = _ccsz;
+                            ss.push_back(next);
+                        }
+                    }
+                }
+                ++_ccsz;
+            }
+
+        return _ccsz;
+    }
+
     static constexpr const int INF = (1 << 30) - 1;
 
   private:
-    int _size;
+    int _size, _ccsz;
     bool _has_neg_cycle;
     std::vector<T> _label;
     std::vector<bool> _seen;
-    std::vector<int> _pred, _dist;
+    std::vector<int> _cc, _dist, _pred;
     std::map<T, int> _index; // unordered will not work with unhashable T
     std::vector<std::vector<edge_t>> _adj;
 };
@@ -348,6 +374,12 @@ int main(int argc, char* argv[])
     assert(!dist.empty());
     assert(dist['A' - 'A']['J' - 'A'] == 6);
     assert(dist['I' - 'A']['E' - 'A'] == 9);
+
+    g.add_node('N');
+    g.add_node('O');
+    g.add_edge('N', 'O', 42);
+    g.reset();
+    assert(g.connected_components() == 2);
     std::cout << "PASSED\n";
 }
 
