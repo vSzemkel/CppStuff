@@ -19,3 +19,13 @@ int64_t modmul(int64_t a, int64_t b)
     }
     return r;
 }
+
+static auto modulo_inverse_list(const int last, const int M)
+{
+    assert(std::gcd(last, M) == 1); // coprimes
+    std::vector<int> ret(last + 1);
+    ret[1] = 1;
+    for (int i = 2; i <= last; ++i)
+        ret[i] = M - M / i * ret[M % i] % M;
+    return ret;
+}
