@@ -4,11 +4,211 @@
 #include <assert.h>
 #include <iostream>
 #include <numeric>
-#include <utility>
+#include <optional>
+#include <string>
 #include <vector>
 
-// Described tree - datastructure implementing elementary tree operations
-// Inspired by work of neal_wu
+// Dependent Events
+// https://codingcompetitions.withgoogle.com/kickstart/round/0000000000435914/00000000008d9970
+
+template <int M = 998244353>
+class modnum_t {
+  public:
+    modnum_t() : value(0) {}
+    modnum_t(int64_t v) : value(v % M) {
+        if (value < 0) value += M;
+    }
+
+    modnum_t inv() const
+    {
+        modnum_t res;
+        res.value = minv(value, M);
+        return res;
+    }
+
+    modnum_t neg() const
+    {
+        modnum_t res;
+        res.value = value ? M - value : 0;
+        return res;
+    }
+
+    modnum_t operator-() const
+    {
+        return neg();
+    }
+
+    modnum_t operator+() const
+    {
+        return modnum_t(*this);
+    }
+
+    modnum_t& operator+=(const modnum_t& o)
+    {
+        value += o.value;
+        if (value >= M) value -= M;
+        return *this;
+    }
+
+    modnum_t& operator-=(const modnum_t& o)
+    {
+        value -= o.value;
+        if (value < 0) value += M;
+        return *this;
+    }
+
+    modnum_t& operator*=(const modnum_t& o)
+    {
+        value = int(int64_t(value) * int64_t(o.value) % M);
+        return *this;
+    }
+
+    modnum_t& operator/=(const modnum_t& o)
+    {
+        return *this *= o.inv();
+    }
+
+    modnum_t& operator++()
+    {
+        value++;
+        if (value == M) value = 0;
+        return *this;
+    }
+
+    modnum_t& operator--()
+    {
+        if (value == 0) value = M;
+        value--;
+        return *this;
+    }
+
+    friend modnum_t operator++(modnum_t& a, int)
+    {
+        modnum_t r = a;
+        ++a;
+        return r;
+    }
+
+    friend modnum_t operator--(modnum_t& a, int)
+    {
+        modnum_t r = a;
+        --a;
+        return r;
+    }
+
+    friend std::optional<modnum_t> inv(const modnum_t& m) { const auto ret = m.inv(); return ret.value < 0 ? std::nullopt : std::optional{ret}; }
+    friend modnum_t neg(const modnum_t& m) { return m.neg(); }
+
+    friend std::ostream& operator<<(std::ostream& out, const modnum_t& n) { return out << int(n); }
+    friend std::istream& operator>>(std::istream& in, modnum_t& n) { int64_t v; in >> v; n = modnum_t(v); return in; }
+
+    friend bool operator<(const modnum_t& a, const modnum_t& b) { return a.value < b.value; }
+    friend bool operator==(const modnum_t& a, const modnum_t& b) { return a.value == b.value; }
+    friend bool operator!=(const modnum_t& a, const modnum_t& b) { return a.value != b.value; }
+    friend modnum_t operator+(const modnum_t& a, const modnum_t& b) { return modnum_t(a) += b; }
+    friend modnum_t operator-(const modnum_t& a, const modnum_t& b) { return modnum_t(a) -= b; }
+    friend modnum_t operator*(const modnum_t& a, const modnum_t& b) { return modnum_t(a) *= b; }
+    friend modnum_t operator/(const modnum_t& a, const modnum_t& b) { return modnum_t(a) /= b; }
+    friend int operator%(const modnum_t& a, const int b) { return a.value % b; }
+
+    explicit operator int() const { return value; }
+
+  private:
+    static int minv(int a, const int m) {
+        a %= m;
+        if (a == 0) return -1; // not exists
+        return a == 1 ? 1 : int(m - int64_t(minv(m, a)) * int64_t(m) / a);
+    }
+
+    int value;
+};
+
+template <class T = int64_t>
+struct fraction_t {
+    inline bool is_zero() const { return num == 0 || denum == 0; }
+
+    void reduce() {
+        if (!is_zero()) {
+            const auto gcd = std::gcd(num, denum);
+            num /= gcd;
+            denum /= gcd;
+            if (num < 0 && denum < 0) {
+                num = -num;
+                denum = -denum;
+            }
+        } else {
+            num = 0;
+            denum = 1;
+        }
+    }
+
+    void operator+=(const fraction_t& other) {
+        if (!other.is_zero()) {
+            if (is_zero()) {
+                num = other.num;
+                denum = other.denum;
+            } else {
+                num = num * other.denum + other.num * denum;
+                denum *= other.denum;
+            }
+            reduce();
+        }
+    }
+
+    void operator-=(const fraction_t& other) {
+        if (!other.is_zero()) {
+            if (is_zero()) {
+                num = -other.num;
+                denum = other.denum;
+            } else {
+                num = num * other.denum -    other.num * denum;
+                denum *= other.denum;
+            }
+            reduce();
+        }
+    }
+
+    void operator*=(const fraction_t& other) {
+        if (!other.is_zero()) {
+            if (!is_zero()) {
+                num *= other.num;
+                denum *= other.denum;
+                reduce();
+            }
+        } else {
+            num = 0;
+            denum = 1;
+        }
+    }
+
+    void operator/=(const fraction_t& other) {
+        if (!other.is_zero()) 
+            operator*=({other.denum, other.num});
+    }
+
+    friend fraction_t operator+(const fraction_t& f1, const fraction_t& f2) { auto ret = f1; ret += f2; return ret; }
+    friend fraction_t operator-(const fraction_t& f1, const fraction_t& f2) { auto ret = f1; ret -= f2; return ret; }
+    friend fraction_t operator*(const fraction_t& f1, const fraction_t& f2) { auto ret = f1; ret *= f2; return ret; }
+    friend fraction_t operator/(const fraction_t& f1, const fraction_t& f2) { auto ret = f1; ret /= f2; return ret; }
+
+    friend bool operator==(const fraction_t& f1, const fraction_t& f2) {
+        auto tf1 = f1;
+        auto tf2 = f2;
+        tf1.reduce();
+        tf2.reduce();
+        return tf1.num == tf2.num && tf1.denum == tf2.denum;
+    }
+
+    friend bool operator<(const fraction_t& f1, const fraction_t& f2) {
+        return (__int128_t)f1.num * f2.denum < (__int128_t)f2.num * f1.denum;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const fraction_t& f) {
+        return os << f.num << '/' << f.denum;
+    }
+
+    T num, denum;
+};
 
 template<typename T, bool maximum_mode = false> // inspired by neal_wu
 struct rmq_t {
@@ -332,57 +532,58 @@ struct desctree_t {
     bool _built{};
 };
 
-constexpr int N = 10;
-desctree_t g_tree(N);
+constexpr const int M = 1000000007;
+constexpr const int64_t FACTOR = 1000000;
+constexpr const int DEPTH = desctree_t::max_depth(200000);
 
-static void init()
-{
-    g_tree.add_edge(0, 1);
-    g_tree.add_edge(2, 0);
-    g_tree.add_edge(1, 3);
-    g_tree.add_edge(3, 6);
-    g_tree.add_edge(7, 3);
-    g_tree.add_edge(7, 9);
-    g_tree.add_edge(4, 2);
-    g_tree.add_edge(2, 5);
-    g_tree.add_edge(5, 8);
-}
+using mod_t = modnum_t<M>;
+using frac_t = fraction_t<int64_t>;
 
-static void test()
-{
-    std::vector<int> subtree_of_1;
-    for (int i = g_tree._dfs_rank[1]; i < g_tree._dfs_rank_end[1]; ++i)
-        subtree_of_1.push_back(g_tree._dfs_list[i]);
-    assert((subtree_of_1 == std::vector<int>{1, 3, 7, 9, 6}));
+static void solve_BUG() { // by tmwilliamlin168
+    int N, Q;
+    std::cin >> N >> Q;
+    desctree_t tree(N);
+    std::vector<int64_t> condp(N);
+    std::vector<std::array<int64_t, DEPTH>> anc(N), succ(N), fail(N);
+    anc[0].fill(-1);
+    std::cin >> condp[0];
+    for (int i = 1; i < N; ++i) {
+        int p;
+        std::cin >> p >> succ[i][0] >> fail[i][0];
+        anc[i][0] = --p;
+        tree.add_edge(p, i);
+        condp[i] = (condp[p] * succ[i][0] + (FACTOR - condp[p]) * fail[i][0]) / FACTOR;
+        for (int k = 1; k < DEPTH; ++k) {
+            anc[i][k] = ~anc[i][k - 1] ? anc[anc[i][k - 1]][k - 1] : -1;
+            if (~anc[i][k]) {
+                succ[i][k] = (succ[i][k - 1] * succ[anc[i][k - 1]][k - 1] + fail[i][k - 1] * (FACTOR - succ[anc[i][k - 1]][k - 1])) / FACTOR;
+                fail[i][k] = (succ[i][k - 1] * fail[anc[i][k - 1]][k - 1] + fail[i][k - 1] * (FACTOR - fail[anc[i][k - 1]][k - 1])) / FACTOR;
+            }
+        }
+    }
 
-    for (int i = 0; i < N; ++i)
-        assert(g_tree._subtree_size[i] == g_tree._dfs_rank_end[i] - g_tree._dfs_rank[i]);
+    tree.build();
+    for (int q = 0; q < Q; ++q) {
+        int p, r; std::cin >> p >> r;
+        --p; --r;
 
-    assert(g_tree.on_path(3, 9, 0));
-    assert(!g_tree.on_path(4, 0, 9));
+        const int la = tree.get_lca(p, r);
+        std::array<int64_t, 2> ap{FACTOR, 0}, ar{FACTOR, 0};
+        auto agg = [&](int& u, int k, std::array<int64_t, 2>& a) {
+            a = {(a[0] * succ[u][k] + a[1] * (FACTOR - succ[u][k])) / FACTOR, (a[0] * fail[u][k] + a[1] * (FACTOR - fail[u][k])) / FACTOR};
+            u = anc[u][k];
+        };
 
-    const auto ct = g_tree.compress_tree({6, 9});
-    assert(ct.size() == 3);
+        while (p != la)
+            agg(p, 0, ap);
+        while (r != la)
+            agg(r, 0, ar);
 
-    const auto diameter = g_tree.get_diameter();
-    std::cout << "Nodes count: " << g_tree._subtree_size[0] << '\n';
-    std::cout << "Diameter: " << diameter.first << " (" << diameter.second[0] << ", " << diameter.second[1] << ")\n";
-    std::cout << "Root paths sum: " << g_tree._paths[0] << '\n';
-    std::cout << "Subtrees paths sum: " << g_tree._subtree_paths[0] << '\n';
-    std::cout << "Degree of node 3: " << g_tree.degree(2) << '\n';
-    std::cout << "Sum of paths to 3: " << g_tree.get_paths_len_to(2) << '\n';
-    std::cout << "Child ancestor of 0 on path to 8: " << g_tree.child_ancestor(0, 8) << '\n';
-    std::cout << "3rd node on path from 1 to 8: " << g_tree.get_kth_node_on_path(1, 8, 3) << '\n';
-    std::cout << "2nd ancestor of 7: " << g_tree.get_kth_ancestor(7, 2) << '\n';
-    std::cout << "Common node of 4, 5, 8: " << g_tree.get_common_node(4, 5, 8) << '\n';
-    std::cout << "Lowest common ancestor of 6 and 9: " << g_tree.get_lca(6, 9) << '\n';
-    std::cout << "Distance between 5 and 7: " << g_tree.get_dist(5, 7) << '\n';
-
-    std::cout << "\nDFS order: ";
-    for (const auto n : g_tree._dfs_list) std::cout << n + 1 << ' ';
-    std::cout << "\nEuler order: ";
-    for (const auto n : g_tree._euler) std::cout << n + 1 << ' ';
-    std::cout << std::endl;
+        const int64_t ans = ((ap[0] * ar[0]) / FACTOR * condp[la] + (ap[1] * ar[1]) / FACTOR * (FACTOR - condp[la])) / FACTOR;
+        frac_t f{ans, FACTOR};
+        f.reduce();
+        std::cout << f.num * mod_t{f.denum}.inv() << ' ';
+    }
 }
 
 int main(int, char**)
@@ -391,30 +592,42 @@ int main(int, char**)
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
 
-    init();
-    g_tree.build();
-    test();
+    int no_of_cases;
+    std::cin >> no_of_cases;
+    for (int g = 1; g <= no_of_cases; ++g) {
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+    }
 }
 
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++17 desctree.cpp -o desctree.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address desctree.cpp -o desctree.o
+clang++.exe -Wall -Wextra -g -O0 -std=c++17 dependent_events.cpp -o dependent_events.exe
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address dependent_events.cpp -o dependent_events
+
+Run:
+dependent_events.exe < dependent_events.in
+
+Input:
+
+2
+5 2
+200000
+1 400000 300000
+2 500000 200000
+1 800000 100000
+4 200000 400000
+1 5
+3 5
+4 2
+300000
+1 100000 100000
+2 300000 400000
+3 500000 600000
+1 2
+2 4
 
 Output:
 
-Nodes count: 10
-Diameter: 7 (9, 8)
-Root paths sum: 21
-Subtrees paths sum: 39
-Degree of node 3: 3
-Sum of paths to 3: 23
-Child ancestor of 0 on path to 8: 2
-3rd node on path from 1 to 8: 5
-2nd ancestor of 7: 1
-Common node of 4, 5, 8: 5
-Lowest common ancestor of 6 and 9: 3
-Distance between 5 and 7: 5
 
 */
