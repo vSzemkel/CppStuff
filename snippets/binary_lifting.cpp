@@ -1,4 +1,21 @@
 // see: ..\kickstart\2020\locked_doors.cpp
+// walking up to node, see: ..\kickstart\2021\dependent_events.cpp
+
+constexpr const int DEPTH = desctree_t::max_depth(200000);
+    std::vector<std::array<int, DEPTH>> anc(N);
+    anc[0].fill(-1); // root has no ancestors
+    for (int i = 1; i < N; ++i) {
+        anc[i][0] = ..;
+        for (int k = 1; k < DEPTH; ++k) {
+            anc[i][k] = ~anc[i][k - 1] ? anc[anc[i][k - 1]][k - 1] : -1;
+            if (~anc[i][k]) {
+                // do stuff here for init tree node's additional values
+
+        for (int k = DEPTH - 1; k >= 0; --k) { // traverse from node p up to node la with 2**k-jumps
+            while (~anc[p][k] && anc[p][k] >= la && p != la) // in-tree && parent-not-above-target && below-target
+                do_stuff(p, k);
+
+////////////////////////////////////////////////////////////////////
 
 std::vector<std::vector<int>> ancestors;
 

@@ -15,7 +15,7 @@ template <int M = 998244353>
 class modnum_t {
   public:
     modnum_t() : value(0) {}
-    modnum_t(int64_t v) : value(v % M) {
+    constexpr modnum_t(int64_t v) : value(v % M) {
         if (value < 0) value += M;
     }
 
@@ -121,93 +121,6 @@ class modnum_t {
     }
 
     int value;
-};
-
-template <class T = int64_t>
-struct fraction_t {
-    inline bool is_zero() const { return num == 0 || denum == 0; }
-
-    void reduce() {
-        if (!is_zero()) {
-            const auto gcd = std::gcd(num, denum);
-            num /= gcd;
-            denum /= gcd;
-            if (num < 0 && denum < 0) {
-                num = -num;
-                denum = -denum;
-            }
-        } else {
-            num = 0;
-            denum = 1;
-        }
-    }
-
-    void operator+=(const fraction_t& other) {
-        if (!other.is_zero()) {
-            if (is_zero()) {
-                num = other.num;
-                denum = other.denum;
-            } else {
-                num = num * other.denum + other.num * denum;
-                denum *= other.denum;
-            }
-            reduce();
-        }
-    }
-
-    void operator-=(const fraction_t& other) {
-        if (!other.is_zero()) {
-            if (is_zero()) {
-                num = -other.num;
-                denum = other.denum;
-            } else {
-                num = num * other.denum -    other.num * denum;
-                denum *= other.denum;
-            }
-            reduce();
-        }
-    }
-
-    void operator*=(const fraction_t& other) {
-        if (!other.is_zero()) {
-            if (!is_zero()) {
-                num *= other.num;
-                denum *= other.denum;
-                reduce();
-            }
-        } else {
-            num = 0;
-            denum = 1;
-        }
-    }
-
-    void operator/=(const fraction_t& other) {
-        if (!other.is_zero()) 
-            operator*=({other.denum, other.num});
-    }
-
-    friend fraction_t operator+(const fraction_t& f1, const fraction_t& f2) { auto ret = f1; ret += f2; return ret; }
-    friend fraction_t operator-(const fraction_t& f1, const fraction_t& f2) { auto ret = f1; ret -= f2; return ret; }
-    friend fraction_t operator*(const fraction_t& f1, const fraction_t& f2) { auto ret = f1; ret *= f2; return ret; }
-    friend fraction_t operator/(const fraction_t& f1, const fraction_t& f2) { auto ret = f1; ret /= f2; return ret; }
-
-    friend bool operator==(const fraction_t& f1, const fraction_t& f2) {
-        auto tf1 = f1;
-        auto tf2 = f2;
-        tf1.reduce();
-        tf2.reduce();
-        return tf1.num == tf2.num && tf1.denum == tf2.denum;
-    }
-
-    friend bool operator<(const fraction_t& f1, const fraction_t& f2) {
-        return (__int128_t)f1.num * f2.denum < (__int128_t)f2.num * f1.denum;
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const fraction_t& f) {
-        return os << f.num << '/' << f.denum;
-    }
-
-    T num, denum;
 };
 
 template<typename T, bool maximum_mode = false> // inspired by neal_wu
@@ -533,31 +446,35 @@ struct desctree_t {
 };
 
 constexpr const int M = 1000000007;
-constexpr const int64_t FACTOR = 1000000;
+constexpr const int FACTOR = 1000000;
 constexpr const int DEPTH = desctree_t::max_depth(200000);
 
 using mod_t = modnum_t<M>;
-using frac_t = fraction_t<int64_t>;
 
-static void solve_BUG() { // by tmwilliamlin168
+static void solve() { // by tmwilliamlin168
     int N, Q;
     std::cin >> N >> Q;
     desctree_t tree(N);
-    std::vector<int64_t> condp(N);
-    std::vector<std::array<int64_t, DEPTH>> anc(N), succ(N), fail(N);
-    anc[0].fill(-1);
+    std::vector<mod_t> condp(N);
+    std::vector<std::array<int, DEPTH>> anc(N);
+    std::vector<std::array<mod_t, DEPTH>> succ(N), fail(N);
+    const mod_t NORM = mod_t{1} / mod_t{FACTOR};
+    anc[0].fill(-1); // root has no ancestors
     std::cin >> condp[0];
+    condp[0] *= NORM;
     for (int i = 1; i < N; ++i) {
         int p;
         std::cin >> p >> succ[i][0] >> fail[i][0];
+        succ[i][0] *= NORM;
+        fail[i][0] *= NORM;
         anc[i][0] = --p;
         tree.add_edge(p, i);
-        condp[i] = (condp[p] * succ[i][0] + (FACTOR - condp[p]) * fail[i][0]) / FACTOR;
+        condp[i] = condp[p] * succ[i][0] + (1 - condp[p]) * fail[i][0];
         for (int k = 1; k < DEPTH; ++k) {
             anc[i][k] = ~anc[i][k - 1] ? anc[anc[i][k - 1]][k - 1] : -1;
             if (~anc[i][k]) {
-                succ[i][k] = (succ[i][k - 1] * succ[anc[i][k - 1]][k - 1] + fail[i][k - 1] * (FACTOR - succ[anc[i][k - 1]][k - 1])) / FACTOR;
-                fail[i][k] = (succ[i][k - 1] * fail[anc[i][k - 1]][k - 1] + fail[i][k - 1] * (FACTOR - fail[anc[i][k - 1]][k - 1])) / FACTOR;
+                succ[i][k] = succ[i][k - 1] * succ[anc[i][k - 1]][k - 1] + fail[i][k - 1] * (1 - succ[anc[i][k - 1]][k - 1]);
+                fail[i][k] = succ[i][k - 1] * fail[anc[i][k - 1]][k - 1] + fail[i][k - 1] * (1 - fail[anc[i][k - 1]][k - 1]);
             }
         }
     }
@@ -568,21 +485,22 @@ static void solve_BUG() { // by tmwilliamlin168
         --p; --r;
 
         const int la = tree.get_lca(p, r);
-        std::array<int64_t, 2> ap{FACTOR, 0}, ar{FACTOR, 0};
-        auto agg = [&](int& u, int k, std::array<int64_t, 2>& a) {
-            a = {(a[0] * succ[u][k] + a[1] * (FACTOR - succ[u][k])) / FACTOR, (a[0] * fail[u][k] + a[1] * (FACTOR - fail[u][k])) / FACTOR};
+        std::array<mod_t, 2> ap{1, 0}, ar{1, 0}; // {happens when parent, happens when not parent}
+        auto agg = [&](int& u, int k, std::array<mod_t, 2>& a) {
+            const auto& s = succ[u][k], f = fail[u][k];
+            a = {a[0] * s + a[1] * (1 - s), a[0] * f + a[1] * (1 - f)};
             u = anc[u][k];
         };
 
-        while (p != la)
-            agg(p, 0, ap);
-        while (r != la)
-            agg(r, 0, ar);
+        for (int k = DEPTH - 1; k >= 0; --k) {
+            while (~anc[p][k] && la < p && la <= anc[p][k]) // in-tree && below-target && parent-not-above-target
+                agg(p, k, ap);
+            while (~anc[r][k] && la < r && la <= anc[r][k])
+                agg(r, k, ar);
+        }
 
-        const int64_t ans = ((ap[0] * ar[0]) / FACTOR * condp[la] + (ap[1] * ar[1]) / FACTOR * (FACTOR - condp[la])) / FACTOR;
-        frac_t f{ans, FACTOR};
-        f.reduce();
-        std::cout << f.num * mod_t{f.denum}.inv() << ' ';
+        const auto ans = ap[0] * ar[0] * condp[la] + ap[1] * ar[1] * (1 - condp[la]);
+        std::cout << ans << ' ';
     }
 }
 
