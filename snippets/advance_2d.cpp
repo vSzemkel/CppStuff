@@ -47,3 +47,25 @@ auto adjacents(const int pos)
 
     return g_adj;
 }
+
+/**********************************************************************/
+
+constexpr const int d4c[4] = {-1, 0, 1, 0}, d4r[4] = {0, 1, 0, -1};
+constexpr const int d8c[8] = {-1, -1, 0, 1, 1, 1, 0, -1}, d8r[8] = {0, 1, 1, 1, 0, -1, -1, -1};
+
+// collect 2 to 4 adjacent cells to pos - short but too many comparitions
+auto adjacents(const int pos)
+{
+    const int row = fn_row(pos);
+    const int col = fn_col(pos);
+
+    g_adj.clear();
+    for (int i = 0; i < 4; ++i) {
+        const int nr = row + d4r[i] * g_cols;
+        const int nc = col + d4c[i];
+        if (0 <= nr && 0 <= nc && nr < g_rows && nc < g_cols)
+            g_adj.push_back(nr * g_cols + nc);
+    }
+
+    return g_adj;
+}
