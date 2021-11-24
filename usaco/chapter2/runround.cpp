@@ -8,7 +8,6 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=JcNxSzhfYW3&S=runround
 #include <array>
 #include <assert.h>
 #include <fstream>
-#include <functional>
 #include <vector>
 
 std::ifstream task_in("runround.in");
@@ -20,7 +19,14 @@ std::array<int64_t, 19> factor10;
 
 auto nth = [](const int n, const int pos) { return n / factor10[pos] % 10; };
 
-static int next_unique(const int n, const bool repeated) { // unique non-zero digits, grater then n
+/**
+ * @brief Generates next interesting number not less then n
+ * 
+ * @param n Lower bound value
+ * @param strict Specifies if answer must be strictly greter then n
+ * @return int 
+ */
+static int next_unique(const int n, const bool strict) { // unique non-zero digits, grater then n
     auto stat = [](int z) {
         int len{0};
         while (z) {
@@ -52,18 +58,22 @@ static int next_unique(const int n, const bool repeated) { // unique non-zero di
             used[d] = true;
     }
 
-    if (!found || (ret == n && !repeated))
-        return next_unique(n + 1, true);
+    if (!found || (ret == n && strict))
+        return -1;
 
     return ret;
 }
 
+/**
+ * @brief Checks if number is interesting
+ * 
+ * @param n Number to check
+ */
 static bool check_roundaround(const int n) {
     std::vector<bool> seen(length);
     const int init = length - 1;
     int pos{init};
     for (int z = length; z; --z) {
-        assert(0<=pos&&pos<11);
         const int d = nth(n, pos);
         if (seen[d])
             return false;
@@ -77,16 +87,22 @@ static bool check_roundaround(const int n) {
 int main(int, char**)
 {
     // precompute factor10 up to the longest number
-    for (int i = 0; i < factor10.size(); ++i)
+    for (int i = 0; i < int(factor10.size()); ++i)
         factor10[i] = (i == 0) ? 1 : 10 * factor10[i - 1];
 
-    int N; task_in >> N;
+    bool strict{false};
+    int N; task_in >> N; ++N;
     while (true) {
-        N = next_unique(N, false);
-        if (check_roundaround(N)) {
-            task_out << N << '\n';
-            return 0;
-        }
+        const int ans = next_unique(N, strict);
+        strict = ~ans;
+        if (strict) {
+            N = ans;
+            if (check_roundaround(N)) {
+                task_out << N << '\n';
+                return 0;
+            }
+        } else
+            ++N;
     }
 }
 
@@ -98,8 +114,10 @@ g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address runround.cpp -o runro
 
 Input:
 
+9415268
 
 Output:
 
+9425618
 
 */
