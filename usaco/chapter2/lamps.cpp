@@ -13,6 +13,12 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=dJ0oxLYmaoh&S=lamps
 std::ifstream task_in("lamps.in");
 std::ofstream task_out("lamps.out");
 
+/**
+ * Fact1 - LCM of button function periods is equal to resulting combination period
+ * Fact2 - Order of button presses is not important
+ * Fact3 - It is sufficient to check every combination of button clicked less then 2 times
+ */
+
 int N, C;
 constexpr const int MAXLAMP = 6; // LCM of buttons periods
 auto bt1 = [](const std::vector<bool>& in){ std::vector<bool> out = in; for (int i = 0; i < N; ++i) out[i] = !in[i]; return out; };
