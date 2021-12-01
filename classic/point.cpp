@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include <array>
 #include <assert.h>
 #include <cmath>
@@ -91,11 +92,38 @@ static bool polar_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.po
 template <typename T = int64_t>
 static bool polar_radius_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_radius_cmp(p2); };
 template <class T = double>
-T polygon_area2(const std::vector<point_t<T>>& v) { // doubled area for circuit ordered points
+static T polygon_area2(const std::vector<point_t<T>>& v) { // doubled area for circuit ordered points
     T a = v.back().cross(v.front());
     for (int i = 0; i < int(v.size()) - 1; ++i)
         a += v[i].cross(v[i + 1]);
     return std::abs(a);
+}
+
+template <typename T = int64_t>
+static auto convex_hull(std::vector<point_t<T>> points) { // copy is sorted
+    decltype(points) upper, lower;
+    std::sort(points.begin(), points.end());
+    for (const auto& p : points) {
+        int usz = int(upper.size());
+        while (usz >= 2 && p.turning_left(upper[usz - 1], upper[usz - 2]) == -1) {
+            upper.pop_back();
+            --usz;
+        }
+        upper.push_back(p);
+        int lsz = int(lower.size());
+        while (lsz >= 2 && lower[lsz - 2].turning_left(upper[lsz - 1], p) == -1) {
+            lower.pop_back();
+            --lsz;
+        }
+        lower.push_back(p);
+    }
+
+    std::reverse(upper.begin(), upper.end());
+    lower.pop_back();
+    lower.insert(lower.end(), upper.begin(), upper.end());
+    lower.pop_back();
+
+    return lower;
 }
 
 int main(int, char**)
@@ -156,6 +184,7 @@ int main(int, char**)
 
     std::vector<point_t<>> v = {{0, 0}, {2, 0}, {1, 1}, {1, 2}, {0, 2}};
     assert(polygon_area2(v) == 5);
+    assert((convex_hull(v) == std::vector{v[0], v[1], v[3], v[4]}));
     std::cout << "PASSED\n";
 }
 
