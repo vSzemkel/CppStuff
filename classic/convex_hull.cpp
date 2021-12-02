@@ -4,9 +4,10 @@
 #include <queue>
 #include <random>
 
-// convex hull algorithm implementation with random points 
+// Convex Hull
+// Classic algorithm implementation with random points 
 // from fixed region and priority queue of polar angles
-
+// For more effective algo see ./point.cpp
 
 // case definition
 constexpr int g_points_count = 100;

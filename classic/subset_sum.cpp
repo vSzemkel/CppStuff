@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <iostream>
@@ -28,6 +29,21 @@ static auto all_sums() {
     }
 
     return ret[N & 1];
+}
+
+static auto all_ksums(const int k) {
+    std::unordered_set<int> ret;
+    std::vector<int> indices(N, 1);
+    for (int i = 0; i < k; ++i)
+        indices[i] = 0;
+
+    do {
+        ret.insert(std::transform_reduce(items.begin(), items.end(), indices.begin(), 0, std::plus<>{}, [](const int item, const int indice){
+            return item * (1 - indice);
+        }));
+    } while (std::next_permutation(indices.begin(), indices.end()));
+
+    return ret;
 }
 
 static bool subset_sum(const int target) {
@@ -65,6 +81,12 @@ int main(int, char**)
             t -= val;
         }
     std::cout << " == " << target << '\n';
+
+    items.fill(1);
+    items[5] = 2;
+    items[10] = 3;
+    assert((all_ksums(10) == std::unordered_set{10, 11, 12, 13}));
+    std::cout << "K-sum test PASSED\n";
 }
 
 /*
