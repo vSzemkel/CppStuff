@@ -35,13 +35,15 @@ static void solve() {
         int64_t prefSum{0}, sufSum{0};
         for (int i = j; i >= 0; --i) {
             prefSum += trees[i];
-            if (prefSum <= K)
-                ret = std::min(ret, j - i + 1 + best[K - prefSum]);
+            if (prefSum > K)
+                break;
+            ret = std::min(ret, j - i + 1 + best[K - prefSum]);
         }
         for (int k = j; k < N; ++k) {
             sufSum += trees[k];
-            if (sufSum <= K)
-                best[sufSum] = std::min(best[sufSum], k - j + 1);
+            if (sufSum > K)
+                break;
+            best[sufSum] = std::min(best[sufSum], k - j + 1);
         }
     }
 

@@ -383,6 +383,13 @@ static void test()
     std::cout << "\nEuler order: ";
     for (const auto n : g_tree._euler) std::cout << n + 1 << ' ';
     std::cout << std::endl;
+
+    std::vector<int> samples = {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0};
+    rmq_t rmq{samples};
+    assert(rmq.query_value(0, samples.size()) == -1);
+    assert(rmq.query_value(0, samples.size() - 2) == 0);
+    rmq_t<int, true> rmq2{samples};
+    assert(rmq2.query_value(0, samples.size()) == 1);
 }
 
 int main(int, char**)
