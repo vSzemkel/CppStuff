@@ -11,8 +11,15 @@ double factorial(const int n) {
     return std::tgamma(n + 1);
 }
 
-double brute(const int n, const int k) {
+double donotuse(const int n, const int k) {
     return factorial(n) / factorial(n - k) / factorial(k);
+}
+
+double brute(const int n, const int k) {
+    double ret{1};
+    for (int i = 0; i < k; ++i)
+        ret = (ret * (n - i)) / (i + 1);
+    return ret;
 }
 
 double bin_coeff(const int n, const int k) {
@@ -33,21 +40,26 @@ int main(int, char**)
 
     auto b = brute(137, 8);
     auto c = bin_coeff(137, 8);
+    assert(std::abs(b - c) < 1);
     std::cout << std::floor(std::log10(c)) + 1 << std::endl;
 
     b = brute(197, 8);
     c = bin_coeff(197, 8);
     std::cout << std::floor(std::log10(c)) + 1 << std::endl;
     assert(b != c);
+    assert(std::abs(b - c) < 1);
 
     logFactorials[0] = 0.0;
     for (int i = 1; i < MAX; i++)
         logFactorials[i] = logFactorials[i-1] + std::log2(i);
 
+    auto a = brute(197, 8);
     b = bin_coeff(197, 8);
     c = std::pow(2, 197) * choose(197, 8);
     std::cout << std::floor(std::log10(c)) + 1 << std::endl;
+    assert(std::abs(a - b) < 1);
     assert(std::abs((b - c) / c) < 0.00000000001);
+    std::cout << "PASSED\n";
 }
 
 /*
