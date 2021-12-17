@@ -50,7 +50,8 @@ auto adjacents(const int pos)
 
 /**********************************************************************/
 
-constexpr const int d4c[4] = {-1, 0, 1, 0}, d4r[4] = {0, 1, 0, -1};
+constexpr const int d4c[4] = {0, 1, 0, -1}, d4r[4] = {-1, 0, 1, 0}; // 0 == N; 1 == E; 2 == S; 3 == W clockwise
+constexpr const int d4c[4] = {0, -1, 0, 1}, d4r[4] = {-1, 0, 1, 0}; // 0 == N; 1 == W; 2 == S; 3 == E counter clockwise
 constexpr const int d8c[8] = {-1, -1, 0, 1, 1, 1, 0, -1}, d8r[8] = {0, 1, 1, 1, 0, -1, -1, -1};
 
 // collect 2 to 4 adjacent cells to pos - short but too many comparitions
