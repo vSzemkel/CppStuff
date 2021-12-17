@@ -70,3 +70,24 @@ auto adjacents(const int pos)
 
     return g_adj;
 }
+
+/**********************************************************************/
+
+struct state_t {
+    int row, col;
+    int dir{0}; // 0 == N; 1 == E; 2 == S; 3 == W
+    bool operator==(const state_t& other) const { return row == other.row && col == other.col; }
+    void advance() {
+        const int next_r = row + d4r[dir];
+        const int next_c = col + d4c[dir];
+        if (next_r < 0 || next_r == size || next_c < 0 || next_c == size || grid[next_r][next_c] == T)
+            dir = (dir + 1) % 4;
+        else {
+            row = next_r;
+            col = next_c;
+        }
+    }
+
+  private:
+    static constexpr const int d4c[4] = {0, 1, 0, -1}, d4r[4] = {-1, 0, 1, 0}; // 0 == N; 1 == E; 2 == S; 3 == W clockwise
+};

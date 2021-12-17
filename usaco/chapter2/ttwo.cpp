@@ -11,29 +11,31 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=u1s4VwnUpTj&S=ttwo
 std::ifstream task_in("ttwo.in");
 std::ofstream task_out("ttwo.out");
 
-constexpr const int d4c[4] = {0, 1, 0, -1}, d4r[4] = {-1, 0, 1, 0}; // 0 == N; 1 == E; 2 == S; 3 == W clockwise
 constexpr const int size = 10;
 const char T = '*'; // taken
 const char F = 'F'; // farmer
 const char C = 'C'; // cows
 
+std::string grid[size];
+
 struct state_t {
     int row, col;
     int dir{0}; // 0 == N; 1 == E; 2 == S; 3 == W
-};
-
-std::string grid[size];
-
-static void advance(state_t& s) {
-    const int next_r = s.row + d4r[s.dir];
-    const int next_c = s.col + d4c[s.dir];
-    if (next_r < 0 || next_r == size || next_c < 0 || next_c == size || grid[next_r][next_c] == T)
-        s.dir = (s.dir + 1) % 4;
-    else {
-        s.row = next_r;
-        s.col = next_c;
+    bool operator==(const state_t& other) const { return row == other.row && col == other.col; }
+    void advance() {
+        const int next_r = row + d4r[dir];
+        const int next_c = col + d4c[dir];
+        if (next_r < 0 || next_r == size || next_c < 0 || next_c == size || grid[next_r][next_c] == T)
+            dir = (dir + 1) % 4;
+        else {
+            row = next_r;
+            col = next_c;
+        }
     }
-}
+
+  private:
+    static constexpr const int d4c[4] = {0, 1, 0, -1}, d4r[4] = {-1, 0, 1, 0}; // 0 == N; 1 == E; 2 == S; 3 == W clockwise
+};
 
 int main(int, char**)
 {
@@ -46,6 +48,7 @@ int main(int, char**)
             if (grid[r][c] == F) {
                 farmer.row = r;
                 farmer.col = c;
+                // there is no need for mark grid[r][c] = '.' as 'F' != '*'
             }
             if (grid[r][c] == C) {
                 cows.row = r;
@@ -55,12 +58,12 @@ int main(int, char**)
 
     constexpr const int no_of_states = (4 * 10 * 10) * (4 * 10 * 10);
     for (int i = 0; i < no_of_states; ++i) {
-        if (farmer.row == cows.row && farmer.col == cows.col) {
+        if (farmer == cows) {
             task_out << i << '\n';
             return 0;
         }
-        advance(farmer);
-        advance(cows);
+        farmer.advance();
+        cows.advance();
     }
 
     task_out << "0\n";
