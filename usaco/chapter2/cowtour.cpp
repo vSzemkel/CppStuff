@@ -44,11 +44,13 @@ int main(int, char**)
         }
     }
 
+    // floyd-warshall
     for (int k = 0; k < N; ++k)
         for (int i = 0; i < N; ++i)
             for (int j = 0; j < N; ++j)
                 pathdist[i][j] = std::min(pathdist[i][j], pathdist[i][k] + pathdist[k][j]);
 
+    // connected components
     int next_cmp{0};
     std::vector<int> comp(N);
     for (int i = 0; i < N; ++i)
@@ -65,17 +67,25 @@ int main(int, char**)
             }
         }
 
-    std::vector<double> diam(N);
+    // diameters
+    std::vector<double> diam(N); // longest path in cc from [i]
     for (int i = 0; i < N; ++i)
         for (int j = 0; j < N; ++j)
             if (comp[i] == comp[j])
                 diam[i] = std::max(diam[i], pathdist[i][j]);
+    std::vector<double> ccdiam(next_cmp + 1); // longest path in cc
+    for (int c = 1; c <= next_cmp; ++c)
+        for (int i = 0; i < N; ++i)
+            if (comp[i] == c)
+                ccdiam[c] = std::max(ccdiam[c], diam[i]);
 
     double ret{INF};
     for (int i = 0; i < N; ++i)
-        for (int j = 0; j < N; ++j)
-            if (comp[i] < comp[j])
+        for (int j = i + 1; j < N; ++j)
+            if (comp[i] != comp[j])
                 ret = std::min(ret, diam[i] + dist[i][j] + diam[j]);
+    for (const auto inner : ccdiam) // maybe longest path is in single cc
+        ret = std::max(ret, inner);
 
     task_out << std::fixed << std::setprecision(6) << ret << '\n';
 }
@@ -108,5 +118,6 @@ Input:
 
 Output:
 
+22.071068
 
 */
