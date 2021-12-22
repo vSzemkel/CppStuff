@@ -1,4 +1,6 @@
 
+// For read the maze see /usaco/chapter2/maze1.cpp
+
 constexpr const int cW = 1;
 constexpr const int cN = 2;
 constexpr const int cE = 4;
