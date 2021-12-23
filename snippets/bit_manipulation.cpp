@@ -6,6 +6,10 @@ n = n & (n - 1)
 ((n & (n - 1)) == 0)
 // get 2**lowest bit
 l = n - n & (n - 1)
+// lowercase/uppercase 'A'==65, 'a'=97
+bool is_upper = letter < 'a';
+letter |= 0x20;  // to_lower
+letter &= ~0x20; // to_upper
 // from Benq (GNU)
 constexpr int pct(int x) { return __builtin_popcount(x); } // # of bits set
 constexpr int bits(int x) { return x == 0 ? 0 : 31 - __builtin_clz(x); } // floor(log2(x)) 

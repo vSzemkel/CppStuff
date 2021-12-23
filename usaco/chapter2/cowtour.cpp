@@ -7,10 +7,8 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=HMDfB318J5w&S=cowtour
 
 #include <algorithm>
 #include <array>
-#include <assert.h>
 #include <cmath>
 #include <iomanip>
-#include <iostream>
 #include <fstream>
 #include <vector>
 
@@ -32,7 +30,6 @@ int main(int, char**)
         pathdist[i][i] = 0;
         for (int j = 0; j < N; ++j) {
             char c; task_in >> c;
-            assert(c == '0' || c == '1');
             const bool connected = c == '1';
             graph[i][j] = connected;
             const int dx = coord[i][0] - coord[j][0];
