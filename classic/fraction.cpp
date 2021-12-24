@@ -1,8 +1,10 @@
 
+#include <array>
 #include <cassert>
 #include <iostream>
 #include <numeric>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // Fraction implemented on integral type T
@@ -70,6 +72,35 @@ struct fraction_t {
             operator*=({other.denum, other.num});
     }
 
+    std::array<std::string, 2> to_decimal_string() { // ret[1] is decimal period digits
+        assert(denum > 0);
+        auto pref = std::to_string(num / denum);
+        const int rem = num % denum;
+        if (rem == 0)
+            return { pref + ".0", {} };
+
+        pref.push_back('.');
+        int counter{0};
+        int val = rem * 10;
+        std::unordered_map<int, int> state;
+        while (true) {
+            const auto found = state.find(val);
+            if (found != state.end()) {
+                const int pref_len = pref.size() - counter + found->second;
+                const auto period = pref.substr(pref_len);
+                pref.resize(pref_len);
+                return { pref, period };
+            }
+
+            const int next_digit = val / denum;
+            pref.push_back('0' + next_digit);
+            if (val % denum == 0)
+                return { pref, {} };
+            state[val] = counter++;
+            val = (val - next_digit * denum) * 10;
+        }
+    }
+
     friend fraction_t operator+(const fraction_t& f1, const fraction_t& f2) { auto ret = f1; ret += f2; return ret; }
     friend fraction_t operator-(const fraction_t& f1, const fraction_t& f2) { auto ret = f1; ret -= f2; return ret; }
     friend fraction_t operator*(const fraction_t& f1, const fraction_t& f2) { auto ret = f1; ret *= f2; return ret; }
@@ -115,6 +146,10 @@ int main(int, char**)
     frac_t f3{8, 14};
     f3 /= {4, 7};
     assert((f3 == frac_t{1, 1}));
+
+    frac_t f4{31, 13};
+    const auto decim = f4.to_decimal_string();
+    assert(decim[0] == "2." && decim[1] == "384615");
 }
 
 /* Compile:

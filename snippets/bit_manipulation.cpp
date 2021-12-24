@@ -10,6 +10,9 @@ l = n - n & (n - 1)
 bool is_upper = letter < 'a';
 letter |= 0x20;  // to_lower
 letter &= ~0x20; // to_upper
+// ascii digits
+char to_char = '0' + 5;
+int to_number = to_char & 0x0f; // to_number == 5
 // from Benq (GNU)
 constexpr int pct(int x) { return __builtin_popcount(x); } // # of bits set
 constexpr int bits(int x) { return x == 0 ? 0 : 31 - __builtin_clz(x); } // floor(log2(x)) 
