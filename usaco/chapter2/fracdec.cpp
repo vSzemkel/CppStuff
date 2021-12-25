@@ -9,6 +9,7 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=A0kIGYpcC8f&S=fracdec
 #include <assert.h>
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -50,17 +51,16 @@ int main(int, char**)
 {
     int num, denum;
     task_in >> num >> denum;
-    auto decim = to_decimal_string(num, denum);
-    if (!decim[1].empty())
-        decim[0] += '(' + decim[1] + ')';
-    int written{0};
-    for (const char c : decim[0]) {
-        task_out << c;
-        ++written;
-        if ((written % MAX_LINE) == 0)
-            task_out << '\n';
+    auto [decim, period] = to_decimal_string(num, denum);
+    if (!period.empty())
+        decim += '(' + period + ')';
+
+    std::string_view view{decim};
+    while (view.size() > MAX_LINE) {
+        task_out << view.substr(0, MAX_LINE) << '\n';
+        view = view.substr(MAX_LINE);
     }
-    task_out << '\n';
+    task_out << view << '\n';
 }
 
 /*
@@ -71,8 +71,12 @@ g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address fracdec.cpp -o fracde
 
 Input:
 
+100000 9817
 
 Output:
 
+10.(186411327289395945808291738820413568299887949475399816644596108790872975
+4507487012325557706020169094428033003972700417642864418865233778139961291636
+...
 
 */

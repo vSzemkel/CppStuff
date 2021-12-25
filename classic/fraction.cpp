@@ -148,8 +148,8 @@ int main(int, char**)
     assert((f3 == frac_t{1, 1}));
 
     frac_t f4{31, 13};
-    const auto decim = f4.to_decimal_string();
-    assert(decim[0] == "2." && decim[1] == "384615");
+    const auto [decim, period] = f4.to_decimal_string();
+    assert(decim == "2." && period == "384615");
 }
 
 /* Compile:
