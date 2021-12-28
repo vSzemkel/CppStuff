@@ -6,6 +6,7 @@
 // for a given graph with positive length edges find
 // the minimal spanning tree
 
+// for solution with coincidence matrix see: /usaco/chapter3/agrinet.cpp
 
 // case definition
 struct edge_t {
