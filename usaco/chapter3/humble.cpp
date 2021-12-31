@@ -14,7 +14,35 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=C7pFl5TCSr7&S=humble
 std::ifstream task_in("humble.in");
 std::ofstream task_out("humble.out");
 
+/**
+ * @brief Key obeservation1: humble[n] == primes[i] * humble[j] for j < n
+ *        Key obeservation2: humble[n + l] == primes[i] * humble[j + k] : l>0 => k>0
+ */
 int main(int, char**)
+{
+    int N, Z; task_in >> N >> Z;
+    std::vector<int> primes(N);
+    for (auto& p : primes)
+        task_in >> p;
+
+    std::vector<int64_t> dp(Z + 1);
+    std::vector<int> next_humble_for_prime(N);
+    dp[0] = 1;
+    for (int i = 1; i <= Z; ++i) {
+        int64_t next = 1e18;
+        for (int p = 0; p < N; ++p) {
+            while (primes[p] * dp[next_humble_for_prime[p]] <= dp[i - 1])
+                ++next_humble_for_prime[p];
+            next = std::min(next, primes[p] * dp[next_humble_for_prime[p]]);
+        }
+
+        dp[i] = next;
+    }
+
+    task_out << dp[Z] << '\n';
+}
+
+int main_slow_but_acceptable(int, char**)
 {
     int N, Z; task_in >> N >> Z;
     std::vector<int> primes(N);
@@ -42,6 +70,7 @@ int main(int, char**)
     }
 
     task_out << ans << '\n';
+    return 0;
 }
 
 /*
