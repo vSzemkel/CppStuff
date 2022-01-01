@@ -9,6 +9,7 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=k9pbbjb8UkI&S=contact
 #include <array>
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 std::ifstream task_in("contact.in");
@@ -26,8 +27,8 @@ int main(int, char**)
     int first_chunk{0};
     const int width = B - A + 1;           // observe this may lengths
     const int max = (1 << (B + 1));        // maximal observed number
-    const int size = int(data.size());
-    const int max_len = std::min(B, size);
+    const int dsz = int(data.size());
+    const int max_len = std::min(B, dsz);
     std::vector<std::vector<int>> stats(width, std::vector<int>(max));
     std::vector<std::vector<int>> log(width, std::vector<int>(max));
     for (int len = A; len <= max_len; ++len) {
@@ -43,7 +44,7 @@ int main(int, char**)
 
         int cur = first_chunk;
         const int mask = ~(1 << len);
-        for (int end = len; end < size; ++end) {
+        for (int end = len; end < dsz; ++end) {
             ++stats[len - A][cur];
             log[len - A][cur] = end - len;
             cur <<= 1;
@@ -51,7 +52,7 @@ int main(int, char**)
             cur &= mask;
         }
         ++stats[len - A][cur];
-        log[len - A][cur] = size - len;
+        log[len - A][cur] = dsz - len;
     }
 
     std::vector<std::array<int, 3>> result; // {count, len - A, number}
@@ -72,11 +73,10 @@ int main(int, char**)
         task_out << freq << std::endl;
         int lc{0};
         while (pos < rsz && result[pos][0] == freq) {
+            const int l = result[pos][1];
             if ((lc % MAX_PER_LINE) > 0)
                 task_out << ' ';
-            const int l = result[pos][1];
-            for (int i = log[l][result[pos][2]], z = A + l; z; --z, ++i)
-                task_out << data[i];
+            task_out << std::string_view(&data[log[l][result[pos][2]]], A + l);
             if ((++lc % MAX_PER_LINE) == 0)
                 task_out << std::endl;
             ++pos;
@@ -99,5 +99,25 @@ Input:
 
 Output:
 
+23
+00
+15
+01 10
+12
+100
+11
+11 000 001
+10
+010
+8
+0100
+7
+0010 1001
+6
+111 0000
+5
+011 110 1000
+4
+0001 0011 1100
 
 */
