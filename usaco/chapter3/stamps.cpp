@@ -26,12 +26,11 @@ int main(int, char**)
     const int INF = 1e09;
     const int MAX = K * (*mM.second);
     std::vector<int> req(MAX + 1, INF);
-    for (const auto s : stamps)
-        req[s] = 1;
-    int ret{2};
+    req[0] = 0;
+    int ret{1};
     while (ret <= MAX) {
         for (const auto s : stamps)
-            if (0 < ret - s && 0 < req[ret - s] && req[ret - s] < K)
+            if (0 <= ret - s && req[ret - s] < K)
                 req[ret] = std::min(req[ret], req[ret - s] + 1);
         if (req[ret] == INF)
             break;
