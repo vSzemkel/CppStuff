@@ -161,8 +161,9 @@ int main(int argc, char* argv[])
     ecnervala_update(g_input, size - 7, 17);
     check();
 
-    const auto total = partial_sum(0, size - 1);
-    auto exactsum = partial_sum(0, 7);
+    // Fenwick tree ksum operations
+    const auto total = g_ss.query(size - 1);
+    auto exactsum = g_ss.query(7);
     int preflen = g_ss.ksum_prefix(exactsum);
     int suflen = g_ss.ksum_sufix(total - exactsum);
     assert(0 < preflen && preflen + 1 == suflen && suflen < size);
@@ -176,6 +177,24 @@ int main(int argc, char* argv[])
     assert(g_ss.ksum_sufix(total) == 0);
     assert(g_ss.ksum_prefix(2 * total) == size);
     assert(g_ss.ksum_sufix(2 * total) == -1);
+
+    // Fenwick tree as Order Statistics Tree
+    // REQ: domain is constraint as we need to allocate array[N]
+    const int MAX = 10000;
+    std::vector<int> os_sample = {2, 62, 172, 671, 1200, 4981, 9999};
+    std::vector<int> os_probe(MAX + 1);
+    for (const int s : os_sample)
+        os_probe[s] = 1;
+    subrange_sum_t ost{os_probe};
+    // rank(1200) == 5
+    assert(ost.query(1200) == 5);
+    // order(5) == 1200
+    assert(ost.ksum_prefix(5) == 1200);
+    // delete 671, insert 1300
+    ost.update(671, -1);
+    ost.update(1300, 1);
+    assert(ost.query(1200) == 4);
+    assert(ost.ksum_prefix(5) == 1300);
     std::cout << "PASSED\n";
 }
 
