@@ -6,9 +6,9 @@
 
 constexpr char g_seedname[] = "competition_template.cpp";
 const std::string g_replace_pattern{"$TASKNAME$"};
-const int g_replace_size = g_replace_pattern.size();
+const int g_replace_size = int(g_replace_pattern.size());
 
-bool init_input(const std::string& filename)
+static bool init_input(const std::string& filename)
 {
     std::string inputfile = filename;
     if (std::filesystem::exists(inputfile.replace(filename.size() - 3, filename.size(), "in")))
@@ -30,7 +30,7 @@ bool init_input(const std::string& filename)
     }
 
     src.close();
-    testdata << "\n";
+    testdata << '\n';
     testdata.close();
 
     return found;
