@@ -26,18 +26,17 @@
             "externalConsole": false
         },
         {
+            "name": "LLDB MacOS",
             "type": "lldb",
-            "request": "launch",
-            "name": "LLDB",
-            "program": "${workspaceFolder}/bacterial_tactics.exe",
-            "args": ["<", "${workspaceFolder}/bacterial_tactics.in"],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "name": "(Windows) Attach",
-            "type": "cppvsdbg",
-            "request": "attach",
-            "processId": "${command:pickProcess}"
+            "request": "custom",
+            "cwd": "${workspaceFolder}",
+            "targetCreateCommands": [
+                "target create ${workspaceFolder}/rod_cutting"
+            ],
+            "processCreateCommands": [
+                "settings set target.input-path rod_cutting.in",
+                "process launch"
+            ]
         },
     ]
 }
