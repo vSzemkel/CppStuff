@@ -133,6 +133,13 @@ class modnum_t {
         return r;
     }
 
+    static T range_len(const int a, const int b) { // [a..b]
+        auto len = b - a + 1;
+        if (len <= 0)
+            len = (M + 1 - a + b) % M;
+        return len;
+    }
+
   private:
     static T minv(T a, const T m) {
         a %= m;
@@ -158,6 +165,10 @@ int main(int, char**)
     modnum_t<int64_t> m4;
     assert(m4.modmul(16351848, 9174561) == 872592476);
     assert(m4.bin_coeff(197, 8) == 26874261); // 48717346033720 % 998244353
+
+    modnum_t<int, 360> wheel;
+    assert(wheel.range_len(100, 200) == 101);
+    assert(wheel.range_len(200, 100) == 261); // 200..359 0..100 -> 160 + 101
     std::cout << "PASSED\n";
 }
 

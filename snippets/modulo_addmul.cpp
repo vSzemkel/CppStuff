@@ -29,3 +29,10 @@ static auto modulo_inverse_list(const int last, const int M)
         ret[i] = M - M / i * ret[M % i] % M;
     return ret;
 }
+
+static auto modulo_range_length(const int first, const int last, const int M) { // [first..last]
+    auto len = last - first + 1;
+    if (len <= 0)
+        len = (M + 1 - first + last) % M;
+    return len;
+}

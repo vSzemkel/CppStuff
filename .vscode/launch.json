@@ -2,41 +2,85 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(Windows) Launch",
+            "name": "WSL Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "enter program name, for example ${workspaceFolder}/a.out",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "WSL Launch with .in",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/silly_substitutions",
+            "args": ["<", "${workspaceFolder}/silly_substitutions.in"],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "C++",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/merge_cards.exe",
+            "program": "${workspaceFolder}/subrange_sum.exe",
             "args": [],
             "stopAtEntry": false,
             "symbolSearchPath": "${workspaceFolder}",
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false
+            "console": "internalConsole"
         },
         {
-            "name": "(Windows) Launch with Args",
+            "name": "C++ with .in",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/boring_numbers.exe",
-            "args": ["<", "${workspaceFolder}/boring_numbers.in"],
+            "program": "${workspaceFolder}/dependent_events.exe",
+            "args": ["<", "${workspaceFolder}/dependent_events.in"],
             "stopAtEntry": false,
             "symbolSearchPath": "${workspaceFolder}",
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false
+            "console": "internalConsole"
         },
         {
-            "name": "LLDB MacOS",
+            "name": "LLDB",
             "type": "lldb",
             "request": "custom",
             "cwd": "${workspaceFolder}",
             "targetCreateCommands": [
-                "target create ${workspaceFolder}/rod_cutting"
+                "target create ${workspaceFolder}/rod_cutting.exe"
             ],
             "processCreateCommands": [
                 "settings set target.input-path rod_cutting.in",
                 "process launch"
             ]
         },
-    ]
+        {
+            "type": "java",
+            "name": "Java",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+   ]
 }
