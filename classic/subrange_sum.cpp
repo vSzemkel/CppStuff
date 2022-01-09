@@ -180,6 +180,7 @@ int main(int argc, char* argv[])
 
     // Fenwick tree as Order Statistics Tree
     // REQ: domain is constraint as we need to allocate array[N]
+    // see also: https://github.com/kth-competitive-programming/kactl/blob/main/content/data-structures/OrderStatisticTree.h
     const int MAX = 10000;
     std::vector<int> os_sample = {2, 62, 172, 671, 1200, 4981, 9999};
     std::vector<int> os_probe(MAX + 1);
