@@ -28,6 +28,8 @@ struct fraction_t {
         }
     }
 
+    operator double() const { return double(num) / denum; }
+
     void operator+=(const fraction_t& other) {
         if (!other.is_zero()) {
             if (is_zero()) {
@@ -122,13 +124,15 @@ struct fraction_t {
         return os << f.num << '/' << f.denum;
     }
 
-    T num, denum;
+    T num, denum{1};
 };
 
 using frac_t = fraction_t<>;
 
 int main(int, char**)
 {
+    const auto integr = frac_t{1} + frac_t{2};
+    assert(double(integr) == 3.0);
 
     frac_t f{1, 2};
     f += {1, 4};
