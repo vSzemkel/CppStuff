@@ -271,8 +271,13 @@ g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address ratios.cpp -o ratios
 
 Input:
 
+3 4 5
+1 2 3
+3 7 1
+2 1 2
 
 Output:
 
+8 1 5 7
 
 */
