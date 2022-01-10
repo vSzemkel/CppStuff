@@ -42,12 +42,12 @@ static void solve() {
     for (int start = N - 1; start >= 0; --start) {
         int extra_words_in_line{0};
         while (start + extra_words_in_line < N) {
-            const int space = L - extra_words_in_line - range_sum(start, start + extra_words_in_line);
-            if (space <= 0) break; // line off limit
+            const int margin = L - extra_words_in_line - range_sum(start, start + extra_words_in_line);
+            if (margin < 0) break; // line off limit
             const int next = start + extra_words_in_line + 1;
-            int cost = space * space * space;
+            int cost{0}; // last line not included in cost
             if (next < N)
-                cost += dp[next];
+                cost = margin * margin * margin + dp[next];
             if (cost < dp[start]) {
                 dp[start] = cost;
                 memo[start] = extra_words_in_line;
@@ -106,13 +106,13 @@ Input:
 
 Output:
 
-Case #1: 280
-#.#.#.#.#.#......|
-#.#.#.#######....|
-Case #2: 5390
-####.##.##.#######.#####.####...........|
-#.##.#########.########.#####...........|
-###########.###.######.###.###..........|
-#########.#####.####.#######............|
+Case #1: 0
+#.#.#.#.#.#.#.#.#|
+#######..........|
+Case #2: 281
+####.##.##.#######.#####.####.#.##......|
+#########.########.#####.###########....|
+###.######.###.###.#########.#####.####.|
+#######.................................|
 
 */
