@@ -17,6 +17,11 @@
                     "description": "Enable pretty-printing for gdb",
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
+                },
+                {
+                    "description": "Display numbers as decimal",
+                    "text": "set output-radix 10",
+                    "ignoreFailures": true
                 }
             ]
         },
@@ -35,6 +40,11 @@
                 {
                     "description": "Enable pretty-printing for gdb",
                     "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Display numbers as decimal",
+                    "text": "set output-radix 10",
                     "ignoreFailures": true
                 }
             ]
