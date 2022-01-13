@@ -34,7 +34,7 @@ using vi_t = std::vector<int>;
 using vl_t = std::vector<int64_t>;
 using vii_t = std::vector<std::vector<int>>;
 using vll_t = std::vector<std::vector<int64_t>>;
-using min_pq_t = std::priority_queue<int, std::vector<int>, std::greater<>>;
+template <typename T> using min_pq_t = std::priority_queue<T, std::vector<T>, std::greater<>>;
 
 vl_t g_input, g_partial;
 std::vector<bool> g_marked;
