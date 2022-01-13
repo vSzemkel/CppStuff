@@ -3,7 +3,8 @@
 #include <iostream>
 #include <numeric>
 
-// enumarate all permutations of g_size elements
+// Enumarate all permutations of g_size elements
+// If elements are comparable use std::next_permutation
 
 
 // case definition - words collection
@@ -13,14 +14,14 @@ constexpr int g_size = 5;
 int g_counter = 1;
 std::array<int, g_size> g_arr;
 
-void print_array() {
+static void print_array() {
     std::cout << g_counter++ << ".\t[";
     for (auto it = g_arr.begin(); it < g_arr.end() - 1; ++it)
         std::cout << *it << ", ";
     std::cout << g_arr.back() << "]\n";
 }
 
-void permute(int size)
+static void permute(const int size)
 {
     if (size < 2) {
         print_array();
