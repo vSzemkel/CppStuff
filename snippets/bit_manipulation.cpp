@@ -1,10 +1,16 @@
-// value of the lowest bit
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
+#include <x86intrin.h>  // Not just <immintrin.h> for compilers other than icc
+#endif
+
+// value of the lowest set bit
 n & -n
-// turn off lowest bit
+// turn off lowest set bit
 n = n & (n - 1)
 // check if n is a power of 2
 ((n & (n - 1)) == 0)
-// get 2**lowest bit
+// get 2**lowest set bit
 l = n - n & (n - 1)
 // lowercase/uppercase 'A'==65, 'a'=97
 bool is_upper = letter < 'a';
