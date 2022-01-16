@@ -1,5 +1,6 @@
 
 #include <cassert>
+#include <iostream>
 #include <optional>
 #include <map>
 #include <utility>
@@ -9,6 +10,8 @@ struct cache_t {
     void add(const K& key, const V& value) {
         _cache[key] = value;
     }
+
+    void clear() { _cache.clear(); }
 
     std::optional<V> find(const K& key) {
         auto cached = _cache.find(key);
@@ -29,9 +32,15 @@ int main(int, char**)
     assert(cache.find({2,5}) == 177);
 
     const auto cached = cache.find({2, 5});
-    if (cached != std::nullopt) {
+    if (cached != std::nullopt)
         std::cout << cached.value() << ' ';
-        continue;
+
+    cache_t<std::pair<int, int>, int> cache2[2];
+    for (int i = 0; i < 99; ++i) {
+        auto& cur_cache = cache2[i & 1];
+        auto& prev_cache = cache2[(i & 1) ^ 1];
+        cur_cache.clear();
+        // fill cur_cache based on prev_cache
     }
 }
 
