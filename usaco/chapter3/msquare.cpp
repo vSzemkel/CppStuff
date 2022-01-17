@@ -10,7 +10,6 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=S7oSd4llX1F&S=msquare
 #include <assert.h>
 #include <fstream>
 #include <unordered_map>
-#include <numeric>
 #include <queue>
 #include <vector>
 
@@ -24,12 +23,9 @@ std::ifstream task_in("msquare.in");
 std::ofstream task_out("msquare.out");
 
 struct game_t : std::array<char, 8> {
-    void operator=(const int64_t val) {
-        *(int64_t*)data() = val;
-    }
-    operator int64_t() const {
-        return *(int64_t*)data();
-    }
+    game_t(const int64_t val = 0) { *(int64_t*)data() = val; }
+    void operator=(const int64_t val) { *(int64_t*)data() = val; }
+    operator int64_t() const { return *(int64_t*)data(); }
 };
 
 static game_t A(game_t g) {
@@ -72,18 +68,14 @@ static game_t C(game_t g) {
 int main(int, char**)
 {
     constexpr const char letter[] = "ABC";
-    constexpr game_t init = {'1', '2', '3', '4', '8', '7', '6', '5'};
-    /* game_t init; for archaic GCC on USACO
-    init[0] = '1'; init[1] = '2'; init[2] = '3'; init[3] = '4'; 
-    init[4] = '8'; init[5] = '7'; init[6] = '6'; init[7] = '5'; */
+    const game_t init = *(int64_t*)"12348765";
 
     game_t target;
     for (auto& t : target)
         task_in >> t;
     std::reverse(target.begin() + 4, target.end());
 
-    game_t perm;
-    std::iota(perm.begin(), perm.end(), '1');
+    game_t perm = *(int64_t*)"12345678";
     std::unordered_map<int64_t, std::array<game_t, 3>> graph;
     do {
         graph[perm] = {A(perm), B(perm), C(perm)};
@@ -97,7 +89,7 @@ int main(int, char**)
         if (node == target)
             break;
         for (int i = 0; i < 3; ++i) {
-            auto& child = graph[node][i];
+            const auto& child = graph[node][i];
             if (parent[child].first == 0) {
                 parent[child] = std::pair<int64_t, char>{node, letter[i]};
                 qq.push(child);
@@ -107,11 +99,8 @@ int main(int, char**)
     }
 
     std::string path;
-    parent[init].first = 0;
-    while (parent[target].first != 0) {
-        path += parent[target].second;
-        target = parent[target].first;
-    }
+    for (auto p = target; p != init; p = parent[p].first)
+        path += parent[p].second;
 
     std::reverse(path.begin(), path.end());
     task_out << path.size() << '\n' << path << '\n';
