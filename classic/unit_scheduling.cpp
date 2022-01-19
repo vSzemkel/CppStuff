@@ -36,7 +36,7 @@ static void solve(const std::array<std::array<int, 2>, N>& deadlines_wages) {
     while (lo < hi) {
         if (!good[lo] && good[hi]) {
             std::swap(ans[lo], ans[hi]);
-            min_penalty = hi;
+            ++min_penalty;
             ++lo; --hi;
         }
         if (good[lo])
@@ -70,7 +70,7 @@ int main(int, char**)
     std::sort(deadlines_wages.begin(), deadlines_wages.end(), std::greater<>{});
     solve(deadlines_wages);
     for (auto& dw : deadlines_wages)
-        dw[2] = 80 - dw[2];
+        dw[2] = 90 - dw[2];
     std::sort(deadlines_wages.begin(), deadlines_wages.end(), std::greater<>{});
     solve(deadlines_wages);
 }
