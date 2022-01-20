@@ -60,8 +60,8 @@ int main(int, char**)
     }
 
     int min{INF};
+    std::vector<int> distances;
     for (int p = 0; p < V; ++p) {
-        std::vector<int> distances;
         shortest_paths(p, distances);
         int can{0};
         for (const auto& [t, c] : counts)

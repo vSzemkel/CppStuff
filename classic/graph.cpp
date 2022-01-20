@@ -281,6 +281,30 @@ struct graph_t
         return _ccsz;
     }
 
+    bool check_euler(const int source = 0) { // all edges exists <=> e[1] > 0
+        int odd_nodes{0};
+        for (const auto& n : _adj) {
+            if (!std::all_of(n.begin(), n.end(), [](const edge_t& e){ return e[1] > 0; }))
+                return false;
+            if (n.size() & 1)
+                ++odd_nodes;
+        }
+
+        return odd_nodes == 0 || (odd_nodes == 2 && (_adj[source].size() & 1));
+    }
+
+    auto euler_path(const T& from) {
+        assert(_index.count(from));
+        return euler_path(_index[from]);
+    }
+
+    auto euler_path(const int source = 0) {
+        std::vector<T> ret;
+        ret.push_back(T{});
+        ret.push_back(T{});
+        return ret;
+    }
+
     static constexpr const int INF = (1 << 30) - 1;
 
   private:
@@ -335,6 +359,27 @@ void init_dijkstra()
     g.reset();
 }
 
+void init_euler()
+{
+    g.clear();
+    for (const char c : "ABCDEFG")
+        if (c) g.add_node(c);
+
+    g.add_edge('A', 'D', 1);
+    g.add_edge('A', 'E', 1);
+    g.add_edge('B', 'D', 1);
+    g.add_edge('B', 'E', 1);
+    g.add_edge('B', 'F', 1);
+    g.add_edge('B', 'G', 1);
+    g.add_edge('C', 'D', 1);
+    g.add_edge('C', 'G', 1);
+    g.add_edge('D', 'F', 1);
+    g.add_edge('E', 'F', 1);
+    g.add_edge('E', 'G', 1);
+    g.add_edge('F', 'G', 1);
+    g.reset();
+}
+
 int main(int argc, char* argv[])
 {
     init_maze();
@@ -380,6 +425,14 @@ int main(int argc, char* argv[])
     g.add_edge('N', 'O', 42);
     g.reset();
     assert(g.connected_components() == 2);
+
+    init_euler();
+    if (g.check_euler()) {
+        const auto path = g.euler_path('A');
+        for (const auto l : path)
+            std::cout << l << ' ';
+        std::cout << '\n';
+    }
     std::cout << "PASSED\n";
 }
 
