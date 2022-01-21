@@ -16,7 +16,7 @@ struct graph_t
     using edge_t = std::array<int, 2>; // {to, cost}
 
     graph_t(const int size = 0) : _size(size), _adj(size) {}
-    graph_t(const std::vector<T>& labels) : _size(labels.size()), _labels(labels), _adj(size) {}
+    graph_t(const std::vector<T>& labels) : _size(labels.size()), _label(labels), _adj(_size) {}
 
     int add_node(T label) {
         assert(_index.count(label) == 0);
@@ -299,10 +299,27 @@ struct graph_t
     }
 
     auto euler_path(const int source = 0) {
-        std::vector<T> ret;
-        ret.push_back(T{});
-        ret.push_back(T{});
-        return ret;
+        std::vector<T> path;
+        std::vector<int> stack(1, source);
+        while (!stack.empty()) {
+            const int node = stack.back();
+            auto& neibors = _adj[node];
+            const auto next = std::find_if(neibors.begin(), neibors.end(), [](const auto& e){ return e[1] != 0; });
+            if (next == neibors.end()) {
+                stack.pop_back();
+                path.push_back(_label[node]);
+            } else {
+                (*next)[1] = 0;
+                for (auto& be : _adj[(*next)[0]])
+                    if (be[0] == node) {
+                        be[1] = 0;
+                        break;
+                    }
+                stack.push_back((*next)[0]);
+            }
+        }
+
+        return path;
     }
 
     static constexpr const int INF = (1 << 30) - 1;
