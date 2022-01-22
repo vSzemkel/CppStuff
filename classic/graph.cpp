@@ -310,7 +310,7 @@ struct graph_t
                 path.push_back(_label[node]);
             } else {
                 (*next)[1] = 0;
-                for (auto& be : _adj[(*next)[0]])
+                for (auto& be : _adj[(*next)[0]]) // see: \usaco\chapter3\fence.cpp
                     if (be[0] == node) {
                         be[1] = 0;
                         break;

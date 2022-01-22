@@ -6,31 +6,9 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=rJ1Z3Rf9Suy&S=fence
 */
 
 #include <algorithm>
-#include <array>
 #include <assert.h>
-#include <bitset>
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <fstream>
-#include <functional>
-#include <limits>
 #include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <stdlib.h>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 std::ifstream task_in("fence.in");
@@ -72,26 +50,31 @@ struct euler_graph_t {
     }
 
     /**
-     * @brief Finds one of starting points of an Euler path
+     * @brief Finds one with minimal label of starting points of an Euler path
      * 
      * @return int Index in _adj or -1
      */
     int check_euler() {
-        int pos{0}, odd_nodes{0}, odd{1024};
+        int pos{0}, odd_nodes{0}, min_all{0}, min_odd{-1};
         for (const auto& n : _adj) {
             if (!std::all_of(n.begin(), n.end(), [this](const int e){ return _edges[e].present; }))
                 return -1;
             if (n.size() & 1) {
                 ++odd_nodes;
-                odd = std::min(odd, pos);
+                if (odd_nodes == 1)
+                    min_odd = pos;
+                else if (_label[pos] < _label[min_odd])
+                    min_odd = pos;
             }
+            if (_label[pos] < _label[min_all])
+                min_all = pos;
             ++pos;
         }
 
         if (odd_nodes != 0 && odd_nodes != 2)
             return -1;
 
-        return ~odd ? odd : 0;
+        return ~min_odd ? min_odd : min_all;
     }
 
     auto euler_path(const int source = 0) {
@@ -138,7 +121,7 @@ int main(int, char**)
 
     const int start = eg.check_euler();
     assert(start >= 0);
-    auto path = eg.euler_path();
+    auto path = eg.euler_path(start);
     std::reverse(path.begin(), path.end());
     for (const auto node : path)
         task_out << node << '\n';
@@ -152,8 +135,40 @@ g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address fence.cpp -o fence
 
 Input:
 
+15 
+2 9 
+9 7 
+9 5 
+5 10 
+10 1 
+1 7 
+7 10 
+7 3 
+3 4 
+4 5 
+5 3 
+3 6 
+6 5 
+4 10 
+5 2
 
 Output:
 
+4
+3
+5
+2
+9
+5
+4
+10
+1
+7
+3
+6
+5
+10
+7
+9
 
 */
