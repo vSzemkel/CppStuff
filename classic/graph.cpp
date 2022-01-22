@@ -33,7 +33,7 @@ struct graph_t
     }
 
     void add_edge(const int from, const int to, const int cost = 0) {
-        assert(0 <= from < _size && 0 <= to < _size);
+        assert(0 <= from && from < _size && 0 <= to && to < _size);
         _adj[from].push_back({to, cost});
         _adj[to].push_back({from, cost});
     }
