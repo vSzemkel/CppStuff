@@ -5,32 +5,8 @@ TASK: range
 PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=qyzwTp4qKKA&S=range
 */
 
-#include <algorithm>
-#include <array>
-#include <assert.h>
-#include <bitset>
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <stdlib.h>
 #include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 std::ifstream task_in("range.in");
