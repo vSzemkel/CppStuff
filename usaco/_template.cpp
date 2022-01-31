@@ -39,7 +39,7 @@ std::ofstream task_out("template.out");
 int main(int, char**)
 {
     std::string comet, group;
-    task_in >> comet >> group;
+    task_in >> comet >> group >> std::ws;
     task_out << (decrypt(comet) == decrypt(group) ? "GO" : "STAY") << '\n';
 }
 

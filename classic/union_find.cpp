@@ -25,7 +25,7 @@ struct uf_t {
         int gx = find(x);
         int gy = find(y);
         if (gx == gy) return;
-        if (_sizes[gx] < _sizes[gy]) std::swap(gx, gy);
+        if (_sizes[gx] < _sizes[gy]) std::swap(gx, gy); // could be tailored, see \classic\arpa_rmq.cpp
         _sizes[gx] += _sizes[gy];
         _groups[gy] = gx;
         --_count;
