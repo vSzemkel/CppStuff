@@ -52,10 +52,12 @@ struct graph_t
     }
 
     void reset() {
-        _ccsz = 0;
+        _ccsz = _time = 0;
         _has_neg_cycle = false;
         _cc.assign(_size, -1);
+        _low.assign(_size, -1);
         _pred.assign(_size, -1);
+        _order.assign(_size, -1);
         _dist.assign(_size, INF);
         _seen.assign(_size, false);
         std::iota(_pred.begin(), _pred.end(), 0);
@@ -322,16 +324,43 @@ struct graph_t
         return path;
     }
 
+    auto find_bridges() {
+        std::vector<std::pair<T, T>> ret;
+        for (int n = 0; n < _size; ++n)
+            if (!_seen[n])
+                bridge_dfs(n, -1, ret);
+
+        return ret;
+    }
+
     static constexpr const int INF = (1 << 30) - 1;
 
   private:
-    int _size, _ccsz;
+    int _size, _ccsz, _time;
     bool _has_neg_cycle;
     std::vector<T> _label;
     std::vector<bool> _seen;
-    std::vector<int> _cc, _dist, _pred;
+    std::vector<int> _cc, _low; // concomp index, low table for find_bridges
+    std::vector<int> _dist, _pred, _order;
     std::map<T, int> _index; // unordered will not work with unhashable T
     std::vector<std::vector<edge_t>> _adj;
+
+    void bridge_dfs(const int n, const int p, std::vector<std::pair<T, T>> ret) { // node, parent
+        _seen[n] = true;
+        _order[n] = _low[n] = _time++;
+        for (const int to : _adj[n]) {
+            if (to == p)
+                continue;
+            if (_seen[to])
+                _low[n] = std::min(_low[n], _order[to]);
+            else {
+                bridge_dfs(to, n, ret);
+                _low[n] = std::min(_low[n], _low[to]);
+                if (_low[to] > _order[to])
+                    ret.emplace_back(_label[n], _label[to]);
+            }
+        }
+    }
 };
 
 graph_t<char> g;

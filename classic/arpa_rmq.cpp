@@ -6,7 +6,8 @@
 #include <vector>
 
 // Given a range of values and set of subrange queries, find minimal element for each query
-// A.K.A offline minimum element problem
+// Arpa's trick A.K.A offline minimum element problem
+// https://cp-algorithms.com/data_structures/disjoint_set_union.html
 
 constexpr const std::array data = {7, 3, 5, 1, 2, 7, 9, 2, 3, 5, 2, 1, 7, 2, 4, 6, 8, 3, 7, 1};
 
