@@ -7,6 +7,7 @@
 #include <vector>
 
 // see: /kickstart/2021/star_trappers.cpp
+// integral points in trangle, see: https://en.wikipedia.org/wiki/Pick's_theorem
 
 constexpr const double EPS = 1e-9;
 constexpr const double INF = 1e18;

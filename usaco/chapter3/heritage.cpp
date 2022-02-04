@@ -12,11 +12,8 @@ std::ifstream task_in("heritage.in");
 std::ofstream task_out("heritage.out");
 
 std::string convert(const std::string& ino, const std::string& preo) {
-    if (ino.size() < 2) {
-        auto ret = preo;
-        std::swap(ret[0], ret[1]);
+    if (ino.size() < 2)
         return preo;
-    }
 
     const char root = preo[0];
     const auto pos = ino.find(root);
