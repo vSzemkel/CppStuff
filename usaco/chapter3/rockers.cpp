@@ -12,9 +12,45 @@ std::ifstream task_in("rockers.in");
 std::ofstream task_out("rockers.out");
 
 int N, T, M; // num of songs, disk capacity, max number of disks
-std::vector<int> items;
+std::vector<short> items;
 
-void full_search() { // O(2^N * N)
+/**
+ * @brief In this solution we suppose having an optimal solution 
+ * for current config and trying to construct the extensions
+ */
+static void dp_solution() { // O(M * N * N)
+    struct state_t {
+        short total;      // total song released
+        short last_time;  // last album time
+    };
+
+    // dp[a][s] holds optimal state for release not more then a albums with last released song s
+    short ans{0};
+    std::vector<std::vector<state_t>> dp(M + 1, std::vector<state_t>(N + 1, state_t{}));
+    for (int a = 0; a < M; ++a)
+        for (int s = 0; s <= N; ++s) {
+            const auto& cur = dp[a][s]; // THIS IS COMPUTED, EXTEND
+            ans = std::max(ans, cur.total);
+            for (int n = s + 1; n <= N; ++n) {
+                auto& next = dp[a][n];
+                const int time = items[n - 1];
+                if (time > T)
+                    continue;
+                if (cur.last_time + time <= T && (next.total < cur.total + 1 || (next.total == cur.total + 1 && cur.last_time + time < next.last_time))) {
+                    next.total = cur.total + 1;
+                    next.last_time = cur.last_time + time;
+                } else if (dp[a + 1][n].total < cur.total + 1) {
+                    dp[a + 1][n].total = cur.total + 1;
+                    dp[a + 1][n].last_time = time;
+                }
+            }
+
+        }
+
+    task_out << ans << '\n';
+}
+
+static void full_search() { // O(2^N * N)
     int ans{0};
     const int SETS = 1 << N;
     for (int sel = 1; sel < SETS; ++sel) {
@@ -46,7 +82,8 @@ int main(int, char**)
     for (auto& s : items)
         task_in >> s;
 
-    full_search();
+    //full_search();
+    dp_solution();
 }
 
 /*
