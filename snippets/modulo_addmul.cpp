@@ -1,10 +1,9 @@
 
 constexpr int64_t MAX = 999999999999999;
 
-int gcd(int a, int b)
+static int gcd(int a, int b)
 {
-    for (;;)
-    {
+    while (true) {
         if (a == 0) return b;
         b %= a;
         if (b == 0) return a;
@@ -12,14 +11,14 @@ int gcd(int a, int b)
     }
 }
 
-int lcm(int a, int b)
+static int lcm(int a, int b)
 {
     int temp = gcd(a, b);
 
     return temp ? (a / temp * b) : 0;
 }
 
-int64_t add(int64_t a, int64_t b)
+static int64_t add(int64_t a, int64_t b)
 {
     a += b;
     while (a >= MAX)
@@ -27,7 +26,7 @@ int64_t add(int64_t a, int64_t b)
     return a;
 }
 
-int64_t modmul(int64_t a, int64_t b)
+static int64_t modmul(int64_t a, int64_t b)
 {
     int64_t r{0};
     while (b) {

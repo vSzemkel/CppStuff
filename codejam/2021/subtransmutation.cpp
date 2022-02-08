@@ -14,8 +14,8 @@ std::vector<int> quantities;
 
 static bool feasible() {
     // every produced item can be presented as: M - k*A - n*B == M - gcd(A, B) * X
-    // M - Item == gcd(A, B) *X
-    // Item1 - Item2 % gcd == 0
+    // M - anyItem == gcd(A, B) * X
+    // (Item1 - Item2) % gcd == 0
     const int g = std::gcd(A, B);
     for (int i = 0; i < N - 1; ++i)
         for (int j = i + 1; j < N; ++j)
@@ -45,8 +45,8 @@ static bool check(int n) {
 static void solve() {
     std::cin >> N >> A >> B;
     quantities.resize(N);
-    for (int i = 0; i < N; ++i)
-        std::cin >> quantities[i];
+    for (auto& q : quantities)
+        std::cin >> q;
 
     if (feasible()) {
         int ret{N - 1};
