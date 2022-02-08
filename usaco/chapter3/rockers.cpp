@@ -18,7 +18,7 @@ std::vector<short> items;
  * @brief In this solution we suppose having an optimal solution 
  * for current config and trying to construct the extensions
  */
-static void dp_solution() { // O(M * N * N)
+static void dp_solution() { // O(M * N2)
     struct state_t {
         short total;      // total song released
         short last_time;  // last album time
@@ -44,12 +44,15 @@ static void dp_solution() { // O(M * N * N)
                     dp[a + 1][n].last_time = time;
                 }
             }
-
         }
 
     task_out << ans << '\n';
 }
 
+/**
+ * @brief As the problem domain is small, we can do
+ * exhaustive search to check all possible subset of songs
+ */
 static void full_search() { // O(2^N * N)
     int ans{0};
     const int SETS = 1 << N;

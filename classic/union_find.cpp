@@ -6,12 +6,12 @@
 #include <vector>
 
 struct uf_t {
-    uf_t(const int size) : _count(size), _groups(size), _sizes(size, 1) {
-        std::iota(_groups.begin(), _groups.end(), 0);
+    uf_t(const int size) : _count(size), _group(size), _rank(size), _size(size, 1) {
+        std::iota(_group.begin(), _group.end(), 0);
     }
 
     int find(const int x) {
-        auto& g = _groups[x];
+        auto& g = _group[x];
         if (x == g) return x;
         g = find(g);
         return g;
@@ -25,22 +25,27 @@ struct uf_t {
         int gx = find(x);
         int gy = find(y);
         if (gx == gy) return;
-        if (_sizes[gx] < _sizes[gy]) std::swap(gx, gy); // could be tailored, see \classic\arpa_rmq.cpp
-        _sizes[gx] += _sizes[gy];
-        _groups[gy] = gx;
+        if (_rank[gx] < _rank[gy]) // could be tailored, see \classic\arpa_rmq.cpp
+            std::swap(gx, gy);
+        else if (_rank[gx] == _rank[gy])
+            ++_rank[gx];
+        _size[gx] += _size[gy];
+        _group[gy] = gx;
         --_count;
     }
 
-    int size(const int x) { return _sizes[find(x)]; }
+    int size(const int x) { return _size[find(x)]; }
     int count() const { return _count; }
   private:
     int _count;
-    std::vector<int> _groups, _sizes;
+    std::vector<int> _group, _rank, _size;
 };
+
+constexpr const int N = 10;
 
 int main(int, char**)
 {
-    uf_t uf(10);
+    uf_t uf(N);
     assert(uf.find(5) == 5);
     assert(uf.count() == 10);
     assert(uf.size(5) == 1);
@@ -58,13 +63,16 @@ int main(int, char**)
     uf.unite(9, 1);
     assert(uf.count() == 5);
     uf.unite(5, 1);
-    assert(uf.find(5) == 1);
+    assert(uf.find(5) == 5);
     assert(uf.count() == 4);
-    assert(uf.find(2) == 1);
+    assert(uf.find(2) == 5);
     uf.unite(5, 7);
     uf.unite(5, 4);
     uf.unite(0, 1);
     assert(uf.count() == 1);
+    for (int i = 0; i < N; ++i)
+        assert(uf.find(i) == 5);
+    std::cout << "PASSED\n";
 }
 
 /*
