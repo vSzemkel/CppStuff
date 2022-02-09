@@ -9,6 +9,7 @@ you cannot make is NM - M - N, that is, the product minus the sum
 
 */
 
+#include <algorithm>
 #include <fstream>
 #include <queue>
 #include <unordered_set>
@@ -62,7 +63,7 @@ static int64_t decompose_naive(int64_t c) { // MLE
  * @brief Counting from minbox we remember last decomposable and max element in queue
  * Process until there is no gaps in queue of a length at least minbox
  */
-static int64_t decompose() {
+static int64_t decompose_stl() {
     std::priority_queue<int, std::vector<int>, std::greater<>> pq;
     std::unordered_set<int> decomposable;
     int min = 1e09, max = 0;
@@ -91,6 +92,33 @@ static int64_t decompose() {
                 max = std::max(max, val);
             }
         }
+    }
+
+    return gap;
+}
+
+/**
+ * @brief First consecutive minbox decomposable elements are jus after last gap
+ */
+static int64_t decompose() {
+    const int size = *std::max_element(boxes.begin(), boxes.end());
+    std::vector<bool> window(size);
+
+    int pos{0};
+    int gap{0}; // maximal not decomposable value
+    window[0] = true;
+    while (true) {
+        if (pos - gap > size)
+            break;
+        if (!window[pos % size])
+            gap = pos;
+        else {
+            window[pos % size] = false; // here is the trick
+            for (const auto b : boxes)
+                window[(pos + b) % size] = true;
+        }
+
+        ++pos;
     }
 
     return gap;
