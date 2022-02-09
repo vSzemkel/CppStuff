@@ -1,6 +1,8 @@
 
+#include <algorithm>
 #include <assert.h>
 #include <cmath>
+#include <map>
 #include <vector>
 
 // Primes - generation and factorization
@@ -55,6 +57,32 @@ static std::vector<int64_t> factorize(int64_t n) {
     return factorization;
 }
 
+// https://cp-algorithms.com/algebra/divisors.html
+static auto get_divisors(const int64_t n) {
+    const auto factorization = factorize(n);
+    assert(std::is_sorted(factorization.begin(), factorization.end()));
+    std::map<int64_t, int> divisors;
+    for (const auto d : factorization)
+        ++divisors[d];
+    return divisors;
+}
+
+static int64_t count_divisors(const int64_t n) {
+    int64_t ret{1};
+    const auto divisors = get_divisors(n);
+    for (const auto& [_, c] : divisors)
+        ret *= (c + 1);
+    return ret;
+}
+
+static int64_t sum_divisors(const int64_t n) {
+    int64_t ret{1};
+    const auto divisors = get_divisors(n);
+    for (const auto& [d, c] : divisors)
+        ret *= (std::pow(d, c + 1) - 1) / (d - 1);
+    return ret;
+}
+
 int main(int, char**)
 {
     auto primes = generate(500);
@@ -65,6 +93,8 @@ int main(int, char**)
     assert(factorize(1'000'000'007) == (std::vector<int64_t>{1'000'000'007}));
     assert(factorize(1) == (std::vector<int64_t>{1}));
     assert(factorize(0).empty());
+    assert(count_divisors(n) == 384); // 3 * 2**7
+    assert(sum_divisors(2 * 2 * 5 * 7) == 336); // 1 + 2 + 5 + 7 + 4 + 10 + 14 + 35 + 140/2 + 140/5 + 140/7 + 140
 }
 
 /* Compile:
