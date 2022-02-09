@@ -13,7 +13,7 @@ static int gcd(int a, int b)
 
 static int lcm(int a, int b)
 {
-    int temp = gcd(a, b);
+    const auto temp = gcd(a, b);
 
     return temp ? (a / temp * b) : 0;
 }
