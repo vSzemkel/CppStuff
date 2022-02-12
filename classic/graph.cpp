@@ -27,6 +27,22 @@ struct graph_t
         return ret;
     }
 
+    void detach_node_label(const T& node) {
+        assert(_index.count(node));
+        detach_node(_index[node]);
+    }
+
+    void detach_node(const int node) {
+        assert(0 <= node && node < _size);
+        for (const auto& e : _adj[node]) {
+            auto& list = _adj[e[0]];
+            const auto ne = std::remove_if(list.begin(), list.end(), [node](const auto& e){ return e[0] == node; });
+            list.erase(ne, list.end());
+        }
+
+        _adj[node].clear();
+    }
+
     void add_edge_label(const T& from, const T& to, const int cost = 0) {
         assert(_index.count(from) && _index.count(to));
         add_edge(_index[from], _index[to], cost);
@@ -109,6 +125,16 @@ struct graph_t
     bool found(const int node) const {
         assert(0 <= node && node < _size);
         return _pred[node] != node;
+    }
+
+    bool has_edge_label(const T& from, const T& to) const {
+        assert(_index.count(from) && _index.count(to));
+        return has_edge(_index[from], _index[to]);
+    }
+
+    bool has_edge(const int from, const int to) const {
+        const auto& c = _adj[from];
+        return std::find_if(c.begin(), c.end(), [to](const auto& e){ return e[0] == to; }) != c.end();
     }
 
     bool has_negative_cycle() const { return _has_neg_cycle; }
