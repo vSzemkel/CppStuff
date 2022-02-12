@@ -36,7 +36,7 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=b4uVVw7TtuR&S=fence6
 std::ifstream task_in("fence6.in");
 std::ofstream task_out("fence6.out");
 
-constexpr const int INF = (1 << 30) - 1;
+constexpr const int INF = 1e06;
 
 template <typename T = int>
 struct graph_t
@@ -49,6 +49,11 @@ struct graph_t
         assert(0 <= from && from < _size && 0 <= to && to < _size);
         _adj[from].push_back({to, cost});
         _adj[to].push_back({from, cost});
+    }
+
+    bool has_edge(const int from, const int to) const {
+        const auto& c = _adj[from];
+        return std::find_if(c.begin(), c.end(), [to](const auto& e){ return e[0] == to; }) != c.end();
     }
 
     void reset() {
@@ -66,7 +71,7 @@ struct graph_t
     auto floyd_warshall() { // compute all distances
         std::vector<std::vector<int>> dist(_size, std::vector<int>(_size, INF));
         for (int i = 0; i < _size; ++i) {
-            //dist[i][i] = 0;
+            dist[i][i] = 0;
             for (const auto& e : _adj[i])
                 dist[i][e[0]] = e[1];
         }
@@ -110,6 +115,30 @@ int main(int, char**)
         for (auto& e : oute) {
             task_in >> e; --e;
         }
+        if (in > out)
+            std::swap(endpoints[lab].first, endpoints[lab].second);
+    }
+
+    // remove leaf (half-free) edges
+    bool repeat{true};
+    while (repeat) {
+        repeat = false;
+        const auto it = std::find_if(endpoints.begin(), endpoints.end(), [](const auto& e){
+            return e.first.empty() ^ e.second.empty();
+        });
+        if (it != endpoints.end()) {
+            const int fence_id = it - endpoints.begin();
+            auto& neib = it->second; // assert(it->first.empty())
+            for (const int n : neib)
+                for (auto al : { &endpoints[n].first, &endpoints[n].second })
+                    for (auto it = al->begin(); it != al->end(); )
+                        if (*it == fence_id)
+                            it = al->erase(it);
+                        else
+                            ++it;
+            neib.clear();
+            repeat = true;
+        }
     }
 
     graph_t<int> pastures(N);
@@ -124,18 +153,28 @@ int main(int, char**)
     }
 
     int ans = INF;
-    auto fw = pastures.floyd_warshall();
+    const auto fw = pastures.floyd_warshall();
     for (int k = 0; k < N; ++k)
         for (int i = k + 1; i < N; ++i)
             for (int j = i + 1; j < N; ++j) {
-                int x{0};
-                const auto& c = endpoints[k].first;
-                if (std::find(c.begin(), c.end(), i) != c.end())
-                    ++x;
-                if (std::find(c.begin(), c.end(), j) != c.end())
-                    ++x;
-                if (x & 1)
-                    ans = std::min(ans, fw[k][i] + fw[i][j] + fw[j][k]);
+                if (pastures.has_edge(k, i) && pastures.has_edge(i, j) && pastures.has_edge(j, k)) {
+                    int x{0};
+                    const auto& c = endpoints[k].first;
+                    if (std::find(c.begin(), c.end(), i) != c.end())
+                        ++x;
+                    if (std::find(c.begin(), c.end(), j) != c.end())
+                        ++x;
+                    if ((x & 1) == 0) // Y config, not O config
+                        continue;
+                }
+
+                const auto a = fw[k][i];
+                const auto b = fw[i][j];
+                const auto c = fw[j][k];
+                if (a < b + c && b < a + c && c < a + b) {
+                    const auto can = a + b + c;
+                    ans = std::min(ans, can);
+                }
             }
 
     task_out << ans / 2 << '\n';
