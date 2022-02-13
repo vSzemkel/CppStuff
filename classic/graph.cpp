@@ -15,8 +15,8 @@ struct graph_t
 {
     using edge_t = std::array<int, 2>; // {to, cost}
 
-    graph_t(const int size = 0) : _size(size), _adj(size) {}
-    graph_t(const std::vector<T>& labels) : _size(labels.size()), _label(labels), _adj(_size) {}
+    graph_t(const int size = 0) : _size(size), _adj(size) { reset(); }
+    graph_t(const std::vector<T>& labels) : _size(labels.size()), _label(labels), _adj(_size) { reset(); }
 
     int add_node_label(T label) {
         assert(_index.count(label) == 0);
@@ -239,6 +239,41 @@ struct graph_t
                 }
             }
         }
+    }
+
+    void shortest_paths(const int source = 0) {
+        std::queue<int> qq;
+        qq.push(source); // {distance from source}
+        _dist[source] = 0;
+        _pred[source] = -1;
+        while (!qq.empty()) {
+            const int cur = qq.front(); qq.pop();
+            _seen[cur] = false;
+            for (const auto& [next, cost] : _adj[cur])
+                if (_dist[cur] + cost < _dist[next]) {
+                    _pred[next] = cur;
+                    _dist[next] = _dist[cur] + cost;
+                    if (!_seen[next]) {
+                        qq.push(next);
+                        _seen[next] = true;
+                    }
+                }
+        }
+    }
+
+    bool have_common_subpath(const int source, int i, int j) const {
+        while (~_pred[i] && _pred[i] != source)
+            i = _pred[i];
+        while (~_pred[j] && _pred[j] != source)
+            j = _pred[j];
+        return ~_pred[i] && ~_pred[j] && i == j;
+    }
+
+    // first node on path from source to target, maybe target or -1
+    int first_path_node(const int source, int target) const {
+        while (~_pred[target] && _pred[target] != source)
+            target = _pred[target];
+        return target;
     }
 
     void bellman_ford_label(const T& from) {

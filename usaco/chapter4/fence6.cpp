@@ -8,28 +8,9 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=b4uVVw7TtuR&S=fence6
 #include <algorithm>
 #include <array>
 #include <assert.h>
-#include <bitset>
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
 #include <numeric>
-#include <optional>
 #include <queue>
-#include <random>
-#include <set>
-#include <stdlib.h>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -43,7 +24,7 @@ struct graph_t
 {
     using edge_t = std::array<int, 2>; // {to, cost}
 
-    graph_t(const int size = 0) : _size(size), _adj(size) {}
+    graph_t(const int size = 0) : _size(size), _adj(size) { reset(); }
 
     void add_edge(const int from, const int to, const int cost = 0) {
         assert(0 <= from && from < _size && 0 <= to && to < _size);
@@ -51,21 +32,37 @@ struct graph_t
         _adj[to].push_back({from, cost});
     }
 
-    bool has_edge(const int from, const int to) const {
-        const auto& c = _adj[from];
-        return std::find_if(c.begin(), c.end(), [to](const auto& e){ return e[0] == to; }) != c.end();
-    }
-
     void reset() {
-        _ccsz = _time = 0;
-        _has_neg_cycle = false;
-        _cc.assign(_size, -1);
-        _low.assign(_size, -1);
         _pred.assign(_size, -1);
-        _order.assign(_size, -1);
         _dist.assign(_size, INF);
         _seen.assign(_size, false);
         std::iota(_pred.begin(), _pred.end(), 0);
+    }
+
+    void shortest_paths(const int source = 0) {
+        std::queue<int> qq;
+        qq.push(source); // {distance from source}
+        _dist[source] = 0;
+        _pred[source] = -1;
+        while (!qq.empty()) {
+            const int cur = qq.front(); qq.pop();
+            _seen[cur] = false;
+            for (const auto& [next, cost] : _adj[cur])
+                if (_dist[cur] + cost < _dist[next]) {
+                    _pred[next] = cur;
+                    _dist[next] = _dist[cur] + cost;
+                    if (!_seen[next]) {
+                        qq.push(next);
+                        _seen[next] = true;
+                    }
+                }
+        }
+    }
+
+    int first_path_node(const int source, int target) const {
+        while (~_pred[target] && _pred[target] != source)
+            target = _pred[target];
+        return target;
     }
 
     auto floyd_warshall() { // compute all distances
@@ -79,20 +76,16 @@ struct graph_t
         for (int k = 0; k < _size; ++k)
             for (int i = 0; i < _size; ++i)
                 for (int j = 0; j < _size; ++j)
-                    if (i != j)
-                        dist[i][j] = std::min(dist[i][j], dist[i][k] + dist[k][j]);
+                    dist[i][j] = std::min(dist[i][j], dist[i][k] + dist[k][j]);
 
         return dist;
     }
 
+    std::vector<int> _pred;
   private:
-    int _size, _ccsz, _time;
-    bool _has_neg_cycle;
-    std::vector<T> _label;
+    int _size;
     std::vector<bool> _seen;
-    std::vector<int> _cc, _low; // concomp index, low table for find_bridges
-    std::vector<int> _dist, _pred, _order;
-    std::map<T, int> _index; // unordered will not work with unhashable T
+    std::vector<int> _dist;
     std::vector<std::vector<edge_t>> _adj;
 };
 
@@ -102,9 +95,10 @@ int main(int, char**)
     std::vector<int> length(N); // {edge -> length}
     std::vector<std::pair<std::vector<int>, std::vector<int>>> endpoints(N); // { edge -> in, out }
     for (int i = 0; i < N; ++i) {
-        int lab, in, out;
-        task_in >> lab >> length[i] >> in >> out;
+        int lab, len, in, out;
+        task_in >> lab >> len >> in >> out;
         --lab;
+        length[lab] = len;
         auto& ine = endpoints[lab].first;
         ine.resize(in);
         for (auto& e : ine) {
@@ -115,67 +109,60 @@ int main(int, char**)
         for (auto& e : oute) {
             task_in >> e; --e;
         }
-        if (in > out)
+        if (in > out) // later scanning only shorter
             std::swap(endpoints[lab].first, endpoints[lab].second);
     }
 
-    // remove leaf (half-free) edges
-    bool repeat{true};
-    while (repeat) {
-        repeat = false;
-        const auto it = std::find_if(endpoints.begin(), endpoints.end(), [](const auto& e){
-            return e.first.empty() ^ e.second.empty();
-        });
-        if (it != endpoints.end()) {
-            const int fence_id = it - endpoints.begin();
-            auto& neib = it->second; // assert(it->first.empty())
-            for (const int n : neib)
-                for (auto al : { &endpoints[n].first, &endpoints[n].second })
-                    for (auto it = al->begin(); it != al->end(); )
-                        if (*it == fence_id)
-                            it = al->erase(it);
-                        else
-                            ++it;
-            neib.clear();
-            repeat = true;
-        }
-    }
 
-    graph_t<int> pastures(N);
-    pastures.reset();
+    // every fence is equivalent to node i posts graph
+    // every cycle in posts graph has its perimeter doubled
+    graph_t<int> posts(N);
     for (int f = 0; f < N; ++f) {
         for (const int t : endpoints[f].first)
             if (f < t)
-                pastures.add_edge(f, t, length[f] + length[t]);
+                posts.add_edge(f, t, length[f] + length[t]);
         for (const int t : endpoints[f].second)
             if (f < t)
-                pastures.add_edge(f, t, length[f] + length[t]);
+                posts.add_edge(f, t, length[f] + length[t]);
     }
 
+    // precompute all source predecors 
+    std::vector<std::vector<int>> pred(N);
+    for (int i = 0; i < N; ++i) {
+        posts.reset();
+        posts.shortest_paths(i);
+        pred[i] = posts._pred;
+    }
+
+    const auto has_y_config = [&](const int s, const int t1, const int t2) -> bool {
+        int x{0};
+        posts._pred = pred[s];
+        const auto p1 = posts.first_path_node(s, t1);
+        const auto p2 = posts.first_path_node(s, t2);
+        if (p1 == p2)
+            return true;
+        for (const int n : endpoints[s].first)
+            if (n == p1 || n == p2)
+                ++x;
+        return (x & 1) == 0; // Y config, not O config
+    };
+
     int ans = INF;
-    const auto fw = pastures.floyd_warshall();
+    const auto fw = posts.floyd_warshall();
     for (int k = 0; k < N; ++k)
         for (int i = k + 1; i < N; ++i)
-            for (int j = i + 1; j < N; ++j) {
-                if (pastures.has_edge(k, i) && pastures.has_edge(i, j) && pastures.has_edge(j, k)) {
-                    int x{0};
-                    const auto& c = endpoints[k].first;
-                    if (std::find(c.begin(), c.end(), i) != c.end())
-                        ++x;
-                    if (std::find(c.begin(), c.end(), j) != c.end())
-                        ++x;
-                    if ((x & 1) == 0) // Y config, not O config
-                        continue;
-                }
-
-                const auto a = fw[k][i];
-                const auto b = fw[i][j];
-                const auto c = fw[j][k];
-                if (a < b + c && b < a + c && c < a + b) {
-                    const auto can = a + b + c;
-                    ans = std::min(ans, can);
-                }
-            }
+            for (int j = i + 1; j < N; ++j)
+                if (!has_y_config(i, j, k) && !has_y_config(j, k, i) && !has_y_config(k, i, j)) 
+                    ans = std::min(ans, fw[k][i] + fw[i][j] + fw[j][k]);
+                /*{
+                    const auto a = fw[k][i];
+                    const auto b = fw[i][j];
+                    const auto c = fw[j][k];
+                    if (a < b + c && b < a + c && c < a + b) {
+                        const auto can = a + b + c;
+                        
+                    }
+                }*/
 
     task_out << ans / 2 << '\n';
 }
