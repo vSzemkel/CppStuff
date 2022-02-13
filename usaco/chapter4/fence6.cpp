@@ -95,22 +95,23 @@ int main(int, char**)
     std::vector<int> length(N); // {edge -> length}
     std::vector<std::pair<std::vector<int>, std::vector<int>>> endpoints(N); // { edge -> in, out }
     for (int i = 0; i < N; ++i) {
-        int lab, len, in, out;
-        task_in >> lab >> len >> in >> out;
-        --lab;
-        length[lab] = len;
-        auto& ine = endpoints[lab].first;
+        int b, len, in, out;
+        task_in >> b >> len >> in >> out;
+        --b;
+        length[b] = len;
+        auto& ep = endpoints[b];
+        auto& ine = ep.first;
         ine.resize(in);
         for (auto& e : ine) {
             task_in >> e; --e;
         }
-        auto& oute = endpoints[lab].second;
+        auto& oute = ep.second;
         oute.resize(out);
         for (auto& e : oute) {
             task_in >> e; --e;
         }
         if (in > out) // later scanning only shorter
-            std::swap(endpoints[lab].first, endpoints[lab].second);
+            std::swap(ep.first, ep.second);
     }
 
 
@@ -154,15 +155,6 @@ int main(int, char**)
             for (int j = i + 1; j < N; ++j)
                 if (!has_y_config(i, j, k) && !has_y_config(j, k, i) && !has_y_config(k, i, j)) 
                     ans = std::min(ans, fw[k][i] + fw[i][j] + fw[j][k]);
-                /*{
-                    const auto a = fw[k][i];
-                    const auto b = fw[i][j];
-                    const auto c = fw[j][k];
-                    if (a < b + c && b < a + c && c < a + b) {
-                        const auto can = a + b + c;
-                        
-                    }
-                }*/
 
     task_out << ans / 2 << '\n';
 }
