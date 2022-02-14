@@ -299,6 +299,26 @@ struct graph_t
         }
     }
 
+    auto floyd_warshall_1d() { // compute all distances
+        const auto sz = _size * _size;
+        _fw_uptr = std::make_unique<int[]>(sz);
+        auto fw = _fw_uptr.get();
+        for (int i = 0; i < _size; ++i) {
+            for (int j = 0; j < _size; ++j)
+                fw[i  * _size + j] = INF;
+            fw[i  * _size + i] = 0;
+            for (const auto& e : _adj[i])
+                fw[i  * _size + e[0]] = e[1];
+        }
+
+        for (int k = 0; k < _size; ++k)
+            for (int i = 0; i < _size; ++i)
+                for (int j = 0; j < _size; ++j)
+                    fw[i  * _size + j] = std::min(fw[i  * _size + j], fw[i  * _size + k] + fw[k  * _size + j]);
+
+        return fw;
+    }
+
     auto floyd_warshall(const bool check_for_neg_cycles = false) { // compute all distances
         if (check_for_neg_cycles)
             bellman_ford();
@@ -402,6 +422,7 @@ struct graph_t
     std::vector<T> _label;
     std::vector<bool> _seen;
     std::vector<int> _cc, _low; // concomp index, low table for find_bridges
+    std::unique_ptr<int[]> _fw_uptr;
     std::vector<int> _dist, _pred, _order;
     std::map<T, int> _index; // unordered will not work with unhashable T
     std::vector<std::vector<edge_t>> _adj;

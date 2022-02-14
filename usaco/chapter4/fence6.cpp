@@ -9,6 +9,7 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=b4uVVw7TtuR&S=fence6
 #include <array>
 #include <assert.h>
 #include <fstream>
+#include <memory>
 #include <numeric>
 #include <queue>
 #include <utility>
@@ -16,6 +17,9 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=b4uVVw7TtuR&S=fence6
 
 std::ifstream task_in("fence6.in");
 std::ofstream task_out("fence6.out");
+
+// Hint, not used below, from the appreciated solution:
+// A node is uniquely identified by two smallest edges
 
 constexpr const int INF = 1e06;
 
@@ -65,20 +69,24 @@ struct graph_t
         return target;
     }
 
-    auto floyd_warshall() { // compute all distances
-        std::vector<std::vector<int>> dist(_size, std::vector<int>(_size, INF));
+    auto floyd_warshall_1d() { // compute all distances
+        const auto sz = _size * _size;
+        _fw_uptr = std::make_unique<int[]>(sz);
+        auto fw = _fw_uptr.get();
         for (int i = 0; i < _size; ++i) {
-            dist[i][i] = 0;
+            for (int j = 0; j < _size; ++j)
+                fw[i  * _size + j] = INF;
+            fw[i  * _size + i] = 0;
             for (const auto& e : _adj[i])
-                dist[i][e[0]] = e[1];
+                fw[i  * _size + e[0]] = e[1];
         }
 
         for (int k = 0; k < _size; ++k)
             for (int i = 0; i < _size; ++i)
                 for (int j = 0; j < _size; ++j)
-                    dist[i][j] = std::min(dist[i][j], dist[i][k] + dist[k][j]);
+                    fw[i  * _size + j] = std::min(fw[i  * _size + j], fw[i  * _size + k] + fw[k  * _size + j]);
 
-        return dist;
+        return fw;
     }
 
     std::vector<int> _pred;
@@ -86,6 +94,7 @@ struct graph_t
     int _size;
     std::vector<bool> _seen;
     std::vector<int> _dist;
+    std::unique_ptr<int[]> _fw_uptr;
     std::vector<std::vector<edge_t>> _adj;
 };
 
@@ -149,12 +158,12 @@ int main(int, char**)
     };
 
     int ans = INF;
-    const auto fw = posts.floyd_warshall();
+    const auto fw = posts.floyd_warshall_1d();
     for (int k = 0; k < N; ++k)
         for (int i = k + 1; i < N; ++i)
             for (int j = i + 1; j < N; ++j)
                 if (!has_y_config(i, j, k) && !has_y_config(j, k, i) && !has_y_config(k, i, j)) 
-                    ans = std::min(ans, fw[k][i] + fw[i][j] + fw[j][k]);
+                    ans = std::min(ans, fw[k * N + i] + fw[i * N + j] + fw[j * N + k]);
 
     task_out << ans / 2 << '\n';
 }
