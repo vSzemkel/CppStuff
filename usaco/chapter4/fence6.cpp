@@ -153,7 +153,9 @@ int main(int, char**)
     for (int k = 0; k < N; ++k)
         for (int i = k + 1; i < N; ++i)
             for (int j = i + 1; j < N; ++j)
-                if (!has_y_config(i, j, k) && !has_y_config(j, k, i) && !has_y_config(k, i, j)) 
+                // with the below condition commented out partial 
+                // solution may be incorrect, but the final is correct.
+                if (!has_y_config(i, j, k) && !has_y_config(j, k, i) /*&& !has_y_config(k, i, j)*/) 
                     ans = std::min(ans, fw[k * N + i] + fw[i * N + j] + fw[j * N + k]);
 
     task_out << ans / 2 << '\n';
