@@ -313,10 +313,10 @@ struct graph_t
                 fw[i  * _size + e[0]] = e[1];
         }
 
-        for (int k = 0; k < _size; ++k)
-            for (int i = 0; i < _size; ++i)
-                for (int j = 0; j < _size; ++j)
-                    fw[i  * _size + j] = std::min(fw[i  * _size + j], fw[i  * _size + k] + fw[k  * _size + j]);
+        for (int k = 0, kr = 0; k < _size; ++k, kr += _size)
+            for (int i = 0, ir = 0; i < _size; ++i, ir += _size)
+                for (int j = 0, jr = 0; j < _size; ++j, jr += _size)
+                    fw[ir + j] = std::min(fw[ir + j], fw[ir + k] + fw[kr + j]);
 
         return fw;
     }
