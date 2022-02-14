@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <map>
 #include <queue>
@@ -241,7 +242,7 @@ struct graph_t
         }
     }
 
-    void shortest_paths(const int source = 0) {
+    auto shortest_paths(const int source = 0) {
         std::queue<int> qq;
         qq.push(source); // {distance from source}
         _dist[source] = 0;
@@ -259,6 +260,8 @@ struct graph_t
                     }
                 }
         }
+
+        return _pred;
     }
 
     bool have_common_subpath(const int source, int i, int j) const {
@@ -300,8 +303,7 @@ struct graph_t
     }
 
     auto floyd_warshall_1d() { // compute all distances
-        const auto sz = _size * _size;
-        _fw_uptr = std::make_unique<int[]>(sz);
+        _fw_uptr = std::make_unique<int[]>(_size * _size);
         auto fw = _fw_uptr.get();
         for (int i = 0; i < _size; ++i) {
             for (int j = 0; j < _size; ++j)

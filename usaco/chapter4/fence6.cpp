@@ -43,7 +43,7 @@ struct graph_t
         std::iota(_pred.begin(), _pred.end(), 0);
     }
 
-    void shortest_paths(const int source = 0) {
+    auto shortest_paths(const int source = 0) {
         std::queue<int> qq;
         qq.push(source); // {distance from source}
         _dist[source] = 0;
@@ -61,17 +61,18 @@ struct graph_t
                     }
                 }
         }
+
+        return _pred;
     }
 
-    int first_path_node(const int source, int target) const {
-        while (~_pred[target] && _pred[target] != source)
-            target = _pred[target];
+    int first_path_node(const std::vector<int>& pred, const int source, int target) const {
+        while (~pred[target] && pred[target] != source)
+            target = pred[target];
         return target;
     }
 
     auto floyd_warshall_1d() { // compute all distances
-        const auto sz = _size * _size;
-        _fw_uptr = std::make_unique<int[]>(sz);
+        _fw_uptr = std::make_unique<int[]>(_size * _size);
         auto fw = _fw_uptr.get();
         for (int i = 0; i < _size; ++i) {
             for (int j = 0; j < _size; ++j)
@@ -89,11 +90,10 @@ struct graph_t
         return fw;
     }
 
-    std::vector<int> _pred;
   private:
     int _size;
     std::vector<bool> _seen;
-    std::vector<int> _dist;
+    std::vector<int> _pred, _dist;
     std::unique_ptr<int[]> _fw_uptr;
     std::vector<std::vector<edge_t>> _adj;
 };
@@ -101,57 +101,48 @@ struct graph_t
 int main(int, char**)
 {
     int N; task_in >> N;
-    std::vector<int> length(N); // {edge -> length}
-    std::vector<std::pair<std::vector<int>, std::vector<int>>> endpoints(N); // { edge -> in, out }
-    for (int i = 0; i < N; ++i) {
+    // every fence is equivalent to node i posts graph
+    // every cycle in posts graph has its perimeter doubled
+    graph_t<int> posts(N);
+    std::vector<int> tmp, length(N); // {edge -> length}
+    std::vector<std::vector<int>> endpoints(N); // { edge -> in, out }
+    for (int z = N; z; --z) {
         int b, len, in, out;
         task_in >> b >> len >> in >> out;
         --b;
         length[b] = len;
-        auto& ep = endpoints[b];
-        auto& ine = ep.first;
-        ine.resize(in);
-        for (auto& e : ine) {
-            task_in >> e; --e;
+        auto& first = endpoints[b];
+        auto& second = tmp;
+        if (in > out)
+            std::swap(first, second);
+        first.resize(in);
+        for (auto& e : first) {
+            task_in >> e;
+            if (length[--e] > 0)
+                posts.add_edge(b, e, len + length[e]);
         }
-        auto& oute = ep.second;
-        oute.resize(out);
-        for (auto& e : oute) {
-            task_in >> e; --e;
+        second.resize(out);
+        for (auto& e : second) {
+            task_in >> e;
+            if (length[--e] > 0)
+                posts.add_edge(b, e, len + length[e]);
         }
-        if (in > out) // later scanning only shorter
-            std::swap(ep.first, ep.second);
-    }
-
-
-    // every fence is equivalent to node i posts graph
-    // every cycle in posts graph has its perimeter doubled
-    graph_t<int> posts(N);
-    for (int f = 0; f < N; ++f) {
-        for (const int t : endpoints[f].first)
-            if (f < t)
-                posts.add_edge(f, t, length[f] + length[t]);
-        for (const int t : endpoints[f].second)
-            if (f < t)
-                posts.add_edge(f, t, length[f] + length[t]);
     }
 
     // precompute all source predecors 
     std::vector<std::vector<int>> pred(N);
     for (int i = 0; i < N; ++i) {
         posts.reset();
-        posts.shortest_paths(i);
-        pred[i] = posts._pred;
+        pred[i] = posts.shortest_paths(i);
     }
 
     const auto has_y_config = [&](const int s, const int t1, const int t2) -> bool {
         int x{0};
-        posts._pred = pred[s];
-        const auto p1 = posts.first_path_node(s, t1);
-        const auto p2 = posts.first_path_node(s, t2);
+        const auto p1 = posts.first_path_node(pred[s], s, t1);
+        const auto p2 = posts.first_path_node(pred[s], s, t2);
         if (p1 == p2)
             return true;
-        for (const int n : endpoints[s].first)
+        for (const int n : endpoints[s])
             if (n == p1 || n == p2)
                 ++x;
         return (x & 1) == 0; // Y config, not O config
