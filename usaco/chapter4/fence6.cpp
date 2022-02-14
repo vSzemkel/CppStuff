@@ -150,12 +150,12 @@ int main(int, char**)
 
     int ans = INF;
     const auto fw = posts.floyd_warshall_1d();
-    for (int k = 0; k < N; ++k)
-        for (int i = k + 1; i < N; ++i)
-            for (int j = i + 1; j < N; ++j) {
+    for (int k = 0, kr = 0; k < N; ++k, kr += N)
+        for (int i = k + 1, ir = N * i; i < N; ++i, ir += N)
+            for (int j = i + 1, jr = N * j; j < N; ++j, jr += N) {
                 // with the below condition commented out partial 
                 // solution may be incorrect, but the final is correct.
-                const auto can = fw[k * N + i] + fw[i * N + j] + fw[j * N + k];
+                const auto can = fw[kr + i] + fw[ir + j] + fw[jr + k];
                 if (can < ans && !has_y_config(i, j, k) && !has_y_config(j, k, i) /*&& !has_y_config(k, i, j)*/) 
                     ans = can;
             }
