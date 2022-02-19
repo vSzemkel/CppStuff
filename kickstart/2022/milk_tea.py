@@ -8,14 +8,13 @@ for cn in range(1, T + 1):
     orders = [str()] * N
     for i in range(N):
         orders[i] = input()
-    bl = [0] * M
+    bad = set()
     for i in range(M):
         b = 0
         sb = input()
         for c in sb:
             b = (b << 1) + ord(c) - ord('0')
-        bl[i] = b
-    bad = set(bl)
+        bad.add(b)
 
     ideal = 0
     misses = [0] * P
@@ -38,7 +37,7 @@ for cn in range(1, T + 1):
     for p in range(P):
         masks[p] = 1 << (P - biases[p][1] - 1)
     ans = 1 << 100
-    MAX = 1 << min(P, 20)
+    MAX = 1 << min(P, 10)
     for bias in range(MAX):
         can, tmp = ideal, bias
         for m in masks:
@@ -58,6 +57,7 @@ for cn in range(1, T + 1):
 
     print(f"Case #{cn}: {ans}")
 
-
-# Run:
-# py.exe milk_tea.py < milk_tea.in
+"""
+Run:
+py.exe milk_tea.py < milk_tea.in
+"""
