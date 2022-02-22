@@ -51,92 +51,96 @@ class flow_graph_t
     }
 };
 
+/**
+ * @brief Works for one unit capacity flow graphs
+ */
 template <typename T>
 class dinic_t
 {
   public:
-    flow_graph_t<T>& g;
+    flow_graph_t<T>& _fg;
 
     std::vector<int> ptr;
     std::vector<int> d;
     std::vector<int> q;
 
-    dinic_t(flow_graph_t<T>& _g) : g(_g) {
-        ptr.resize(g.n);
-        d.resize(g.n);
-        q.resize(g.n);
+    dinic_t(flow_graph_t<T>& fg) : _fg(fg) {
+        ptr.resize(_fg.n);
+        d.resize(_fg.n);
+        q.resize(_fg.n);
     }
 
     bool expath() {
         fill(d.begin(), d.end(), -1);
-        q[0] = g.fin;
-        d[g.fin] = 0;
+        q[0] = _fg.fin;
+        d[_fg.fin] = 0;
         int beg = 0, end = 1;
         while (beg < end) {
-            int i = q[beg++];
-            for (int id : g.g[i]) {
-                const auto& e = g.edges[id];
-                const auto& back = g.edges[id ^ 1];
-                if (back.capacity - back.flow > g.eps && d[e.to] == -1) {
+            const int i = q[beg++];
+            for (int id : _fg.g[i]) {
+                const auto& e = _fg.edges[id];
+                const auto& back = _fg.edges[id ^ 1];
+                if (back.capacity - back.flow > _fg.eps && d[e.to] == -1) {
                     d[e.to] = d[i] + 1;
-                    if (e.to == g.st) {
+                    if (e.to == _fg.st)
                         return true;
-                    }
+
                     q[end++] = e.to;
                 }
             }
         }
+
         return false;
     }
 
     T dfs(int v, T w) {
-        if (v == g.fin) {
+        if (v == _fg.fin)
             return w;
-        }
+
         int& j = ptr[v];
         while (j >= 0) {
-            int id = g.g[v][j];
-            const auto& e = g.edges[id];
-            if (e.capacity - e.flow > g.eps && d[e.to] == d[v] - 1) {
+            const int id = _fg.g[v][j];
+            const auto& e = _fg.edges[id];
+            if (e.capacity - e.flow > _fg.eps && d[e.to] == d[v] - 1) {
                 T t = dfs(e.to, std::min(e.capacity - e.flow, w));
-                if (t > g.eps) {
-                    g.edges[id].flow += t;
-                    g.edges[id ^ 1].flow -= t;
+                if (t > _fg.eps) {
+                    _fg.edges[id].flow += t;
+                    _fg.edges[id ^ 1].flow -= t;
                     return t;
                 }
             }
             --j;
         }
+
         return 0;
     }
 
     T max_flow() {
         while (expath()) {
-            for (int i = 0; i < g.n; ++i) {
-                ptr[i] = (int)g.g[i].size() - 1;
-            }
-            T big_add = 0;
+            for (int i = 0; i < _fg.n; ++i)
+                ptr[i] = (int)_fg.g[i].size() - 1;
+
+            T big_add{0};
             while (true) {
-                T add = dfs(g.st, std::numeric_limits<T>::max());
-                if (add <= g.eps) {
+                T add = dfs(_fg.st, std::numeric_limits<T>::max());
+                if (add <= _fg.eps)
                     break;
-                }
                 big_add += add;
             }
-            if (big_add <= g.eps) {
+            if (big_add <= _fg.eps)
                 break;
-            }
-            g.flow += big_add;
+            _fg.flow += big_add;
         }
-        return g.flow;
+
+        return _fg.flow;
     }
 
     std::vector<bool> min_cut() {
         max_flow();
-        std::vector<bool> ret(g.n);
-        for (int i = 0; i < g.n; ++i) {
+        std::vector<bool> ret(_fg.n);
+        for (int i = 0; i < _fg.n; ++i)
             ret[i] = (d[i] != -1);
-        }
+
         return ret;
     }
 };
