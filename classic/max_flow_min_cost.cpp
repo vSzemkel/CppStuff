@@ -54,19 +54,15 @@ static void max_flow_min_cost(const int source, const int target)
         shortest_paths(source, distances, predecors);
         if (distances[target] == big32) break;
 
-        int cur{target}, path_flow{big32};
-        while (predecors[cur] != -1) {
+        int path_flow{big32};
+        for (int cur = target; predecors[cur] != -1; cur = predecors[cur])
             path_flow = std::min(path_flow, g_capacity[predecors[cur]][cur]);
-            cur = predecors[cur];
-        }
 
         flow += path_flow;
         cost += distances[target];
-        cur = target;
-        while (predecors[cur] != -1) {
+        for (int cur = target; predecors[cur] != -1; cur = predecors[cur]) {
             g_capacity[predecors[cur]][cur] -= path_flow;
             g_capacity[cur][predecors[cur]] += path_flow;
-            cur = predecors[cur];
         }
     }
 
