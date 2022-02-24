@@ -5,22 +5,6 @@
 template <typename T = int>
 struct flow_graph_t
 {
-    static constexpr T eps = (T)1e-9;
-
-    struct edge_t {
-        int from;
-        int to;
-        T capacity;
-        T flow;
-    };
-
-    std::vector<std::vector<int>> _adj;
-    std::vector<edge_t> _edges;
-    int _size;
-    int _source;
-    int _sink;
-    T _flow;
-
     flow_graph_t(const int sz, const int src, const int snk) : _size(sz), _source(src), _sink(snk), _flow{0} {
         assert(0 <= src && src < sz && 0 <= snk && snk < sz && src != snk);
         _adj.resize(_size);
@@ -41,6 +25,22 @@ struct flow_graph_t
         _edges.push_back({to, from, backward_cap, 0});
         return id;
     }
+
+    struct edge_t {
+        int from;
+        int to;
+        T capacity;
+        T flow;
+    };
+
+    static constexpr T eps = (T)1e-9;
+
+    std::vector<std::vector<int>> _adj;
+    std::vector<edge_t> _edges;
+    int _size;
+    int _source;
+    int _sink;
+    T _flow;
 };
 
 int main(int, char**)
