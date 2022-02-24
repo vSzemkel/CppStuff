@@ -2,6 +2,7 @@
 #include <cassert>
 #include <vector>
 
+// see: /usaco/chapter4/ditch.cpp
 template <typename T = int>
 struct flow_graph_t
 {
