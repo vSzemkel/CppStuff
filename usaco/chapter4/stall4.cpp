@@ -1,31 +1,21 @@
+/*
+ID: marcin.8
+LANG: C++
+TASK: stall4
+PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=akC2pFr0a6m&S=stall4
+*/
 
-#include <iostream>
+#include <fstream>
 #include <limits>
 #include <queue>
 #include <vector>
 
-// Bipartite graph maximal matching using Hopcroft-Karp algorithm
-// for simpler solution see max_matching in /codejam/2021/retiling.cpp
-
-using bipartite_t = std::vector<std::vector<bool>>;
+std::ifstream task_in("stall4.in");
+std::ofstream task_out("stall4.out");
 
 class hopcroft_karp_t { // based on https://www.geeksforgeeks.org/hopcroft-karp-algorithm-for-maximum-matching-set-2-implementation/?ref=rp
   public:
     hopcroft_karp_t(const int C, const int M) : _C(C), _M(M), _adj(C + 1) {}
-
-    hopcroft_karp_t(const bipartite_t& bg) {
-        if (bg.empty())
-            _C = _M = 0;
-        else {
-            _C = bg.size();
-            _M = bg[0].size();
-            _adj.resize(_C + 1);
-        }
-
-        for (int r = 0; r < _C; ++r)
-            for (int c = 0; c < _M; ++c)
-                if (bg[r][c]) add_edge(r, c);
-    }
 
     void add_edge(const int c, const int m) { _adj[c + 1].push_back(m + 1); }
 
@@ -93,28 +83,31 @@ class hopcroft_karp_t { // based on https://www.geeksforgeeks.org/hopcroft-karp-
 
 int main(int, char**)
 {
-    std::ios_base::sync_with_stdio(false);
-    std::cin.tie(nullptr);
-    std::cout.tie(nullptr);
+    int N, M;
+    task_in >> N >> M;
 
-    hopcroft_karp_t g(4, 4);
-    g.add_edge(0, 1);
-    g.add_edge(0, 2);
-    g.add_edge(1, 0);
-    g.add_edge(2, 1);
-    g.add_edge(3, 1);
-    g.add_edge(3, 3);
- 
-    std::cout << "Size of maximum matching is " << g.compute() << '\n';
+    hopcroft_karp_t hc(N, M);
+    for (int c = 0; c < N; ++c) {
+        int z; task_in >> z;
+        for (int i = z; i; --i) {
+            int s; task_in >> s;
+            hc.add_edge(c, --s);
+        }
+    }
+
+    task_out << hc.compute() << '\n';
 }
 
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++17 bipartite_matching.cpp -o bipartite_matching.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address bipartite_matching.cpp -o bipartite_matching
+clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 stall4.cpp -o stall4.exe
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address stall4.cpp -o stall4
 
-Run:
-bipartite_matching.exe
+Input:
+
+
+Output:
+
 
 */

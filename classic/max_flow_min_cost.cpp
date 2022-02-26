@@ -8,6 +8,9 @@
 // Maximum flow with minimal cost
 // https://cp-algorithms.com/graph/min_cost_flow.html
 
+// for simplified version without cost, see: /usaco/chapter4/ditch.cpp
+
+
 /* For graphs defined with capacity and cost for each edge
 struct edge_t {
     int src;
