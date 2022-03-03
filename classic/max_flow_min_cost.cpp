@@ -19,81 +19,101 @@ struct edge_t {
     int cost;
 }; */
 
-constexpr auto big32 = std::numeric_limits<int>::max();
-
-int g_V, g_E;
-std::vector<std::vector<int>> g_adj, g_cost, g_capacity; // [src][dst] == attribute
-
-static void shortest_paths(int source, std::vector<int>& distances, std::vector<int>& predecors)
+template <typename T = int>
+struct flow_graph_t
 {
-    assert(0 <= source && source < (int)g_cost.size());
-    std::vector<bool> in_queue(g_V, false);
-    std::queue<int> q;
-    q.push(source);
-    predecors.assign(g_V, -1);
-    distances.assign(g_V, big32);
-    distances[source] = 0;
+    flow_graph_t(const int sz, const int src, const int snk) : _size(sz), _source(src), _sink(snk) {
+        assert(0 <= src && src < sz && 0 <= snk && snk < sz && src != snk);
+        _adj.resize(_size);
+        _capacity.assign(_size, std::vector<int>(_size));
+        _cost = _capacity;
+    }
 
-    while (!q.empty()) {
-        const int cur = q.front(); q.pop();
-        in_queue[cur] = false;
-        for (const auto next : g_adj[cur])
-            if (distances[cur] + g_cost[cur][next] < distances[next] && g_capacity[cur][next] > 0) {
-                distances[next] = distances[cur] + g_cost[cur][next];
-                predecors[next] = cur;
-                if (!in_queue[next]) {
-                    q.push(next);
-                    in_queue[next] = true;
+    void add(const int from, const int to, const T forward_cap, const int cost) {
+        assert(0 <= from && from < _size && 0 <= to && to < _size);
+        _adj[from].push_back(to);
+        _capacity[from][to] = forward_cap;
+        _cost[from][to] = cost;
+        _adj[to].push_back(from);
+        //_capacity[to][from] = 0; set in init
+        _cost[to][from] = -cost;
+    }
+
+    bool shortest_paths()
+    {
+        std::vector<bool> in_queue(_size, false);
+        std::queue<int> q;
+        q.push(_source);
+        _pred.assign(_size, -1);
+        _dist.assign(_size, INF);
+        _dist[_source] = 0;
+
+        bool ret{false};
+        while (!q.empty()) {
+            const int cur = q.front(); q.pop();
+            in_queue[cur] = false;
+            for (const auto next : _adj[cur]) {
+                const auto can = _dist[cur] + _cost[cur][next];
+                if (_capacity[cur][next] > 0 && can < _dist[next]) {
+                    ret = true;
+                    _dist[next] = can;
+                    _pred[next] = cur;
+                    if (!in_queue[next]) {
+                        q.push(next);
+                        in_queue[next] = true;
+                    }
                 }
             }
-    }
-}
-
-static void max_flow_min_cost(const int source, const int target)
-{
-    int flow{0}, cost{0};
-    std::vector<int> distances, predecors;
-    while (true) { // while flow < desired
-        shortest_paths(source, distances, predecors);
-        if (distances[target] == big32) break;
-
-        int path_flow{big32};
-        for (int cur = target; predecors[cur] != -1; cur = predecors[cur])
-            path_flow = std::min(path_flow, g_capacity[predecors[cur]][cur]);
-
-        flow += path_flow;
-        cost += distances[target];
-        for (int cur = target; predecors[cur] != -1; cur = predecors[cur]) {
-            g_capacity[predecors[cur]][cur] -= path_flow;
-            g_capacity[cur][predecors[cur]] += path_flow;
         }
+
+        return ret;
     }
 
-    std::cout << "Maximal flow is " << flow << " with minimal cost " << cost << '\n';
-}
+    /**
+     * @brief Computes max flow and its cost.
+     * @return std::pair<flow, cost> 
+     */
+    std::pair<T, T> compute_max_flow_min_cost() {
+        T flow{0}, cost{0};
+        while (shortest_paths()) { // while _sing reachable from _source
+            int path_flow{INF};
+            for (int cur = _sink; ~_pred[cur]; cur = _pred[cur])
+                path_flow = std::min(path_flow, _capacity[_pred[cur]][cur]);
 
-static void read_graph(/* std::vector<edge_t> */)
-{
-    for (int i = 0; i < g_E; ++i) {
-        char s, d; int ca, co; std::cin >> s >> d >> ca >> co;
-        const int is = (int)s - 'A', id = (int)d - 'A';
-        g_adj[is].push_back(id);
-        g_adj[id].push_back(is);
-        g_cost[is][id] = co;
-        g_cost[id][is] = -co;
-        g_capacity[is][id] = ca;
+            flow += path_flow;
+            cost += _dist[_sink];
+            for (int cur = _sink, prev = _pred[cur]; ~prev; cur = prev, prev = _pred[prev]) {
+                _capacity[prev][cur] -= path_flow;
+                _capacity[cur][prev] += path_flow;
+            }
+        }
+
+        return {flow, cost};
     }
-}
+
+    static const T EPS = (T)1e-9;
+    static const T INF = (T)1e09;
+
+    std::vector<std::vector<int>> _adj, _capacity, _cost;
+    std::vector<int> _dist, _pred;
+    int _size;
+    int _source;
+    int _sink;
+};
 
 void solve() {
-    std::cin >> g_V >> g_E;
-    g_adj.resize(g_V);
-    g_cost.assign(g_V, std::vector<int>(g_V));
-    g_capacity.assign(g_V, std::vector<int>(g_V));
+    int V, E;
+    std::cin >> V >> E;
     char src, dst; std::cin >> src >> dst;
+    flow_graph_t g{V, src - 'A', dst - 'A'};
+    for (int z = E; z; --z) {
+        char s, d; int ca, co; std::cin >> s >> d >> ca >> co;
+        const int is = (int)s - 'A', id = (int)d - 'A';
+        g.add(is, id, ca, co);
+    }
 
-    read_graph();
-    max_flow_min_cost(src - 'A', dst - 'A');
+    auto mfmc = g.compute_max_flow_min_cost();
+    std::cout << "Maximal flow is " << mfmc.first << " with minimal cost " << mfmc.second << '\n';
 }
 
 int main(int, char**)
