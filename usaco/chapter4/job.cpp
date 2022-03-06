@@ -23,7 +23,7 @@ auto times(const int M, const int N) {
     std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> pq;
     std::vector<int> times(N);
 
-    for (int i = 0; i < M; ++i) {
+    for (int z = M; z; --z) {
         int t; task_in >> t;
         pq.push({t, t});
     }
