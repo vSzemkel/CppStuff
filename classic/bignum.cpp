@@ -137,7 +137,7 @@ struct bignum_t {
             if (other._bignum[0] & 1)
                 ret = ret * base;
             base = base * base;
-            // other = other / 2;
+            other = other.digdiv(2);
         }
 
         return ret;
@@ -166,6 +166,31 @@ struct bignum_t {
         wrapper._bignum = std::move(ret);
         return wrapper;
     }
+
+    /**
+     * @brief Divide this by d and discard the reminder
+     */
+    bignum_t digdiv(const char d) const {
+        if (_bignum.empty())
+            return {};
+        const auto sz = int(_bignum.size());
+        std::string ret;
+        ret.reserve(sz);
+        int carry{0}, pos = sz - 1, msd = _bignum.back();
+        if (msd < d) {
+            carry = msd;
+            --pos;
+        }
+        for (int i = pos; i >= 0; --i) {
+            const auto cd = _bignum[i] + 10 * carry;
+            ret.push_back(cd / d);
+            carry = cd % d;
+        }
+
+        bignum_t wrapper;
+        wrapper._bignum = std::move(ret);
+        return wrapper; // reminder in carry
+    }
 };
 
 int main(int, char**)
@@ -184,6 +209,9 @@ int main(int, char**)
 
     assert((bignum_t(138) * bignum_t(7182)).to_string() == "991116");
     assert((bns1 * bns2).to_string().substr(0, 6) == "763626");
+
+    assert((bignum_t(138) ^ bignum_t(5)).to_string() == "50049003168");
+    assert((bignum_t(180) ^ bignum_t(92)).to_string().substr(0, 6) == "305541");
     std::cout << "PASSED\n";
 }
 
