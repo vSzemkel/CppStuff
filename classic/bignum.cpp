@@ -52,11 +52,11 @@ struct bignum_t {
         return ret;
     }
 
-    auto operator+(const bignum_t& other) {
+    auto operator+(const bignum_t& other) const {
         const auto sz = int(std::min(_bignum.size(), other._bignum.size()));
         std::string ret;
         ret.reserve(sz);
-        int carry = 0;
+        int carry{0};
         for (int i = 0; i < sz; ++i) {
             ret.push_back(_bignum[i] + other._bignum[i] + carry);
             auto& last = ret.back();
@@ -81,7 +81,7 @@ struct bignum_t {
         return wrapper;
     }
 
-    auto operator-(const bignum_t& other) {
+    auto operator-(const bignum_t& other) const {
         if (_bignum == other._bignum)
             return bignum_t{};
         assert(other < *this);
@@ -89,7 +89,7 @@ struct bignum_t {
         const auto sz = int(std::min(_bignum.size(), other._bignum.size()));
         std::string ret;
         ret.reserve(sz);
-        int borrow = 0;
+        int borrow{0};
         for (int i = 0; i < sz; ++i) {
             ret.push_back(_bignum[i] - other._bignum[i] - borrow);
             auto& last = ret.back();
@@ -118,22 +118,72 @@ struct bignum_t {
         return wrapper;
     }
 
+    bignum_t operator*(const bignum_t& other) const {
+        const auto sz = _bignum.size(), osz = other._bignum.size();
+        if (3 * sz < 2 * osz)
+            return other * (*this);
+
+        bignum_t ret{};
+        ret._bignum.reserve(sz + osz);
+        for (int i = 0; i < int(osz); ++i)
+            ret = ret + digmul(other._bignum[i], i);
+
+        return ret;
+    }
+
+    bignum_t operator^(bignum_t other) const {
+        bignum_t base{*this}, ret{1}, zero{};
+        while (zero < other) {
+            if (other._bignum[0] & 1)
+                ret = ret * base;
+            base = base * base;
+            // other = other / 2;
+        }
+
+        return ret;
+    }
+
   private:
     std::string _bignum;
+
+    /**
+     * @brief Multiply this by d and add p padding of least significant zeros to the result
+     */
+    bignum_t digmul(const char d, const int p) const {
+        const auto sz = int(_bignum.size());
+        std::string ret(p, 0);
+        ret.reserve(sz);
+        int carry{0};
+        for (int i = 0; i < sz; ++i) {
+            const auto v = _bignum[i] * d + carry;
+            ret.push_back(v % 10);
+            carry = v / 10;
+        }
+        if (carry > 0)
+            ret.push_back(carry);
+
+        bignum_t wrapper;
+        wrapper._bignum = std::move(ret);
+        return wrapper;
+    }
 };
 
 int main(int, char**)
 {
     std::string bs1 = "9992357899728851732500348514614308994657";
     std::string bs2 = "7642100271148267499651485385691005343";
-    bignum_t bns{bs1};
-    assert(bns.to_string() == bs1);
+    const bignum_t bns1{bs1};
+    const bignum_t bns2{bs2};
+    assert(bns1.to_string() == bs1);
     bignum_t bn{761009514385615};
     assert(bn.to_string() == "761009514385615");
 
     assert(bignum_t(1784) + bignum_t(306) == bignum_t(2090));
-    assert(bignum_t(bs1) + bignum_t(bs2) == bignum_t("10000000000000000000000000000000000000000"));
-    assert(bignum_t(bs1) - bignum_t(bs2) == bignum_t("9984715799457703465000697029228617989314"));
+    assert(bns1 + bns2 == bignum_t("10000000000000000000000000000000000000000"));
+    assert(bns1 - bns2 == bignum_t("9984715799457703465000697029228617989314"));
+
+    assert((bignum_t(138) * bignum_t(7182)).to_string() == "991116");
+    assert((bns1 * bns2).to_string().substr(0, 6) == "763626");
     std::cout << "PASSED\n";
 }
 
@@ -142,15 +192,5 @@ int main(int, char**)
 Compile:
 clang++.exe -Wall -Wextra -g -O0 -std=c++17 bignum.cpp -o bignum.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address bignum.cpp -o bignum
-
-Run:
-py.exe interactive_runner.py py.exe bignum_testing_tool.py 1 -- bignum.exe
-bignum.exe < bignum.in
-
-Input:
-
-
-Output:
-
 
 */
