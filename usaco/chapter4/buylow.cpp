@@ -240,19 +240,22 @@ int main(int, char**)
     std::unordered_map<int, int> rev_order;
     for (int i = 0; i < distinct; ++i)
         rev_order[order[i]] = i;
+    order.clear();
 
     // dp[i][j] holds number of decreasing sequences of length i ending with order[j]
-    std::vector<std::vector<bignum_t>> dp(size + 1, std::vector<bignum_t>(distinct));
+    std::vector<std::vector<bignum_t>> dp(2, std::vector<bignum_t>(distinct));
     std::vector<int> tails, locations(1), prev(size, -1);
     tails.push_back(input.front());
     dp[1][rev_order[tails.back()]] = 1;
     for (int i = 1; i < size; ++i) {
         const auto val = input[i];
-        dp[1][rev_order[val]] = 1;
+        const auto rev = rev_order[val];
+        dp[1][rev] = 1;
         if (val < tails.back()) {
             prev[i] = locations.back();
             tails.push_back(val);
             locations.push_back(i);
+            dp.emplace_back(distinct);
         } else {
             const auto it = std::lower_bound(tails.begin(), tails.end(), val, [](const int e, const int v){
                 return v < e;
@@ -264,11 +267,14 @@ int main(int, char**)
         }
 
         for (int len = 2; len <= int(tails.size()); ++len) {
-            dp[len][rev_order[val]] = 0;
-            for (int i = distinct - 1; i >= 0; --i) {
-                if (order[i] <= val)
+            const auto& shrt = dp[len - 1];
+            auto& cur = dp[len][rev]; cur = 0;
+            for (int i = rev + 1; i < distinct; ++i) {
+                cur += shrt[i];
+                if (bignum_t{} < dp[len][i]) {
+                    cur += dp[len][i];
                     break;
-                dp[len][rev_order[val]] += dp[len - 1][i];
+                }
             }
         }
     }
