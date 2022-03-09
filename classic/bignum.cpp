@@ -10,7 +10,9 @@
 // https://github.com/michaeljclark/bignum
 
 struct bignum_t {
-    explicit bignum_t(int64_t n = 0) {
+    bignum_t(int64_t n = 0) {
+        if (n == 0)
+            _bignum.push_back(0);
         while (n) {
             _bignum.push_back(n % 10);
             n /= 10;
@@ -18,6 +20,7 @@ struct bignum_t {
     }
 
     bignum_t(const std::string& s) {
+        assert(!s.empty());
         _bignum.resize(s.size());
         std::transform(s.crbegin(), s.crend(), _bignum.begin(), [](const char d){ return d - '0'; });
     }
@@ -220,6 +223,8 @@ struct bignum_t {
 
 int main(int, char**)
 {
+    assert(bignum_t{0} == bignum_t("0"));
+    assert(bignum_t{1} == bignum_t("1"));
     std::string bs1 = "9992357899728851732500348514614308994657";
     std::string bs2 = "7642100271148267499651485385691005343";
     const bignum_t bns1{bs1};
