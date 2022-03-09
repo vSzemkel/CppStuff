@@ -18,7 +18,7 @@ std::ifstream task_in("buylow.in");
 std::ofstream task_out("buylow.out");
 
 struct bignum_t {
-    bignum_t(int64_t n = 0) {
+    explicit bignum_t(int64_t n = 0) {
         while (n) {
             _bignum.push_back(n % 10);
             n /= 10;
@@ -205,7 +205,7 @@ struct bignum_t {
      */
     bignum_t digdiv(const char d) const {
         if (_bignum.empty())
-            return {};
+            return bignum_t{};
         const auto sz = int(_bignum.size());
         std::string ret;
         ret.reserve(sz);
@@ -226,7 +226,7 @@ struct bignum_t {
     }
 };
 
-int main(int, char**)
+static void working_suboptimal()
 {
     int size; task_in >> size;
     std::vector<int> input(size);
@@ -246,11 +246,11 @@ int main(int, char**)
     std::vector<std::vector<bignum_t>> dp(2, std::vector<bignum_t>(distinct));
     std::vector<int> tails, locations(1), prev(size, -1);
     tails.push_back(input.front());
-    dp[1][rev_order[tails.back()]] = 1;
+    dp[1][rev_order[tails.back()]] = bignum_t{1};
     for (int i = 1; i < size; ++i) {
         const auto val = input[i];
         const auto rev = rev_order[val];
-        dp[1][rev] = 1;
+        dp[1][rev] = bignum_t{1};
         if (val < tails.back()) {
             prev[i] = locations.back();
             tails.push_back(val);
@@ -268,7 +268,7 @@ int main(int, char**)
 
         for (int len = 2; len <= int(tails.size()); ++len) {
             const auto& shrt = dp[len - 1];
-            auto& cur = dp[len][rev]; cur = 0;
+            auto& cur = dp[len][rev]; cur = bignum_t{};
             for (int i = rev + 1; i < distinct; ++i) {
                 cur += shrt[i];
                 if (bignum_t{} < dp[len][i]) {
@@ -284,6 +284,56 @@ int main(int, char**)
     for (const auto& c : dp[length])
         sum += c;
     task_out << length << ' ' << sum.to_string() << std::endl;
+}
+
+int main(int, char**)
+{
+    int size; task_in >> size;
+    std::vector<int> input(size);
+    for (auto& n : input)
+        task_in >> n;
+
+    /**
+     * @brief for each number, calculate the maximum length that 
+     * a valid sequence ending there can have
+     */
+    std::vector<int> len(size, 1);
+    for (int r = 1; r < size; ++r) {
+        auto& max = len[r];
+        for (int l = 0; l < r; ++l)
+            if (input[l] > input[r])
+                max = std::max(max, len[l] + 1);
+    }
+
+    /**
+     * @brief calculate the number of unique sequences ending at each location
+     * that are the maximum length that a sequence ending there can be
+     */
+    std::vector<bignum_t> count(size);
+    for (int r = 0; r < size; ++r)
+        if (len[r] == 1)
+            count[r] = bignum_t{1};
+        else {
+            auto& cnt = count[r];
+            int last = -1, need{len[r] - 1};
+            for (int l = r - 1; l >= 0; --l) {
+                if (input[l] > input[r] && len[l] == need && input[l] != last) {
+                    cnt += count[l];
+                    last = input[l];
+                }
+            }
+        }
+
+    int last = -1;
+    bignum_t sum{};
+    const auto max_len = *std::max_element(len.begin(), len.end());
+    for (int r = size - 1; r >= 0; --r)
+        if (len[r] == max_len && input[r] != last) {
+            sum += count[r];
+            last = input[r];
+        }
+
+    task_out << max_len << ' ' << sum.to_string() << std::endl;
 }
 
 /*

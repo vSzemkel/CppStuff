@@ -10,7 +10,7 @@
 // https://github.com/michaeljclark/bignum
 
 struct bignum_t {
-    bignum_t(int64_t n = 0) {
+    explicit bignum_t(int64_t n = 0) {
         while (n) {
             _bignum.push_back(n % 10);
             n /= 10;
@@ -79,6 +79,31 @@ struct bignum_t {
         bignum_t wrapper;
         wrapper._bignum = std::move(ret);
         return wrapper;
+    }
+
+    void operator+=(const bignum_t& other) {
+        int carry{0};
+        const auto sz = int(std::min(_bignum.size(), other._bignum.size()));
+        for (int i = 0; i < sz; ++i) {
+            auto& cur = _bignum[i];
+            const auto val = cur + other._bignum[i] + carry;
+            cur = val % 10;
+            carry = val / 10;
+        }
+
+        const auto& tail = (_bignum.size() < other._bignum.size()) ? other._bignum : _bignum;
+        const auto tsz = int(tail.size());
+        if (sz < tsz)
+            _bignum.resize(tsz);
+        for (int i = sz; i < tsz; ++i) {
+            auto& cur = _bignum[i];
+            const auto val = tail[i] + carry;
+            cur = val % 10;
+            carry = val / 10;
+        }
+
+        if (carry)
+            _bignum.push_back(carry);
     }
 
     auto operator-(const bignum_t& other) const {
@@ -172,7 +197,7 @@ struct bignum_t {
      */
     bignum_t digdiv(const char d) const {
         if (_bignum.empty())
-            return {};
+            return bignum_t{};
         const auto sz = int(_bignum.size());
         std::string ret;
         ret.reserve(sz);

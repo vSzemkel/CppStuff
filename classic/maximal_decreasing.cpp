@@ -8,6 +8,8 @@
 // Maximal decreasing sequence
 // Given an integer sequence find the length of maximal decreasing non-consecutive subsequence
 
+// for counting unique max sequences see: /usaco/chapter4/buylow.cpp
+
 const auto rand_in_range = [](const int ubound){ std::random_device seed; std::mt19937 gen{seed()}; std::uniform_int_distribution<int> dist(0, ubound - 1); return dist(gen); };
 
 template <typename C>
