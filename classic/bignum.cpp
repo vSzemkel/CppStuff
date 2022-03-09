@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <iostream>
+#include <iterator>
 #include <string>
 
 // Bignum
@@ -49,9 +50,7 @@ struct bignum_t {
             return std::string{"0"};
         std::string ret;
         ret.reserve(_bignum.size());
-        for (const auto d : _bignum)
-            ret.push_back(d + '0');
-        std::reverse(ret.begin(), ret.end());
+        std::transform(_bignum.crbegin(), _bignum.crend(), std::back_inserter(ret), [](const char d){ return d + '0'; });
         return ret;
     }
 
