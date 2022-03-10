@@ -407,11 +407,20 @@ struct graph_t
         return path;
     }
 
-    auto find_bridges() {
+    auto find_bridges() { // requires this->reset()
         std::vector<std::pair<T, T>> ret;
         for (int n = 0; n < _size; ++n)
             if (!_seen[n])
                 bridge_dfs(n, -1, ret);
+
+        return ret;
+    }
+
+    auto find_cutpoints() { // requires this->reset()
+        std::vector<int> ret;
+        for (int i = 0; i < _size; ++i)
+            if (!_seen[i])
+                cutpoints_dfs(i, -1, ret);
 
         return ret;
     }
@@ -444,6 +453,27 @@ struct graph_t
                     ret.emplace_back(_label[n], _label[to]);
             }
         }
+    }
+
+    void cutpoints_dfs(const int v, const int p, std::vector<int>& cutpoints) {
+        _seen[v] = true;
+        _order[v] = _low[v] = _time++;
+        int children{0};
+        for (const auto& [to, cost] : _adj[n]) {
+            if (to == p) continue;
+            if (_seen[to]) {
+                _low[v] = std::min(_low[v], _order[to]);
+            } else {
+                cutpoints_dfs(to, v, cutpoints);
+                _low[v] = std::min(_low[v], _low[to]);
+                if (~p && _order[v] <= _low[to])
+                    cutpoints.push_back(v);
+                ++children;
+            }
+        }
+
+        if (p == -1 && children > 1)
+            cutpoints.push_back(v);
     }
 };
 
