@@ -29,3 +29,18 @@ std::cout << my_pair.size() << '\n';
 
 - only hashable types can be used in unordered containers
 
+### What does this code?
+```
+int riddle(const char* s) {
+    int ret{0};
+    if (s == nullptr)
+        return 0;
+    while (s++)
+        ++ret;
+    return ret;
+}
+```
+
+- it will loop for a very long time
+- assert(ret * -1 == (int)s)
+
