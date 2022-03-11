@@ -6,31 +6,10 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=c7zTMGpJrkw&S=race3
 */
 
 #include <algorithm>
-#include <array>
 #include <assert.h>
-#include <bitset>
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
 #include <queue>
-#include <random>
-#include <set>
-#include <stdlib.h>
-#include <string>
-#include <string_view>
 #include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 std::ifstream task_in("race3.in");
@@ -68,10 +47,27 @@ struct digraph_t
         return _comp;
     }
 
+    auto get_unavoidables(const int src, const int snk) {
+        _unavo.clear();
+        if (!reachable(src, snk))
+            return _unavo;
+        for (int n = 0; n < _size; ++n) {
+            if (n == src || n == snk)
+                continue;
+            auto tmp = std::move(_out[n]);
+            _out[n].clear();
+            if (!reachable(src, snk))
+                _unavo.push_back(n);
+            _out[n] = std::move(tmp);
+        }
+
+        return _unavo;
+    }
+
   private:
     int _size;
     std::vector<bool> _used;
-    std::vector<int> _comp, _low, _order;
+    std::vector<int> _comp, _low, _order, _unavo;
     std::vector<std::vector<int>> _in, _out;
 
     void first_dfs(const int v) {
@@ -91,39 +87,17 @@ struct digraph_t
                 second_dfs(u, ci);
         }
     }
-};
 
-constexpr const int INF = 1e09;
-
-int size;
-std::vector<bool> seen;
-std::vector<int> dist, count, pred, scc;
-std::vector<std::vector<int>> input(1);
-
-static void shortest_paths(int source = 0)
-{
-    std::vector<bool> in_queue(size);
-    std::queue<int> q;
-    q.push(source);
-    dist.assign(size, INF);
-    dist[source] = 0;
-
-    while (!q.empty()) {
-        const int cur = q.front(); q.pop();
-        in_queue[cur] = false;
-        for (const auto& next : input[cur])
-            if (dist[cur] + 1 < dist[next]) {
-                dist[next] = dist[cur] + 1;
-                if (!in_queue[next]) {
-                    q.push(next);
-                    in_queue[next] = true;
-                }
-            }
+    bool reachable(const int src, const int snk) {
+        _used.assign(_size, false);
+        first_dfs(src);
+        return _used[snk];
     }
-}
+};
 
 int main(int, char**)
 {
+    std::vector<std::vector<int>> input(1);
     while (true) {
         int n; task_in >> n;
         if (n == -1) break;
@@ -133,28 +107,21 @@ int main(int, char**)
             input.back().push_back(n);
     }
 
-    size = int(input.size()) - 1;
+    int size = int(input.size()) - 1;
     digraph_t g(size);
     for (int f = 0; f < size; ++f)
         for (const int t : input[f])
             g.add_edge(f, t);
-    scc = g.get_sccomponents();
+    const auto scc = g.get_sccomponents();
     std::unordered_map<int, int> sccs;
     for (int i = 0; i < int(scc.size()); ++i)
         ++sccs[scc[i]];
 
     // if unavoidable vertex has no out edges, target is unreachable
-    std::vector<int> unavo, split;
-    for (int i = 1; i < size - 1; ++i) {
-        auto tmp = std::move(input[i]);
-        input[i].clear();
-        shortest_paths();
-        if (dist[size - 1] == INF)
-            unavo.push_back(i);
-        input[i] = std::move(tmp);
-    }
+    const auto unavo = g.get_unavoidables(0, size - 1);
 
     // only unavoidable vertexes that are begining of SCC are the splitting ones
+    std::vector<int> split;
     for (const int i : unavo)
         if (sccs[scc[i]] == 1 || i == *std::find(scc.begin(), scc.end(), scc[i]))
             split.push_back(i);

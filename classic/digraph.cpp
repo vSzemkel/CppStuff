@@ -72,11 +72,28 @@ struct digraph_t
         return _comp;
     }
 
+    auto get_unavoidables(const int src, const int snk) {
+        _unavo.clear();
+        if (!reachable(src, snk))
+            return _unavo;
+        for (int n = 0; n < _size; ++n) {
+            if (n == src || n == snk)
+                continue;
+            auto tmp = std::move(_out[n]);
+            _out[n].clear();
+            if (!reachable(src, snk))
+                _unavo.push_back(n);
+            _out[n] = std::move(tmp);
+        }
+
+        return _unavo;
+    }
+
   private:
     int _size;
     bool _has_cycle;
     std::vector<bool> _used;
-    std::vector<int> _comp, _order;
+    std::vector<int> _comp, _order, _unavo;
     std::vector<std::vector<int>> _in, _out;
 
     void first_dfs(const int v) {
@@ -95,6 +112,12 @@ struct digraph_t
             if (_comp[u] == -1)
                 second_dfs(u, ci);
         }
+    }
+
+    bool reachable(const int src, const int snk) {
+        _used.assign(_size, false);
+        first_dfs(src);
+        return _used[snk];
     }
 };
 
