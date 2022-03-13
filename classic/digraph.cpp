@@ -89,6 +89,20 @@ struct digraph_t
         return _unavo;
     }
 
+    auto get_transitive_closure() const { // ret[i][j] == reachable(i, j)
+        std::vector<std::vector<bool>> ret(_size, std::vector<bool>(_size));
+        for (int f = 0; f < _size; ++f)
+            for (const int t : _out[f])
+                ret[f][t] = true;
+
+        for (int k = 0; k < _size; ++k)
+            for (int f = 0; f < _size; ++f)
+                for (int t = 0; t < _size; ++t)
+                    ret[f][t] = ret[f][t] || (ret[f][k] && ret[k][t]);
+
+        return ret;
+    }
+
   private:
     int _size;
     bool _has_cycle;
@@ -143,6 +157,13 @@ int main(int, char**)
     assert(dg.topological_order().empty());
     assert((dg.get_sccomponents() == std::vector{0, 1, 1, 1, 1, 2}));
 
+    digraph_t tc{4};
+    tc.add_edge(0, 1);
+    tc.add_edge(1, 2);
+    tc.add_edge(2, 3);
+    tc.add_edge(3, 1);
+    const auto tr_cl = tc.get_transitive_closure();
+    assert(tr_cl[0][2] && !tr_cl[2][0]);
     std::cout << "PASSED\n";
 }
 
