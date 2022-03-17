@@ -28,8 +28,8 @@ static void permute(const int size)
         return;
     }
 
-    auto& last = g_arr[size - 1];
-    for (int i = size - 1; i >= 0; --i) {
+    auto& last = g_arr.back();
+    for (int i = size - 1; ~i; --i) {
         std::swap(g_arr[i], last);
         permute(size - 1);
         std::swap(g_arr[i], last);
