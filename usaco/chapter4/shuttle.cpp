@@ -29,7 +29,8 @@ static bool valid() {
 }
 
 /**
- * @brief 2 strokes are better then 1 strokes
+ * @brief This is bactracking problem
+ * 2 strokes are better then 1 strokes
  * Leftmost move with equal stroke wins
  */
 int main(int, char**)
