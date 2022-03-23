@@ -1,3 +1,5 @@
+// for general DP approach, see: \kickstart\2022\interesting_integers.cpp
+
 constexpr const int LEN = 19;
 std::array<int64_t, LEN> factor10;
 
@@ -15,7 +17,7 @@ assert(nth(123456, 2) == 4);
 static int numlen(const int64_t n) {
     int len{0}; 
     int64_t probe{1};
-    while (probe < n) {
+    while (probe <= n) {
         probe *= 10;
         ++len;
     }

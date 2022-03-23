@@ -1,37 +1,91 @@
 
 #include <algorithm>
-#include <array>
-#include <assert.h>
-#include <bitset>
-#include <cmath>
-#include <iomanip>
+#include <cstring>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <stdlib.h>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 // Interesting Integers
 // https://codingcompetitions.withgoogle.com/kickstart/round/00000000008cb33e/00000000009e73ea
 
+constexpr const int LOG = 13;
+constexpr const int SUM = 12 * 9 + 1;
 
-static void solve() { // TLE
+int len, mod;
+std::vector<int> digits;
+bool    seen[LOG][SUM][SUM][2][2];
+int64_t memo[LOG][SUM][SUM][2][2];
+
+/**
+ * @brief 
+ * Counts interesting integers with digits of arbitrary sum
+ * MSD is on position 0, LSD on len-1
+ * Written by racsosabe
+ * @param pos Position of the digit to consider in this run
+ * @param prod Product of digits to the left of pos
+ * @param suma Sum of digits to the left of pos
+ * @param menor 0|1 Flag if considering numbers with digit d on position pos equal to the digit in upper bound number
+ * @param start 0|1 Flag if considering numbers with any digit d on position to the left of pos greater then 0
+ * @return int64_t Count of numbers with required property
+ */
+static int64_t dpfun(const int pos, const int prod, const int suma, const int menor, const int start) {
+    if (suma > mod) 
+        return 0;
+    if (pos == len)
+        return prod == 0 && suma == mod;
+    if (seen[pos][prod][suma][menor][start])
+        return memo[pos][prod][suma][menor][start];
+
+    int64_t ans{0};
+    const int limit = menor ? 9 : digits[pos];
+    for (int i = 0; i <= limit; ++i) {
+        const int nprod = start ? (prod * i) % mod : (i > 0 ? i % mod : 0);
+        const int nsum = suma + i;
+        const int nmenor = menor | (i < digits[pos]);
+        const int nstart = start | (i > 0);
+        ans += dpfun(pos + 1, nprod, nsum, nmenor, nstart);
+    }
+
+    seen[pos][prod][suma][menor][start] = true;
+    return memo[pos][prod][suma][menor][start] = ans;
+}
+
+/**
+ * @brief Count interesting integers in range [0..n]
+ */
+static int64_t _solve(int64_t n) {
+    if (n == 0)
+        return 0;
+
+    len = 0;
+    int64_t probe{1};
+    while (probe <= n) {
+        probe *= 10;
+        ++len;
+    }
+    const int max_digits_sum = n / (probe / 10) + 9 * (len - 1);
+
+    digits.resize(len);
+    for (int z = len - 1; ~z; --z) {
+        digits[z] = n % 10;
+        n /= 10;
+    }
+
+    int64_t ans{0};
+    for (mod = 1; mod <= max_digits_sum; ++mod) {
+        memset(seen, 0, sizeof(seen));
+        ans += dpfun(0, 0, 0, 0, 0);
+    }
+
+    return ans;
+}
+
+static void solve() {
+    int64_t A, B;
+    std::cin >> A >> B;
+    std::cout << _solve(B) - _solve(A - 1);
+}
+
+static void solve_brute() { // TLE
     int64_t A, B;
     std::cin >> A >> B;
 
