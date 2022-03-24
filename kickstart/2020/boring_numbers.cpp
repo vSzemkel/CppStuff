@@ -1,16 +1,28 @@
 
-#include <cmath>
 #include <iostream>
 #include <string>
 
 // Boring numbers
 // https://codingcompetitions.withgoogle.com/kickstart/round/000000000019ff49/000000000043b0c6
 
+constexpr const int LEN = 19;
+int64_t factor10[LEN];
+
 int64_t g_a, g_b;
 const std::string g_min_boring = "10101010101010101010";
 const std::string g_max_boring = "98989898989898989898";
 
-bool is_boring(int64_t n)
+static int numlen(const uint64_t n) {
+    int len{0}; 
+    uint64_t probe{1};
+    while (probe <= n) {
+        probe *= 10;
+        ++len;
+    }
+    return len;
+}
+
+static bool is_boring(int64_t n)
 {
     bool boring = n % 2;
     while (n > 0) {
@@ -21,41 +33,41 @@ bool is_boring(int64_t n)
     return !boring;
 }
 
-int64_t boring_ceil(int64_t n)
+static int64_t boring_ceil(int64_t n)
 {
-    const int digits = 1 + (int)log10(n);
+    const int digits = numlen(n);
     for (int pos = 0; pos < digits; ++pos) {
-        const int64_t p10 = pow(10, pos);
+        const auto& p10 = factor10[pos];
         if ((digits - pos) % 2 != (n / p10) % 2) {
             n = ((n + p10) / p10) * p10;
             n += std::atoll(g_min_boring.substr(digits - pos, pos).c_str());
         }
     }
 
-    if (1 + (int)log10(n) > digits)
+    if (numlen(n) > digits)
         n = std::atoll(g_min_boring.substr(0, digits + 1).c_str());
 
     return n;
 }
 
-int64_t boring_floor(int64_t n)
+static int64_t boring_floor(int64_t n)
 {
-    const int digits = 1 + (int)log10(n);
+    const int digits = numlen(n);
     for (int pos = 0; pos < digits; ++pos) {
-        const int64_t p10 = pow(10, pos);
+        const auto& p10 = factor10[pos];
         if ((digits - pos) % 2 != (n / p10) % 2) {
             n = ((n - p10) / p10) * p10;
             n += std::atoll(g_max_boring.substr(digits - pos, pos).c_str());
         }
     }
 
-    if (1 + (int)log10(n) < digits)
+    if (numlen(n) < digits)
         n = std::atoll(g_max_boring.substr(0, digits - 1).c_str());
 
     return n;
 }
 
-int64_t smart()
+static int64_t smart()
 {
     const auto boring_ordinal = [](int64_t n){
         int64_t ret{0}, factor{1};
@@ -71,8 +83,8 @@ int64_t smart()
     int64_t rng, ret{0};
     int64_t a = boring_ceil(g_a);
     int64_t b = boring_floor(g_b);
-    const int digits_a = 1 + (int)log10(a);
-    const int digits_b = 1 + (int)log10(b);
+    const int digits_a = numlen(a);
+    const int digits_b = numlen(b);
     for (int i = digits_a; i < digits_b; ++i) {
         rng = std::atoll(g_max_boring.substr(0, i).c_str()) - a;
         if (rng >= 0)
@@ -101,6 +113,12 @@ int main(int argc, char* argv[])
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
+
+    // precompute factor10 up to the longest number
+    factor10[0] = 1;
+    for (int i = 1; i < LEN; ++i)
+        factor10[i] = 10 * factor10[i - 1];
+
     // parse console input
     int no_of_cases;
     std::cin >> no_of_cases;
@@ -113,7 +131,7 @@ int main(int argc, char* argv[])
 
 /*
 clang++.exe -Wall -ggdb3 -O0 -std=c++17 boring_numbers.cpp -o boring_numbers.exe
-g++ -Wall -ggdb3 -O0 -std=c++14 boring_numbers.cpp -o boring_numbers.o
+g++ -Wall -g3 -O0 -std=c++17 -fsanitize=address boring_numbers.cpp -o boring_numbers
 boring_numbers.exe < boring_numbers.in
 
 Input:
@@ -124,7 +142,7 @@ Input:
 779 783
 141 19740
 61894 7611091
-1 10000000
+900000000000000000 1000000000000000000
 
 Output:
 

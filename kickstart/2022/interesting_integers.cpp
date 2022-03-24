@@ -32,8 +32,10 @@ static int64_t dpfun(const int pos, const int prod, const int suma, const int me
         return 0;
     if (pos == len)
         return prod == 0 && suma == mod;
-    if (seen[pos][prod][suma][menor][start])
-        return memo[pos][prod][suma][menor][start];
+    auto& s = seen[pos][prod][suma][menor][start];
+    auto& m = memo[pos][prod][suma][menor][start];
+    if (s)
+        return m;
 
     int64_t ans{0};
     const int limit = menor ? 9 : digits[pos];
@@ -45,8 +47,8 @@ static int64_t dpfun(const int pos, const int prod, const int suma, const int me
         ans += dpfun(pos + 1, nprod, nsum, nmenor, nstart);
     }
 
-    seen[pos][prod][suma][menor][start] = true;
-    return memo[pos][prod][suma][menor][start] = ans;
+    s = true;
+    return m = ans;
 }
 
 /**

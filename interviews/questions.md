@@ -44,3 +44,21 @@ int riddle(const char* s) {
 - it will loop for a very long time
 - assert(ret * -1 == (int)s)
 
+### Write a function that computes digit length for positive integral
+
+```
+static int numlen(const uint64_t n) {
+    int len{0}; 
+    uint64_t probe{1};
+    while (probe <= n) {
+        probe *= 10;
+        ++len;
+    }
+    return len;
+}
+```
+
+- assert(numlen(1) == 1)
+- assert(numlen((1LL<<63) - 1) == 19)
+- assert(numlen(n) == 1 + (int)std::log10(n))
+- it works only for signed types, we need this extra bit for probe
