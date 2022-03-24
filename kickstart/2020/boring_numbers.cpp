@@ -12,11 +12,11 @@ int64_t g_a, g_b;
 const std::string g_min_boring = "10101010101010101010";
 const std::string g_max_boring = "98989898989898989898";
 
-static int numlen(const uint64_t n) {
-    int len{0}; 
-    uint64_t probe{1};
-    while (probe <= n) {
-        probe *= 10;
+template <typename T>
+static int numlen(T n) {
+    int len{0};
+    while (n) {
+        n /= 10;
         ++len;
     }
     return len;
