@@ -11,32 +11,27 @@
 // for simplified version without cost, see: /usaco/chapter4/ditch.cpp
 
 
-/* For graphs defined with capacity and cost for each edge
-struct edge_t {
-    int src;
-    int dst;
-    int capacity;
-    int cost;
-}; */
-
-template <typename T = int>
+template <typename flow_t = int, typename cost_t = int64_t>
 struct flow_graph_t
 {
-    flow_graph_t(const int sz, const int src, const int snk) : _size(sz), _source(src), _sink(snk) {
+    struct edge_t {
+        int dst;
+        flow_t capacity;
+        cost_t cost;
+    };
+
+    flow_graph_t(const int sz, const int src, const int snk) : _adj(sz), _size(sz), _source(src), _sink(snk) {
         assert(0 <= src && src < sz && 0 <= snk && snk < sz && src != snk);
-        _adj.resize(_size);
-        _capacity.assign(_size, std::vector<int>(_size));
-        _cost = _capacity;
     }
 
-    void add(const int from, const int to, const T forward_cap, const int cost) {
+    void add(const int from, const int to, const flow_t forward_cap, const cost_t cost) {
         assert(0 <= from && from < _size && 0 <= to && to < _size);
-        _adj[from].push_back(to);
-        _capacity[from][to] = forward_cap;
-        _cost[from][to] = cost;
-        _adj[to].push_back(from);
-        //_capacity[to][from] = 0; set in init
-        _cost[to][from] = -cost;
+        assert(forward_cap >= 0 && cost >= 0);
+        const int e = int(_edges.size());
+        _edges.emplace_back(edge_t{to, forward_cap, cost});
+        _edges.emplace_back(edge_t{from, 0, -cost});
+        _adj[from].push_back(e);
+        _adj[to].push_back(e + 1);
     }
 
     bool shortest_paths()
@@ -51,17 +46,19 @@ struct flow_graph_t
         while (!q.empty()) {
             const int cur = q.front(); q.pop();
             in_queue[cur] = false;
-            for (const auto next : _adj[cur]) {
-                const auto can = _dist[cur] + _cost[cur][next];
-                if (_capacity[cur][next] > 0 && can < _dist[next]) {
-                    _dist[next] = can;
-                    _pred[next] = cur;
-                    if (!in_queue[next]) {
-                        q.push(next);
-                        in_queue[next] = true;
+            for (const int e : _adj[cur])
+                if (_edges[e].capacity > 0) {
+                    const auto next = _edges[e].dst;
+                    const auto can = _dist[cur] + _edges[e].cost;
+                    if (can < _dist[next]) {
+                        _pred[next] = e;
+                        _dist[next] = can;
+                        if (!in_queue[next]) {
+                            q.push(next);
+                            in_queue[next] = true;
+                        }
                     }
                 }
-            }
         }
 
         return _dist[_sink] < INF;
@@ -71,29 +68,32 @@ struct flow_graph_t
      * @brief Computes max flow and its cost.
      * @return std::pair<flow, cost> 
      */
-    std::pair<T, T> compute_max_flow_min_cost() {
-        T flow{0}, cost{0};
+    std::pair<flow_t, cost_t> compute_max_flow_min_cost() {
+        flow_t flow{0};
+        cost_t cost{0};
         while (shortest_paths()) { // while _sing reachable from _source
-            int path_flow{INF};
-            for (int cur = _sink; ~_pred[cur]; cur = _pred[cur])
-                path_flow = std::min(path_flow, _capacity[_pred[cur]][cur]);
+            flow_t path_flow = std::numeric_limits<flow_t>::max();
+            for (int cur = _sink; ~_pred[cur]; cur = _edges[_pred[cur] ^ 1].dst)
+                path_flow = std::min(path_flow, _edges[_pred[cur]].capacity);
 
             flow += path_flow;
-            cost += _dist[_sink];
-            for (int cur = _sink, prev = _pred[cur]; ~prev; cur = prev, prev = _pred[prev]) {
-                _capacity[prev][cur] -= path_flow;
-                _capacity[cur][prev] += path_flow;
+            cost += _dist[_sink] * path_flow;
+            for (int cur = _sink; ~_pred[cur]; cur = _edges[_pred[cur] ^ 1].dst) {
+                _edges[_pred[cur]].capacity -= path_flow;
+                _edges[_pred[cur] ^ 1].capacity += path_flow;
             }
         }
 
         return {flow, cost};
     }
 
-    static const T EPS = (T)1e-9;
-    static const T INF = (T)1e09;
+    static const flow_t EPS = 1e-9;
+    static const cost_t INF = std::numeric_limits<cost_t>::max();
 
-    std::vector<std::vector<int>> _adj, _capacity, _cost;
-    std::vector<int> _dist, _pred;
+    std::vector<std::vector<int>> _adj; // holds index to _edges
+    std::vector<edge_t> _edges;
+    std::vector<cost_t> _dist;
+    std::vector<int> _pred; // holds index to _edges
     int _size;
     int _source;
     int _sink;
