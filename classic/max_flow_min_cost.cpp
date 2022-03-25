@@ -48,14 +48,12 @@ struct flow_graph_t
         _dist.assign(_size, INF);
         _dist[_source] = 0;
 
-        bool ret{false};
         while (!q.empty()) {
             const int cur = q.front(); q.pop();
             in_queue[cur] = false;
             for (const auto next : _adj[cur]) {
                 const auto can = _dist[cur] + _cost[cur][next];
                 if (_capacity[cur][next] > 0 && can < _dist[next]) {
-                    ret = true;
                     _dist[next] = can;
                     _pred[next] = cur;
                     if (!in_queue[next]) {
@@ -66,7 +64,7 @@ struct flow_graph_t
             }
         }
 
-        return ret;
+        return _dist[_sink] < INF;
     }
 
     /**
