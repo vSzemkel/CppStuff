@@ -10,9 +10,93 @@
 
 // for simplified version without cost, see: /usaco/chapter4/ditch.cpp
 
-
-template <typename flow_t = int, typename cost_t = int64_t>
+/*
+ * @brief No counteracting edges allowed
+ */
+template <typename T = int>
 struct flow_graph_t
+{
+    flow_graph_t(const int sz, const int src, const int snk) : _adj(sz), _size(sz), _source(src), _sink(snk) {
+        assert(0 <= src && src < sz && 0 <= snk && snk < sz && src != snk);
+        _capacity.assign(_size, std::vector<int>(_size));
+        _cost = _capacity;
+    }
+
+    void add(const int from, const int to, const T forward_cap, const int cost) {
+        assert(0 <= from && from < _size && 0 <= to && to < _size);
+        assert(_capacity[to][from] == 0); //_capacity[to][from] = 0; set in init and no counteracting edges
+        _adj[from].push_back(to);
+        _capacity[from][to] = forward_cap;
+        _cost[from][to] = cost;
+        _adj[to].push_back(from);
+        _cost[to][from] = -cost;
+    }
+
+    bool shortest_paths() {
+        std::vector<bool> in_queue(_size, false);
+        std::queue<int> q;
+        q.push(_source);
+        _pred.assign(_size, -1);
+        _dist.assign(_size, INF);
+        _dist[_source] = 0;
+
+        while (!q.empty()) {
+            const int cur = q.front(); q.pop();
+            in_queue[cur] = false;
+            for (const auto next : _adj[cur]) 
+                if (_capacity[cur][next] > 0) {
+                    const auto can = _dist[cur] + _cost[cur][next];
+                    if (can < _dist[next]) {
+                        _dist[next] = can;
+                        _pred[next] = cur;
+                        if (!in_queue[next]) {
+                            q.push(next);
+                            in_queue[next] = true;
+                        }
+                    }
+                }
+        }
+
+        return _dist[_sink] < INF;
+    }
+
+    /**
+     * @brief Computes max flow and its cost.
+     * @return std::pair<flow, cost> 
+     */
+    std::pair<T, T> compute_max_flow_min_cost() {
+        T flow{0}, cost{0};
+        while (shortest_paths()) { // while _sing reachable from _source
+            int path_flow{INF};
+            for (int cur = _sink; ~_pred[cur]; cur = _pred[cur])
+                path_flow = std::min(path_flow, _capacity[_pred[cur]][cur]);
+
+            flow += path_flow;
+            cost += _dist[_sink];
+            for (int cur = _sink, prev = _pred[cur]; ~prev; cur = prev, prev = _pred[prev]) {
+                _capacity[prev][cur] -= path_flow;
+                _capacity[cur][prev] += path_flow;
+            }
+        }
+
+        return {flow, cost};
+    }
+
+    static const T EPS = (T)1e-9;
+    static const T INF = (T)1e09;
+
+    std::vector<std::vector<int>> _adj, _capacity, _cost;
+    std::vector<int> _dist, _pred;
+    int _size;
+    int _source;
+    int _sink;
+};
+
+/*
+ * @brief Allows counteracting edges
+ */
+template <typename flow_t = int, typename cost_t = int64_t>
+struct flow_graph2_t
 {
     struct edge_t {
         int dst;
@@ -20,7 +104,7 @@ struct flow_graph_t
         cost_t cost;
     };
 
-    flow_graph_t(const int sz, const int src, const int snk) : _adj(sz), _size(sz), _source(src), _sink(snk) {
+    flow_graph2_t(const int sz, const int src, const int snk) : _adj(sz), _size(sz), _source(src), _sink(snk) {
         assert(0 <= src && src < sz && 0 <= snk && snk < sz && src != snk);
     }
 
