@@ -82,8 +82,8 @@ struct flow_graph_t
         return {flow, cost};
     }
 
-    static const T EPS = (T)1e-9;
-    static const T INF = (T)1e09;
+    inline static const T EPS = (T)1e-9;
+    inline static const T INF = (T)1e09;
 
     std::vector<std::vector<int>> _adj, _capacity, _cost;
     std::vector<int> _dist, _pred;
@@ -118,8 +118,22 @@ struct flow_graph2_t
         _adj[to].push_back(e + 1);
     }
 
-    bool shortest_paths()
-    {
+    int add_coalesce(const int from, const int to, const flow_t forward_cap, const cost_t cost) {
+        assert(0 <= from && from < _size && 0 <= to && to < _size);
+        assert(forward_cap >= 0 && cost >= 0);
+        for (int e : _adj[from])
+            if ((e & 1) == 0 && _edges[e].dst == to) { // not residual edge
+                _edges[e].capacity += forward_cap;
+                _edges[e].cost += cost;
+                _edges[e ^ 1].cost -= cost;
+                return e;
+            }
+
+        add(from, to, forward_cap, cost);
+        return -1;
+    }
+
+    bool shortest_paths() {
         std::vector<bool> in_queue(_size, false);
         std::queue<int> q;
         q.push(_source);
@@ -171,8 +185,8 @@ struct flow_graph2_t
         return {flow, cost};
     }
 
-    static const flow_t EPS = 1e-9;
-    static const cost_t INF = std::numeric_limits<cost_t>::max();
+    inline static const flow_t EPS = 1e-9;
+    inline static const cost_t INF = std::numeric_limits<cost_t>::max();
 
     std::vector<std::vector<int>> _adj; // holds index to _edges
     std::vector<edge_t> _edges;
