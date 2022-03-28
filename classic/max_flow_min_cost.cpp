@@ -133,6 +133,55 @@ struct flow_graph2_t
         return -1;
     }
 
+
+    /**
+     * @brief Find shortest path to _sink with BFS
+     * @param shortcut Do not traverse all nodes
+     * @return The flow on found path
+     */
+    int edmonds_karp(bool shortcut = true) {
+        std::queue<std::pair<int, flow_t>> q; // {node, flow}
+        _pred.assign(_size, -1);
+        _pred[_source] = -2;
+        q.push({_source, std::numeric_limits<flow_t>::max()});
+
+        while (!q.empty()) {
+            const auto cur = q.front().first;
+            const auto flow = q.front().second;
+            q.pop();
+
+            for (const int ne : _adj[cur])
+                if (_edges[ne].capacity) {
+                    const int next = _edges[ne].dst;
+                    if (_pred[next] == -1) {
+                        _pred[next] = ne;
+                        const auto nflow = std::min(flow, _edges[ne].capacity);
+                        if (shortcut && next == _sink)
+                            return nflow;
+                        q.push({next, nflow});
+                    }
+                }
+        }
+
+        return 0;
+    }
+
+    /**
+     * @brief Computes max flow, ignores costs
+     */
+    flow_t compute_max_flow() {
+        flow_t flow{0};
+        while (flow_t path_flow = edmonds_karp()) { // while _sink reachable from _source
+            flow += path_flow;
+            for (int cur = _sink; _pred[cur] >= 0; cur = _edges[_pred[cur] ^ 1].dst) {
+                _edges[_pred[cur]].capacity -= path_flow;
+                _edges[_pred[cur] ^ 1].capacity += path_flow;
+            }
+        }
+
+        return flow;
+    }
+
     bool shortest_paths() {
         std::vector<bool> in_queue(_size, false);
         std::queue<int> q;
@@ -201,7 +250,7 @@ void solve() {
     int V, E;
     std::cin >> V >> E;
     char src, dst; std::cin >> src >> dst;
-    flow_graph_t g{V, src - 'A', dst - 'A'};
+    flow_graph2_t g{V, src - 'A', dst - 'A'};
     for (int z = E; z; --z) {
         char s, d; int ca, co; std::cin >> s >> d >> ca >> co;
         const int is = (int)s - 'A', id = (int)d - 'A';
