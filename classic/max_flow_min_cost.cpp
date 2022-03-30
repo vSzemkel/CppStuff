@@ -9,6 +9,7 @@
 // https://cp-algorithms.com/graph/min_cost_flow.html
 
 // for simplified version without cost, see: /usaco/chapter4/ditch.cpp
+// for min cut, see: /usaco/chapter4/milk6.cpp
 
 /*
  * @brief No counteracting edges allowed
@@ -132,7 +133,6 @@ struct flow_graph2_t
         add(from, to, forward_cap, cost);
         return -1;
     }
-
 
     /**
      * @brief Find shortest path to _sink with BFS
