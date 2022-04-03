@@ -34,25 +34,29 @@ std::array<std::vector<int>, 4> wall;
 
     N.assign(R, std::vector<int>(C));
     E = S = W = N;
-    for (int r = 1; r < R; ++r)
-        for (int c = 1; c < C; ++c) {
-            W[r][c] = W[r][c - 1];
-            const char w = board[r][c - 1];
-            if (w != '.')
-                W[r][c] |= 1 << (w - 'A');
-            N[r][c] = N[r - 1][c];
-            const char n = board[r - 1][c];
-            if (n != '.')
-                N[r][c] |= 1 << (n - 'A');
+    for (int r = 0; r < R; ++r)
+        for (int c = 0; c < C; ++c) {
+            if (c) {
+                W[r][c] = W[r][c - 1];
+                const char w = board[r][c - 1];
+                if (w != '.') W[r][c] |= charbit(w);
+            }
+            if (r) {
+                N[r][c] = N[r - 1][c];
+                const char n = board[r - 1][c];
+                if (n != '.') N[r][c] |= charbit(n);
+            }
         }
-    for (int r = R - 2; ~r; --r)
-        for (int c = C - 2; ~c; --c) {
-            E[r][c] = E[r][c + 1];
-            const char e = board[r][c + 1];
-            if (e != '.')
-                E[r][c] |= 1 << (e - 'A');
-            S[r][c] = S[r + 1][c];
-            const char s = board[r + 1][c];
-            if (s != '.')
-                S[r][c] |= 1 << (s - 'A');
+    for (int r = R - 1; ~r; --r)
+        for (int c = C - 1; ~c; --c) {
+            if (c < C - 1) {
+                E[r][c] = E[r][c + 1];
+                const char e = board[r][c + 1];
+                if (e != '.') E[r][c] |= charbit(e);
+            }
+            if (r < R - 1) {
+                S[r][c] = S[r + 1][c];
+                const char s = board[r + 1][c];
+                if (s != '.') S[r][c] |= charbit(s);
+            }
         }

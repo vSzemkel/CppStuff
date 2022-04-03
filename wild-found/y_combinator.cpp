@@ -1,3 +1,8 @@
+
+#include <functional>
+
+// see: /codejam/2022/chain_reactions.cpp
+
 namespace std {
     template <class Fun>
     class y_combinator_result
