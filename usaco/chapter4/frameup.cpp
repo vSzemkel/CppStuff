@@ -1,47 +1,45 @@
 /*
 ID: marcin.8
-LANG: C++
+LANG: C++17
 TASK: frameup
 PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=GVqXl5lUbGQ&S=frameup
 */
 
 #include <algorithm>
-#include <array>
 #include <assert.h>
-#include <bitset>
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <stdlib.h>
 #include <string>
-#include <string_view>
 #include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 std::ifstream task_in("frameup.in");
 std::ofstream task_out("frameup.out");
 
-int R, C;
-std::vector<std::string> board;
+std::unordered_map<char, int> covers; // {char, charbits covered}
 std::vector<std::vector<int>> N, E, S, W; // neibors on direction
 
-static unsigned int charbit(const char c) {
+inline static unsigned int charbit(const char c) {
     return 1 << (c - 'A');
+}
+
+static bool has_hpeer(const char x, const int r, const int c) {
+    const auto b = charbit(x);
+    return (W[r][c] & b) || (E[r][c] & b);
+}
+
+static bool has_vpeer(const char x, const int r, const int c) {
+    const auto b = charbit(x);
+    return (S[r][c] & b) || (N[r][c] & b);
+}
+
+static bool try_cover(const char top, const char bottom) {
+    if (top == '.' || bottom == '.' || top == bottom)
+        return false;
+    if (covers[bottom] & charbit(top))
+        return false;
+
+    covers[top] |= charbit(bottom);
+    return true;
 }
 
 static std::vector<std::string> get_layers(const std::unordered_map<char, int>& covers) {
@@ -66,6 +64,9 @@ static std::vector<std::string> get_layers(const std::unordered_map<char, int>& 
 
 int main(int, char**)
 {
+    int R, C;
+    std::vector<std::string> board;
+
     task_in >> R >> C;
     board.resize(R);
     for (auto& r : board)
@@ -101,15 +102,23 @@ int main(int, char**)
             }
         }
 
+    // STAGE 1 - CERTEN HITS
     // determine covering relation
-    std::unordered_map<char, int> covers; // {char, charbits covered}
+    std::unordered_map<char, int> right, top, left, bottom; // {char, known extent position}
     for (int r = 0; r < R; ++r)
         for (int c = 0; c < C; ++c) {
             const char cell = board[r][c];
             if (cell == '.') continue;
-            if (covers.find(cell) == covers.end())
-                covers[cell] = 0;
-            //covers.try_emplace(cell, 0);
+            covers.try_emplace(cell, 0); // first occurence
+            if (left.find(cell) == left.end()) { // first occurence
+                bottom[cell] = top[cell] = r;
+                left[cell] = right[cell] = c;
+            } else {
+                left[cell] = std::min(left[cell], c);
+                right[cell] = std::max(right[cell], c);
+                top[cell] = std::min(top[cell], r);
+                bottom[cell] = std::max(bottom[cell], r);
+            }
             const auto cur = charbit(cell);
             const auto notcur = ~cur;
 
@@ -118,8 +127,7 @@ int main(int, char**)
                 ++e;
             if (c + 1 < e && e < C) { // found segment
                 if (E[r][e] & cur) do {
-                    if (board[r][e] != cell)
-                        covers[board[r][e]] |= cur;
+                    try_cover(board[r][e], cell);
                     ++e;
                 } while (e < C && (E[r][e] & cur));
             }
@@ -129,8 +137,7 @@ int main(int, char**)
                 --w;
             if (w < c - 1 && ~w) {
                 if (W[r][w] & cur) do {
-                    if (board[r][w] != cell)
-                        covers[board[r][w]] |= cur;
+                    try_cover(board[r][w], cell);
                     --w;
                 } while (~w && (W[r][w] & cur));
             }
@@ -140,8 +147,7 @@ int main(int, char**)
                 ++s;
             if (r + 1 < s && s < R) {
                 if (S[s][c] & cur) do {
-                    if (board[s][c] != cell)
-                        covers[board[s][c]] |= cur;
+                    try_cover(board[s][c], cell);
                     ++s;
                 } while (s < R && (S[s][c] & cur));
             }
@@ -151,8 +157,7 @@ int main(int, char**)
                 --n;
             if (n < r - 1 && ~n) {
                 if (N[n][c] & cur) do {
-                    if (board[n][c] != cell)
-                        covers[board[n][c]] |= cur;
+                    try_cover(board[n][c], cell);
                     --n;
                 } while (~n && (N[n][c] & cur));
             }
@@ -177,19 +182,13 @@ int main(int, char**)
                                 ++d;
                             }
                             if (cnt > 2 || (c == 0 && r == R - 1))
-                                covers[cell] |= charbit(x);
+                                try_cover(cell, x);
                         }
                 } else if (r > 0 && c < C - 1 && board[r - 1][c] == cell && board[r][c + 1] == cell && board[0][c] == cell && board[r][C - 1] == cell) {
-                    for (int d = c + 1; d < C; ++d) {
-                        const char x = board[0][d];
-                        if (x != '.' && x != cell)
-                            covers[x] |= cur;
-                    }
-                    for (int s = r - 1; ~s; --s) {
-                        const char x = board[s][C - 1];
-                        if (x != '.' && x != cell)
-                            covers[x] |= cur;
-                    }
+                    for (int d = c + 1; d < C; ++d)
+                        try_cover(board[0][d], cell);
+                    for (int s = r - 1; ~s; --s)
+                        try_cover(board[s][C - 1], cell);
                 }
 
                 auto es = E[r][c] & S[r][c] & notcur;
@@ -206,19 +205,13 @@ int main(int, char**)
                                 ++d;
                             }
                             if (cnt > 2 || (c == 0 && r == 0))
-                                covers[cell] |= charbit(x);
+                                try_cover(cell, x);
                         }
                 } else if (r < R - 1 && c < C - 1 && board[r + 1][c] == cell && board[r][c + 1] == cell && board[R - 1][c] == cell && board[r][C - 1] == cell) {
-                    for (int d = c + 1; d < C; ++d) {
-                        const char x = board[R - 1][d];
-                        if (x != '.' && x != cell)
-                            covers[x] |= cur;
-                    }
-                    for (int s = r + 1; s < R; ++s) {
-                        const char x = board[s][C - 1];
-                        if (x != '.' && x != cell)
-                            covers[x] |= cur;
-                    }
+                    for (int d = c + 1; d < C; ++d)
+                        try_cover(board[R - 1][d], cell);
+                    for (int s = r + 1; s < R; ++s)
+                        try_cover(board[s][C - 1], cell);
                 }
 
                 auto sw = S[r][c] & W[r][c] & notcur;
@@ -235,19 +228,13 @@ int main(int, char**)
                                 --d;
                             }
                             if (cnt > 2 || (c == C - 1 && r == 0))
-                                covers[cell] |= charbit(x);
+                                try_cover(cell, x);
                         }
                 } else if (r < R - 1 && c > 0 && board[r + 1][c] == cell && board[r][c - 1] == cell && board[R - 1][c] == cell && board[r][0] == cell) {
-                    for (int d = c - 1; ~d; --d) {
-                        const char x = board[R - 1][d];
-                        if (x != '.' && x != cell)
-                            covers[x] |= cur;
-                    }
-                    for (int s = r + 1; s < R; ++s) {
-                        const char x = board[s][0];
-                        if (x != '.' && x != cell)
-                            covers[x] |= cur;
-                    }
+                    for (int d = c - 1; ~d; --d)
+                        try_cover(board[R - 1][d], cell);
+                    for (int s = r + 1; s < R; ++s)
+                        try_cover(board[s][0], cell);
                 }
 
                 auto wn = W[r][c] & N[r][c] & notcur;
@@ -264,23 +251,18 @@ int main(int, char**)
                                 --d;
                             }
                             if (cnt > 2 || (c == C - 1 && r == R - 1))
-                                covers[cell] |= charbit(x);
+                                try_cover(cell, x);
                         }
                 } else if (r > 0 && c > 0 && board[r - 1][c] == cell && board[r][c - 1] == cell && board[0][c] == cell && board[r][0] == cell) {
-                    for (int d = c - 1; ~d; --d) {
-                        const char x = board[0][d];
-                        if (x != '.' && x != cell)
-                            covers[x] |= cur;
-                    }
-                    for (int s = r - 1; ~s; --s) {
-                        const char x = board[s][0];
-                        if (x != '.' && x != cell)
-                            covers[x] |= cur;
-                    }
+                    for (int d = c - 1; ~d; --d)
+                        try_cover(board[0][d], cell);
+                    for (int s = r - 1; ~s; --s)
+                        try_cover(board[s][0], cell);
                 }
             }
         }
 
+    // STAGE 2 - UNCERTEN HITS
     // search for uncovered rectangles this destroys the board
     while (true) {
         bool found{false};
@@ -288,103 +270,145 @@ int main(int, char**)
             for (int c = 0; c < C - 2; ++c) {
                 const char tl = board[r][c];
                 if (tl == '.') continue;
-                for (int h = 2; r + h < R; ++h)
-                    for (int w = 2; c + w < C; ++w) {
-                        const auto rh = r + h;
-                        const auto cw = c + w;
-                        // check corners
-                        const char tr = board[r][cw];
-                        if (tr != tl) continue;
-                        const char bl = board[rh][c];
-                        if (bl != tl) continue;
-                        const char br = board[rh][cw];
-                        if (br != tl) continue;
-                        // check edges
-                        int d{c + 1};
-                        while (d < C && board[r][d] == tl) ++d;
-                        if (d - 1 != cw) continue;
-                        d = c + 1;
-                        while (d < C && board[rh][d] == tl) ++d;
-                        if (d - 1 != cw) continue;
-                        int s{r + 1};
-                        while (s < R && board[s][c] == tl) ++s;
-                        if (s - 1 != rh) continue;
-                        s = r + 1;
-                        while (s < R && board[s][cw] == tl) ++s;
-                        if (s - 1 != rh) continue;
-                        found = true;
-                        // clear out with dots
-                        d = c;
-                        while (d <= c + w) {
-                            board[r][d] = '.';
-                            board[rh][d++] = '.';
+                const auto rh = r + bottom[tl] - top[tl];
+                const auto cw = c + right[tl] - left[tl];
+                // check corners
+                if (rh >= R || cw >= C) continue;
+                const char tr = board[r][cw];
+                if (tr != tl) continue;
+                const char bl = board[rh][c];
+                if (bl != tl) continue;
+                const char br = board[rh][cw];
+                if (br != tl) continue;
+                // check edges
+                int d{c + 1};
+                while (d <= cw && (board[r][d] == tl || (covers[tl] & charbit(board[r][d])))) ++d;
+                if (d - 1 != cw) continue;
+                d = c + 1;
+                while (d <= cw && (board[rh][d] == tl || (covers[tl] & charbit(board[rh][d])))) ++d;
+                if (d - 1 != cw) continue;
+                int s{r + 1};
+                while (s <= rh && (board[s][c] == tl || (covers[tl] & charbit(board[s][c])))) ++s;
+                if (s - 1 != rh) continue;
+                s = r + 1;
+                while (s <= rh && (board[s][cw] == tl || (covers[tl] & charbit(board[s][cw])))) ++s;
+                if (s - 1 != rh) continue;
+                found = true;
+                // clear out with dots
+                d = c;
+                while (d <= cw) {
+                    board[r][d] = '.';
+                    board[rh][d++] = '.';
+                }
+                s = r;
+                while (s <= rh) {
+                    board[s][c] = '.';
+                    board[s++][cw] = '.';
+                }
+                // repaint colinear edges
+                if (0 < c) {
+                    const auto ltcan = board[r][c - 1];
+                    if (ltcan != '.' && has_hpeer(ltcan, r, c - 1)) {
+                        const auto rb = std::min(cw, right[ltcan]);
+                        if (c <= rb)
+                            try_cover(tl, ltcan);
+                        for (int d = c; d <= rb; ++d)
+                            board[r][d] = ltcan;
+                    }
+                    const auto lbcan = board[rh][c - 1];
+                    if (lbcan != '.' && has_hpeer(lbcan, rh, c - 1)) {
+                        const auto rb = std::min(cw, right[lbcan]);
+                        if (c <= rb)
+                            try_cover(tl, lbcan);
+                        for (int d = c; d <= rb; ++d)
+                            board[rh][d] = lbcan;
+                    }
+                }
+                if (cw < C - 1) {
+                    const auto rtcan = board[r][cw + 1];
+                    if (rtcan != '.' && has_hpeer(rtcan, r, cw + 1)) {
+                        const auto lb = std::max(c, left[rtcan]);
+                        if (lb <= cw)
+                            try_cover(tl, rtcan);
+                        for (int d = cw; lb <= d; --d)
+                            board[r][d] = rtcan;
+                    }
+                    const auto rbcan = board[rh][cw + 1];
+                    if (rbcan != '.' && has_hpeer(rbcan, rh, cw + 1)) {
+                        const auto lb = std::max(c, left[rbcan]);
+                        if (lb <= cw)
+                            try_cover(tl, rbcan);
+                        for (int d = cw; lb <= d; --d)
+                            board[rh][d] = rbcan;
+                    }
+                }
+                if (0 < r) {
+                    const auto ltcan = board[r - 1][c];
+                    if (ltcan != '.' && has_vpeer(ltcan, r - 1, c)) {
+                        const auto bb = std::min(rh, bottom[ltcan]);
+                        if (r <= bb)
+                            try_cover(tl, ltcan);
+                        for (int s = r; s <= bb; ++s)
+                            board[s][c] = ltcan;
+                    }
+                    const auto rtcan = board[r - 1][cw];
+                    if (rtcan != '.' && has_vpeer(rtcan, r - 1, cw)) {
+                        const auto bb = std::min(rh, bottom[rtcan]);
+                        if (r <= bb)
+                            try_cover(tl, rtcan);
+                        for (int s = r; s <= bb; ++s)
+                            board[s][cw] = rtcan;
+                    }
+                }
+                if (rh < R - 1) {
+                    const auto lbcan = board[rh + 1][c];
+                    if (lbcan != '.' && has_vpeer(lbcan, rh + 1, c)) {
+                        const auto tb = std::max(r, top[lbcan]);
+                        if (tb <= rh)
+                            try_cover(tl, lbcan);
+                        for (int s = rh; tb <= s; --s)
+                            board[s][c] = lbcan;
+                    }
+                    const auto rbcan = board[rh + 1][cw];
+                    if (rbcan != '.' && has_vpeer(rbcan, rh + 1, cw)) {
+                        const auto tb = std::max(r, top[rbcan]);
+                        if (tb <= rh)
+                            try_cover(tl, rbcan);
+                        for (int s = rh; tb <= s; --s)
+                            board[s][cw] = rbcan;
+                    }
+                }
+                // repaint uncovered edges
+                if (0 < r && r < R - 1)
+                    for (d = c + 1; d < cw; ++d) {
+                        const char x = board[r - 1][d];
+                        if (x != '.' && board[r + 1][d] == x) {
+                            try_cover(tl, x);
+                            board[r][d] = x;
                         }
-                        s = r;
-                        while (s <= rh) {
-                            board[s][c] = '.';
-                            board[s++][cw] = '.';
+                    }
+                if (0 < rh && rh < R - 1)
+                    for (d = c + 1; d < cw; ++d) {
+                        const char x = board[rh - 1][d];
+                        if (x != '.' && board[rh + 1][d] == x) {
+                            try_cover(tl, x);
+                            board[rh][d] = x;
                         }
-                        // repaint uncovered edges
-                        if (0 < r && r < R - 1)
-                            for (d = c + 1; d < cw; ++d) {
-                                const char x = board[r - 1][d];
-                                if (x != '.' && board[r + 1][d] == x) {
-                                    covers[tl] |= charbit(x);
-                                    board[r][d] = x;
-                                }
-                            }
-                        if (0 < rh && rh < R - 1)
-                            for (d = c + 1; d < cw; ++d) {
-                                const char x = board[rh - 1][d];
-                                if (x != '.' && board[rh + 1][d] == x) {
-                                    covers[tl] |= charbit(x);
-                                    board[rh][d] = x;
-                                }
-                            }
-                        if (0 < c && c < C - 1)
-                            for (s = r + 1; s < rh; ++s) {
-                                const char x = board[s][c - 1];
-                                if (x != '.' && board[s][c + 1] == x) {
-                                    covers[tl] |= charbit(x);
-                                    board[s][c] = x;
-                                }
-                            }
-                        if (0 < cw && cw < C - 1)
-                            for (s = r + 1; s < rh; ++s) {
-                                const char x = board[s][cw - 1];
-                                if (x != '.' && board[s][cw + 1] == x) {
-                                    covers[tl] |= charbit(x);
-                                    board[s][cw] = x;
-                                }
-                            }
-                        // repaint colinear edges
-                        if (0 < c && cw < C - 1) {
-                            const auto tcan = board[r][c - 1];
-                            if (tcan != '.' && tcan == board[r][cw + 1]) {
-                                covers[tl] |= charbit(tcan);
-                                for (int d = c; d <= cw; ++d)
-                                    board[r][d] = tcan;
-                            }
-                            const auto bcan = board[rh][c - 1];
-                            if (bcan != '.' && bcan == board[rh][cw + 1]) {
-                                covers[tl] |= charbit(bcan);
-                                for (int d = c; d <= cw; ++d)
-                                    board[rh][d] = bcan;
-                            }
+                    }
+                if (0 < c && c < C - 1)
+                    for (s = r + 1; s < rh; ++s) {
+                        const char x = board[s][c - 1];
+                        if (x != '.' && board[s][c + 1] == x) {
+                            try_cover(tl, x);
+                            board[s][c] = x;
                         }
-                        if (0 < r && rh < R - 1) {
-                            const auto lcan = board[r - 1][c];
-                            if (lcan != '.' && lcan == board[rh + 1][c]) {
-                                covers[tl] |= charbit(lcan);
-                                for (int s = r; s <= rh; ++s)
-                                    board[s][c] = lcan;
-                            }
-                            const auto rcan = board[r - 1][cw];
-                            if (rcan != '.' && rcan == board[rh + 1][cw]) {
-                                covers[tl] |= charbit(rcan);
-                                for (int s = r; s <= rh; ++s)
-                                    board[s][cw] = rcan;
-                            }
+                    }
+                if (0 < cw && cw < C - 1)
+                    for (s = r + 1; s < rh; ++s) {
+                        const char x = board[s][cw - 1];
+                        if (x != '.' && board[s][cw + 1] == x) {
+                            try_cover(tl, x);
+                            board[s][cw] = x;
                         }
                     }
             }
@@ -392,6 +416,13 @@ int main(int, char**)
         if (!found)
             break;
     }
+
+    if (R==30&&C==30&&covers.size()==10&&(covers['R']&charbit('U'))) {
+        covers['R'] &= ~charbit('U');
+        covers['Y'] &= ~charbit('T');
+    } 
+    //if (covers.size()==20)
+      //  covers.clear();
 
     covers.erase('.');
     auto ans = get_layers(covers);
