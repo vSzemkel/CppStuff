@@ -10,12 +10,17 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=GVqXl5lUbGQ&S=frameup
 #include <fstream>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 std::ifstream task_in("frameup.in");
 std::ofstream task_out("frameup.out");
 
+int R, C;
+std::vector<std::string> board, initial;
 std::unordered_map<char, int> covers; // {char, charbits covered}
+std::unordered_map<char, std::pair<int, int>> topleft; // {char, charbits covered}
+std::unordered_map<char, int> right, top, left, bottom; // {char, known extent position}
 std::vector<std::vector<int>> N, E, S, W; // neibors on direction
 
 inline static unsigned int charbit(const char c) {
@@ -30,6 +35,79 @@ static bool has_hpeer(const char x, const int r, const int c) {
 static bool has_vpeer(const char x, const int r, const int c) {
     const auto b = charbit(x);
     return (S[r][c] & b) || (N[r][c] & b);
+}
+
+static bool is_above(const char u, const char l) {
+    if (topleft.count(l) == 0)
+        return true; // inconclusive
+    const auto& [r, c] = topleft[l];
+    const auto rh = r + bottom[l] - top[l];
+    const auto cw = c + right[l] - left[l];
+    for (int d = c; d <= cw; ++d)
+        if (initial[r][d] == u || initial[rh][d] == u) return true;
+    for (int s = r; s <= rh; ++s)
+        if (initial[s][c] == u || initial[s][cw] == u) return true;
+    return false;
+}
+
+static bool identify_rectangle(const char c) {
+    int d, s, badr, badc, score{4};
+    const auto m = charbit(c);
+    const auto r = right[c], t = top[c], l = left[c], b = bottom[c];
+    const auto h = b - t, w = r - l;
+    if (h < 2 || w < 2)
+        return false;
+
+    if (t > 0) {
+        for (d = l; d <= r; ++d)
+            if (initial[t][d] == c)
+                break;
+        if (!(W[t][d] & m) && !(E[t][d] & m)) {
+            badr = t; badc = d;
+            --score;
+        }
+    }
+    if (b < R - 1) {
+        for (d = l; d <= r; ++d)
+            if (initial[b][d] == c)
+                break;
+        if (!(W[b][d] & m) && !(E[b][d] & m)) {
+            badr = b; badc = d;
+            --score;
+        }
+    }
+    if (l > 0) {
+        for (s = t; s <= b; ++s)
+            if (initial[s][l] == c)
+                break;
+        if (!(N[s][l] & m) && !(S[s][l] & m)) {
+            badr = s; badc = l;
+            --score;
+        }
+    }
+    if (r < C - 1) {
+        for (s = t; s <= b; ++s)
+            if (initial[s][r] == c)
+                break;
+        if (!(N[s][r] & m) && !(S[s][r] & m)) {
+            badr = s; badc = r;
+            --score;
+        }
+    }
+
+    if (score < 3)
+        return false;
+    if (score == 3) {
+        if (l < badc) --score;
+        if (badc < r) --score;
+        if (t < badr) --score;
+        if (badr < b) --score;
+        if (score)
+            return false;
+    }
+
+    topleft[c] = {t, l};
+    return true;
 }
 
 static bool try_cover(const char top, const char bottom) {
@@ -64,15 +142,12 @@ static std::vector<std::string> get_layers(const std::unordered_map<char, int>& 
 
 int main(int, char**)
 {
-    int R, C;
-    std::vector<std::string> board;
-
     task_in >> R >> C;
     board.resize(R);
     for (auto& r : board)
         task_in >> r;
 
-    // build a map
+    // STAGE 0 - build a map
     N.assign(R, std::vector<int>(C));
     E = S = W = N;
     for (int r = 0; r < R; ++r)
@@ -86,6 +161,19 @@ int main(int, char**)
                 N[r][c] = N[r - 1][c];
                 const char n = board[r - 1][c];
                 if (n != '.') N[r][c] |= charbit(n);
+            }
+
+            const char cell = board[r][c];
+            if (cell == '.') continue;
+            covers.try_emplace(cell, 0); // first occurence
+            if (left.find(cell) == left.end()) { // first occurence
+                bottom[cell] = top[cell] = r;
+                left[cell] = right[cell] = c;
+            } else {
+                left[cell] = std::min(left[cell], c);
+                right[cell] = std::max(right[cell], c);
+                top[cell] = std::min(top[cell], r);
+                bottom[cell] = std::max(bottom[cell], r);
             }
         }
     for (int r = R - 1; ~r; --r)
@@ -104,21 +192,10 @@ int main(int, char**)
 
     // STAGE 1 - CERTEN HITS
     // determine covering relation
-    std::unordered_map<char, int> right, top, left, bottom; // {char, known extent position}
     for (int r = 0; r < R; ++r)
         for (int c = 0; c < C; ++c) {
             const char cell = board[r][c];
             if (cell == '.') continue;
-            covers.try_emplace(cell, 0); // first occurence
-            if (left.find(cell) == left.end()) { // first occurence
-                bottom[cell] = top[cell] = r;
-                left[cell] = right[cell] = c;
-            } else {
-                left[cell] = std::min(left[cell], c);
-                right[cell] = std::max(right[cell], c);
-                top[cell] = std::min(top[cell], r);
-                bottom[cell] = std::max(bottom[cell], r);
-            }
             const auto cur = charbit(cell);
             const auto notcur = ~cur;
 
@@ -184,11 +261,6 @@ int main(int, char**)
                             if (cnt > 2 || (c == 0 && r == R - 1))
                                 try_cover(cell, x);
                         }
-                } else if (r > 0 && c < C - 1 && board[r - 1][c] == cell && board[r][c + 1] == cell && board[0][c] == cell && board[r][C - 1] == cell) {
-                    for (int d = c + 1; d < C; ++d)
-                        try_cover(board[0][d], cell);
-                    for (int s = r - 1; ~s; --s)
-                        try_cover(board[s][C - 1], cell);
                 }
 
                 auto es = E[r][c] & S[r][c] & notcur;
@@ -207,11 +279,6 @@ int main(int, char**)
                             if (cnt > 2 || (c == 0 && r == 0))
                                 try_cover(cell, x);
                         }
-                } else if (r < R - 1 && c < C - 1 && board[r + 1][c] == cell && board[r][c + 1] == cell && board[R - 1][c] == cell && board[r][C - 1] == cell) {
-                    for (int d = c + 1; d < C; ++d)
-                        try_cover(board[R - 1][d], cell);
-                    for (int s = r + 1; s < R; ++s)
-                        try_cover(board[s][C - 1], cell);
                 }
 
                 auto sw = S[r][c] & W[r][c] & notcur;
@@ -230,11 +297,6 @@ int main(int, char**)
                             if (cnt > 2 || (c == C - 1 && r == 0))
                                 try_cover(cell, x);
                         }
-                } else if (r < R - 1 && c > 0 && board[r + 1][c] == cell && board[r][c - 1] == cell && board[R - 1][c] == cell && board[r][0] == cell) {
-                    for (int d = c - 1; ~d; --d)
-                        try_cover(board[R - 1][d], cell);
-                    for (int s = r + 1; s < R; ++s)
-                        try_cover(board[s][0], cell);
                 }
 
                 auto wn = W[r][c] & N[r][c] & notcur;
@@ -253,17 +315,13 @@ int main(int, char**)
                             if (cnt > 2 || (c == C - 1 && r == R - 1))
                                 try_cover(cell, x);
                         }
-                } else if (r > 0 && c > 0 && board[r - 1][c] == cell && board[r][c - 1] == cell && board[0][c] == cell && board[r][0] == cell) {
-                    for (int d = c - 1; ~d; --d)
-                        try_cover(board[0][d], cell);
-                    for (int s = r - 1; ~s; --s)
-                        try_cover(board[s][0], cell);
                 }
             }
         }
 
     // STAGE 2 - UNCERTEN HITS
     // search for uncovered rectangles this destroys the board
+    initial = board;
     while (true) {
         bool found{false};
         for (int r = 0; r < R - 2; ++r)
@@ -280,6 +338,7 @@ int main(int, char**)
                 if (bl != tl) continue;
                 const char br = board[rh][cw];
                 if (br != tl) continue;
+                topleft[tl] = {r, c};
                 // check edges
                 int d{c + 1};
                 while (d <= cw && (board[r][d] == tl || (covers[tl] & charbit(board[r][d])))) ++d;
@@ -417,14 +476,36 @@ int main(int, char**)
             break;
     }
 
-    if (R==30&&C==30&&covers.size()==10&&(covers['R']&charbit('U'))) {
-        covers['R'] &= ~charbit('U');
-        covers['Y'] &= ~charbit('T');
-    } 
-    //if (covers.size()==20)
-      //  covers.clear();
+    // STAGE 3 - REMOVE FALSE POSITIVES
+    for (auto& c : covers) {
+        char b = 'A';
+        for (int m{1}, l{c.second}; l; l >>= 1, m <<= 1, ++b)
+            if ((l & 1) && !is_above(c.first, b))
+                c.second &= ~m;
+    }
 
-    covers.erase('.');
+    // STAGE 4 - IDENTIFY HARD RECTANGLES
+    for (auto& k : covers)
+        if (topleft.count(k.first) == 0 && identify_rectangle(k.first)) {
+            const int cell = k.first;
+            const auto cur = charbit(cell);
+            const auto& [r, c] = topleft[cell];
+            const auto rh = r + bottom[cell] - top[cell];
+            const auto cw = c + right[cell] - left[cell];
+            for (int d = c; d <= cw; ++d)
+                if (initial[r][d] != cell)
+                    covers[initial[r][d]] |= cur;
+            for (int d = c; d <= cw; ++d)
+                if (initial[rh][d] != cell)
+                    covers[initial[rh][d]] |= cur;
+            for (int s = r; s <= rh; ++s)
+                if (initial[s][c] != cell)
+                    covers[initial[s][c]] |= cur;
+            for (int s = r; s <= rh; ++s)
+                if (initial[s][cw] != cell)
+                    covers[initial[s][cw]] |= cur;
+        }
+
     auto ans = get_layers(covers);
     std::sort(ans.begin(), ans.end());
     for (const auto& a : ans)
