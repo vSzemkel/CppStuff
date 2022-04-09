@@ -8,6 +8,7 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=GVqXl5lUbGQ&S=frameup
 #include <algorithm>
 #include <assert.h>
 #include <fstream>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -18,7 +19,7 @@ std::ofstream task_out("frameup.out");
 
 int R, C;
 std::vector<std::string> board, initial;
-std::unordered_map<char, int> covers; // {char, charbits covered}
+std::map<char, int> covers; // {char, charbits covered}
 std::unordered_map<char, std::pair<int, int>> topleft; // {char, top-left rectangle corner}
 std::unordered_map<char, int> right, top, left, bottom; // {char, known extent position}
 std::vector<std::vector<int>> N, E, S, W; // neibors on direction
@@ -119,24 +120,23 @@ static bool try_cover(const char top, const char bottom) {
     return true;
 }
 
-static std::vector<std::string> get_layers(const std::unordered_map<char, int>& covers) {
-    std::vector<std::string> ret;
-    for (const auto& c : covers)
-        if (c.second == 0) {
+static void get_layers(const std::string& prefix, const std::map<char, int>& covers) {
+    if (covers.empty())
+        task_out << prefix << '\n';
+    else {
+        auto it = covers.begin();
+        while (true) {
+            it = std::find_if(it, covers.end(), [&](const auto& c){ return c.second == 0; });
+            if (it == covers.end())
+                break;
             auto copy = covers;
-            copy.erase(c.first);
-            if (copy.empty())
-                ret.push_back(std::string(1, c.first));
-            else {
-                for (auto& d : copy)
-                    d.second &= ~charbit(c.first);
-                const auto tails = get_layers(copy);
-                for (const auto& t : tails)
-                    ret.push_back(c.first + t);
-            }
+            for (auto& d : copy)
+                d.second &= ~charbit(it->first);
+            copy.erase(it->first);
+            get_layers(prefix + it->first, copy);
+            ++it;
         }
-
-    return ret;
+    }
 }
 
 /**
@@ -508,10 +508,7 @@ int main(int, char**)
                     covers[initial[s][cw]] |= cur;
         }
 
-    auto ans = get_layers(covers);
-    std::sort(ans.begin(), ans.end());
-    for (const auto& a : ans)
-        task_out << a << '\n';
+    get_layers("", covers);
 }
 
 /*
