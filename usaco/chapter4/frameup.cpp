@@ -19,7 +19,7 @@ std::ofstream task_out("frameup.out");
 int R, C;
 std::vector<std::string> board, initial;
 std::unordered_map<char, int> covers; // {char, charbits covered}
-std::unordered_map<char, std::pair<int, int>> topleft; // {char, charbits covered}
+std::unordered_map<char, std::pair<int, int>> topleft; // {char, top-left rectangle corner}
 std::unordered_map<char, int> right, top, left, bottom; // {char, known extent position}
 std::vector<std::vector<int>> N, E, S, W; // neibors on direction
 
@@ -27,12 +27,12 @@ inline static unsigned int charbit(const char c) {
     return 1 << (c - 'A');
 }
 
-static bool has_hpeer(const char x, const int r, const int c) {
+inline static bool has_hpeer(const char x, const int r, const int c) {
     const auto b = charbit(x);
     return (W[r][c] & b) || (E[r][c] & b);
 }
 
-static bool has_vpeer(const char x, const int r, const int c) {
+inline static bool has_vpeer(const char x, const int r, const int c) {
     const auto b = charbit(x);
     return (S[r][c] & b) || (N[r][c] & b);
 }
@@ -51,18 +51,17 @@ static bool is_above(const char u, const char l) {
 }
 
 static bool identify_rectangle(const char c) {
-    int d, s, badr, badc, score{4};
-    const auto m = charbit(c);
     const auto r = right[c], t = top[c], l = left[c], b = bottom[c];
     const auto h = b - t, w = r - l;
     if (h < 2 || w < 2)
         return false;
 
+    int d, s, badr{}, badc{}, score{4};
     if (t > 0) {
         for (d = l; d <= r; ++d)
             if (initial[t][d] == c)
                 break;
-        if (!(W[t][d] & m) && !(E[t][d] & m)) {
+        if (!has_hpeer(c, t, d) && initial[t - 1][d] != '.') {
             badr = t; badc = d;
             --score;
         }
@@ -71,7 +70,7 @@ static bool identify_rectangle(const char c) {
         for (d = l; d <= r; ++d)
             if (initial[b][d] == c)
                 break;
-        if (!(W[b][d] & m) && !(E[b][d] & m)) {
+        if (!has_hpeer(c, b, d) && initial[b + 1][d] != '.') {
             badr = b; badc = d;
             --score;
         }
@@ -80,7 +79,7 @@ static bool identify_rectangle(const char c) {
         for (s = t; s <= b; ++s)
             if (initial[s][l] == c)
                 break;
-        if (!(N[s][l] & m) && !(S[s][l] & m)) {
+        if (!has_vpeer(c, s, l) && initial[s][l - 1] != '.') {
             badr = s; badc = l;
             --score;
         }
@@ -89,7 +88,7 @@ static bool identify_rectangle(const char c) {
         for (s = t; s <= b; ++s)
             if (initial[s][r] == c)
                 break;
-        if (!(N[s][r] & m) && !(S[s][r] & m)) {
+        if (!has_vpeer(c, s, r) && initial[s][r + 1] != '.') {
             badr = s; badc = r;
             --score;
         }
@@ -140,6 +139,9 @@ static std::vector<std::string> get_layers(const std::unordered_map<char, int>& 
     return ret;
 }
 
+/**
+ * @brief Stages 0 and 4 are sufficient. Others come from solutionprototypes
+ */
 int main(int, char**)
 {
     task_in >> R >> C;
