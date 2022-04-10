@@ -5,7 +5,7 @@
 
 // Enumarate all permutations of g_size elements
 // If elements are comparable use std::next_permutation
-
+// For permuting groups see: /usaco/chapter4/frameup.cpp::get_layers
 
 // case definition - words collection
 constexpr int g_size = 5;
