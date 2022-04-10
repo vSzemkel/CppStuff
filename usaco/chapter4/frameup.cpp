@@ -115,7 +115,7 @@ static void get_layers(const std::map<char, int>& covers) {
 }
 
 /**
- * @brief Stages 0 and 4 are sufficient. Others came from solution prototypes
+ * @brief There is a simpler solution on USACO but is it correct?
  */
 int main(int, char**)
 {
