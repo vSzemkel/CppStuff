@@ -1,0 +1,3 @@
+---
+Checks: '-*,performance-*,bugprone-*,readability-*,-readability-braces-around-statements,-readability-implicit-bool-conversion,modernize-*,-modernize-use-equals-default,-modernize-use-trailing-return-type'
+...
