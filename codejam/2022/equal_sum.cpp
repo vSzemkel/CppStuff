@@ -1,15 +1,14 @@
 
 #include <iostream>
-#include <numeric>
 #include <vector>
 
 // Equal Sum
 // https://codingcompetitions.withgoogle.com/codejam/round/0000000000877ba5/0000000000aa8fc1
 
+constexpr const int MAGIC = 600; // there is no power of 2 in range [MAGIC..MAGIC+100]
 constexpr const int MAX = 1e09;
 
 /**
- * @brief My numbers sum must be positive
  * Last numbers of naive fair 2-partition algorithm should be decreasing powers of 2
  */
 static void solve() {
@@ -19,14 +18,8 @@ static void solve() {
     for (int i = 1; i <= MAX; i <<= 1)
         data.push_back(i);
     const int special = int(data.size());
-    for (int z = N - special, i = 5000; z; --z)
-        data.push_back(i++);
-
-    int64_t sum = std::accumulate(data.begin(), data.end(), 0LL);
-    if (sum & 1) {
-        ++sum;
-        ++data.back();
-    }
+    for (int z = N - special, i = MAGIC; z; --z, ++i)
+        data.push_back(i);
 
     for (const int i : data)
         std::cout << i << ' ';
@@ -35,22 +28,20 @@ static void solve() {
         int d; std::cin >> d;
         data.push_back(d);
     };
+    // assert(sum(data) % 2 == 0)
 
+    int balance{0};
     std::vector<int> ans;
-    int64_t taken{0}, nottaken{0};
-    for (int i = special; i < 2 * N; ++i)
-        if (taken < nottaken) {
-            ans.push_back(data[i]);
-            taken += data[i];
+    const auto naive = [&](const int v) {
+        if (balance < 0) {
+            ans.push_back(v);
+            balance += v;
         } else
-            nottaken += data[i];
+            balance -= v;
+    };
 
-    for (int i = special - 1; ~i; --i)
-        if (taken < nottaken) {
-            ans.push_back(data[i]);
-            taken += data[i];
-        } else
-            nottaken += data[i];
+    for (int i = special; i < 2 * N; ++i) naive(data[i]);
+    for (int i = special - 1; ~i; --i)  naive(data[i]);
 
     for (const int t : ans)
         std::cout << t << ' ';

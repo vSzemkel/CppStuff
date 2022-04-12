@@ -1,5 +1,5 @@
 ### What are sanitizers, e.g. address sanitizer
--fsanitize-address
+-fsanitize=address
 -fsanitize=undefined
 -fsanitize=thread
 
@@ -42,6 +42,7 @@ int riddle(const char* s) {
 ```
 
 - it will loop for a very long time
+- it returns a pointer range size minus initial s pointer location, after overflowing
 - assert(ret * -1 == (int)s)
 
 ### Write a function that computes digit length for positive integral

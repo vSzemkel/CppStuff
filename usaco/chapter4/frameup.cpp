@@ -6,7 +6,7 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=GVqXl5lUbGQ&S=frameup
 */
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <fstream>
 #include <map>
 #include <string>
@@ -20,10 +20,10 @@ std::ofstream task_out("frameup.out");
 int R, C;
 std::string ans;
 std::vector<std::string> board;
-std::map<char, int> covers; // sorted {char, charbits covered}
+std::map<char, unsigned int> covers; // sorted {char, charbits covered}
 std::unordered_map<char, std::pair<int, int>> topleft; // {char, top-left rectangle corner}
 std::unordered_map<char, int> right, top, left, bottom; // {char, known extent position}
-std::vector<std::vector<int>> N, E, S, W; // neibors on direction
+std::vector<std::vector<unsigned int>> N, E, S, W; // neibors on direction
 
 inline static unsigned int charbit(const char c) {
     return 1 << (c - 'A');
@@ -97,7 +97,7 @@ static bool identify_rectangle(const char c) {
     return true;
 }
 
-static void get_layers(const std::map<char, int>& covers) {
+static void get_layers(const std::map<char, unsigned int>& covers) {
     if (covers.empty())
         task_out << ans << '\n';
     else {
@@ -125,7 +125,7 @@ int main(int, char**)
         task_in >> r;
 
     // BUILD A MAP
-    N.assign(R, std::vector<int>(C));
+    N.assign(R, std::vector<unsigned int>(C));
     E = S = W = N;
     for (int r = 0; r < R; ++r)
         for (int c = 0; c < C; ++c) {
@@ -170,7 +170,7 @@ int main(int, char**)
     // IDENTIFY RECTANGLES
     for (auto& k : covers)
         if (identify_rectangle(k.first)) {
-            const int cell = k.first;
+            const char cell = k.first;
             const auto cur = charbit(cell);
             const auto& [r, c] = topleft[cell];
             const auto rh = r + bottom[cell] - top[cell];
