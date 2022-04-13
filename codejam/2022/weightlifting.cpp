@@ -10,6 +10,81 @@ constexpr const int INF = 1e09;
 std::vector<std::vector<int>> commons;
 std::vector<std::vector<std::vector<int>>> memo;
 
+static void solve() { // inspired by tourist and ksun48
+    int R, C;
+    std::cin >> R >> C;
+
+    std::vector<std::vector<int>> weights(R, std::vector<int>(C));
+    for (auto& row : weights)
+        for (auto& w : row)
+            std::cin >> w;
+
+    commons.assign(R, std::vector<int>(R));
+    for (int r = 0; r < R; ++r) {
+        auto base = weights[r];
+        commons[r][r] = std::accumulate(base.begin(), base.end(), 0);
+        for (int s = r + 1; s < R; ++s) {
+            for (int e = 0; e < C; ++e)
+                base[e] = std::min(base[e], weights[s][e]);
+            commons[r][s] = std::accumulate(base.begin(), base.end(), 0);
+        }
+    }
+
+    std::vector<std::vector<int>> dp(R, std::vector<int>(R));
+    for (int u = 0; u < R; ++u)
+        for (int l = u; ~l; --l) {
+            auto& cur = dp[l][u];
+            if (l == u)
+                cur = commons[l][u];
+            else {
+                cur = INF;
+                const int range = u - l;
+                for (int len = 0; len < range ; ++len)
+                    cur = std::min(cur, dp[l][l + len] + dp[l + len + 1][u]);
+                cur -= commons[l][u];
+            }
+        }
+
+    std::cout << dp[0][R - 1] * 2;
+}
+
+static void recommended() {
+    int R, C;
+    std::cin >> R >> C;
+
+    std::vector<std::vector<int>> weights(R, std::vector<int>(C));
+    for (auto& row : weights)
+        for (auto& w : row)
+            std::cin >> w;
+
+    commons.assign(R, std::vector<int>(R));
+    for (int r = 0; r < R; ++r) {
+        auto base = weights[r];
+        commons[r][r] = std::accumulate(base.begin(), base.end(), 0);
+        for (int s = r + 1; s < R; ++s) {
+            for (int e = 0; e < C; ++e)
+                base[e] = std::min(base[e], weights[s][e]);
+            commons[r][s] = std::accumulate(base.begin(), base.end(), 0);
+        }
+    }
+
+    std::vector<std::vector<int>> dp(R, std::vector<int>(R));
+    for (int u = 0; u < R; ++u)
+        for (int l = u; ~l; --l) {
+            auto& cur = dp[l][u];
+            if (l == u)
+                cur = 0;
+            else {
+                cur = INF;
+                const int range = u - l;
+                for (int len = 0; len < range ; ++len)
+                    cur = std::min(cur, dp[l][l + len] + commons[l][l + len] - commons[l][u] + dp[l + len + 1][u] + commons[l + len + 1][u] - commons[l][u]);
+            }
+        }
+
+    std::cout << (dp[0][R - 1] + commons[0][R - 1]) * 2;
+}
+
 static int divandconq(const int begin, const int end, const int bottom) {
     const int cm = commons[begin][end];
     if (begin == end)
@@ -26,7 +101,10 @@ static int divandconq(const int begin, const int end, const int bottom) {
     return m = ans + 2 * (cm - bottom);
 }
 
-static void solve() {
+/**
+ * This solution is accepted for Set2 but it is too complicated and memory demanding
+ */
+static void solve_bigmem() {
     int R, C;
     std::cin >> R >> C;
 
