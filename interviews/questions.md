@@ -3,6 +3,11 @@
 -fsanitize=undefined
 -fsanitize=thread
 
+### What stands after the abbreviation
+- RAII
+- CTAD
+- CRTP
+
 ### What is std::array for?
 - stack allocated, fast
 - std container interface to use with algorithms

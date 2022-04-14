@@ -112,7 +112,7 @@ static auto convex_hull(std::vector<point_t<T>> points) { // copy is sorted
         }
         upper.push_back(p);
         int lsz = int(lower.size());
-        while (lsz >= 2 && lower[lsz - 2].turning_left(upper[lsz - 1], p) == -1) {
+        while (lsz >= 2 && lower[lsz - 2].turning_left(lower[lsz - 1], p) == -1) {
             lower.pop_back();
             --lsz;
         }
@@ -125,6 +125,15 @@ static auto convex_hull(std::vector<point_t<T>> points) { // copy is sorted
     lower.pop_back();
 
     return lower;
+}
+
+template <typename T = int64_t>
+static auto perimeter_len(const std::vector<point_t<T>>& points) { // points are perimeter ordered
+    T perm{0};
+    for (int z = int(points.size()) - 1; z; --z)
+        perm += (points[z] - points[z - 1]).len();
+    perm += (points.back() - points.front()).len();
+    return perm;
 }
 
 int main(int, char**)
