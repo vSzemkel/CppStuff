@@ -7,9 +7,10 @@ PROBLEM STATEMENT:
 
 #include <algorithm>
 #include <array>
-#include <assert.h>
 #include <bitset>
+#include <cassert>
 #include <cmath>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -24,7 +25,6 @@ PROBLEM STATEMENT:
 #include <queue>
 #include <random>
 #include <set>
-#include <stdlib.h>
 #include <string>
 #include <string_view>
 #include <unordered_map>
