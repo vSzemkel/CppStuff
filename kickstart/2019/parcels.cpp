@@ -52,12 +52,14 @@ static void solve() {
 
     /**
      * @brief Checks if with one additional office enables
-     * delivery with max ditance not exceeding d
+     * delivery with max distance not exceeding d
      */
     const auto check = [&](const int d) -> bool {
+        if (d >= max)
+            return true;
+
         // compute region such that placing an office in it enable delivering
         // distance <= d for each point reachable with distance >d from original offices
-        bool found{};
         int ne = INF, nw = INF, sw = -INF, se = -INF; // manhattan wheel edges
         for (int r = 0; r < R; ++r)
             for (int c = 0; c < C; ++c)
@@ -66,11 +68,7 @@ static void solve() {
                     nw = std::min(nw, r - c + d);
                     sw = std::max(sw, r + c - d);
                     se = std::max(se, r - c - d);
-                    found = true;
                 }
-
-        if (!found)
-            return true;
 
         if (sw <= ne && se <= nw)
             for (int r = 0; r < R; ++r)
