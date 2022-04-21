@@ -8,11 +8,12 @@
 
 // Interval tree
 // Can answer in O(logN + M) a list of intervals containing arbitrary point
+// source: "CP in Python 128", page 82
 
-
+template <typename T = int>
 struct interval_tree_t
 {
-    using interval_t = std::pair<int64_t, int64_t>; // [i, j)
+    using interval_t = std::pair<T, T>; // [i, j)
 
     interval_tree_t(const std::vector<interval_t>& intervals) {
         assert(std::is_sorted(intervals.begin(), intervals.end()));
@@ -35,7 +36,7 @@ struct interval_tree_t
         if (!rt.empty()) _right = std::make_unique<interval_tree_t>(rt);
     }
 
-    std::vector<interval_t> list_containing(const int64_t p) {
+    std::vector<interval_t> list_containing(const T p) {
         const auto marker = interval_t{p, INF};
         std::vector<interval_t> ret;
         if (p < _center) {
@@ -53,25 +54,26 @@ struct interval_tree_t
         return ret;
     }
 
-    static const auto INF = std::numeric_limits<int64_t>::max();
+    static const auto INF = std::numeric_limits<T>::max();
 
   private:
-    int64_t _center;
+    T _center;
     std::vector<interval_t> _by_low, _by_high;
     std::unique_ptr<interval_tree_t> _left, _right;
 };
 
 int main(int, char**)
 {
-    std::vector<interval_tree_t::interval_t> input = {
-        interval_tree_t::interval_t{0, 9},
-        interval_tree_t::interval_t{1, 2},
-        interval_tree_t::interval_t{4, 7},
-        interval_tree_t::interval_t{6, 9},
-        interval_tree_t::interval_t{8, 9},
+    using itv_t = interval_tree_t<int>;
+    std::vector<itv_t::interval_t> input = {
+        itv_t::interval_t{0, 9},
+        itv_t::interval_t{1, 2},
+        itv_t::interval_t{4, 7},
+        itv_t::interval_t{6, 9},
+        itv_t::interval_t{8, 9},
     };
 
-    interval_tree_t tree{input};
+    itv_t tree{input};
     assert(tree.list_containing(0).size() == 1);
     assert(tree.list_containing(1).size() == 2);
     assert(tree.list_containing(2).size() == 1);

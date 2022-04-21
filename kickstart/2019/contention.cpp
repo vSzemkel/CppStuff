@@ -2,10 +2,80 @@
 #include <algorithm>
 #include <array>
 #include <iostream>
+#include <set>
 #include <vector>
 
 // Contention
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000050e01/0000000000069881#problem
+
+template <typename T, typename U>
+T last_true(T lo, T hi, U f) {
+    lo--;
+    while (lo < hi) { // find last index such that f is true
+        const T mid = lo + (hi - lo + 1) / 2; // this will work for negative numbers too
+        f(mid) ? lo = mid : hi = mid - 1;
+    }
+    return lo;
+}
+
+static void solve() { // by wifi
+    int N, Q;
+    std::cin >> N >> Q;
+    int max{N};
+    std::vector<std::array<int, 2>> ranges(Q);
+    for (auto& r : ranges) {
+        std::cin >> r[0] >> r[1];
+        --r[0];
+        max = std::min(max, r[1] - r[0]);
+    }
+    std::sort(ranges.begin(), ranges.end());
+
+    const auto check = [&](const int k) -> bool {
+        int cur{0}, last{0};
+        std::vector<int> score(Q);
+        std::set<std::array<int, 2>> inmid;
+        for (const auto& [l, r] : ranges) {
+            while (!inmid.empty()) {
+                const auto [r, i] = *inmid.begin();
+                if (r <= l) {
+                    score[i] += std::max(r - last, 0);
+                    last = std::max(last, r);
+                    inmid.erase(inmid.begin());
+                } else
+                    break;
+            }
+            if (last < l) {
+                if (!inmid.empty())
+                    score[(*inmid.begin())[1]] += l - last;
+                last = l;
+            }
+            std::array<int, 2> now = {r, cur++};
+            auto [it, _] = inmid.insert(now);
+            if (it == inmid.begin())
+                continue;
+            --it;
+            while (true) {
+                if (score[(*it)[1]] >= k) {
+                    if (it == inmid.begin()) {
+                        inmid.erase(it);
+                        break;
+                    } else
+                        it = std::prev(inmid.erase(it));
+                } else
+                    break;
+            }
+        }
+
+        for (const auto& [r, i] : inmid) {
+            score[i] += std::max(r - last, 0);
+            last = std::max(last, r);
+        }
+
+        return std::all_of(score.begin(), score.end(), [k](const int s){ return k <= s; });
+    };
+
+    std::cout << last_true(0, max, check);
+}
 
 /**
  * @brief Last reservation can be greedy maximized
