@@ -18,7 +18,7 @@ static std::vector<int> kmp(const std::string& s) {
     std::vector<int> ret(n);
     for (int k = 0, i = 1; i < n; ++i) { // k is lenght of already found proper (non identity) bound 
         while (k > 0 && s[k] != s[i])
-            k = ret[k]; // books say there should be ret[k-1] - counterexample needed
+            k = ret[k - 1]; // can't be ret[k] - counterexample: "aaab$aaaccc" inf-loops
         if (s[k] == s[i])
             ++k;
         ret[i] = k;
@@ -34,17 +34,18 @@ int main(int, char**)
 
     const auto pat_size = int(pat.size());
     const auto combined = pat + '$' + text;
-    auto f = kmp(combined);
-    const auto it = std::find(f.begin(), f.end(), pat_size);
-    if (it == f.end())
+    const auto findings = kmp(combined);
+    const auto it = std::find(findings.begin(), findings.end(), pat_size);
+    if (it == findings.end())
         std::cout << "NOT FOUND\n";
     else {
-        const auto off = it - f.begin();
+        const auto off = it - findings.begin();
         assert(pat == text.substr(off - 2 * pat_size, pat_size));
         std::cout << text << '\n';
-        std::cout << std::setw(off - pat_size) << pat << std::endl;
+        std::cout << std::setw(off - pat_size) << pat;
     }
-    std::cout << "PASSED\n";
+
+    std::cout << "\nPASSED\n";
 }
 
 /*
