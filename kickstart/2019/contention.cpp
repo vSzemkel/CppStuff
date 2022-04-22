@@ -18,28 +18,30 @@ T last_true(T lo, T hi, U f) {
     return lo;
 }
 
+/**
+ * @brief This is variant of sweep line with greedy expanding in-the-middle reservations
+ */
 static void solve() { // by wifi
     int N, Q;
     std::cin >> N >> Q;
     int max{N};
     std::vector<std::array<int, 2>> ranges(Q);
-    for (auto& r : ranges) {
-        std::cin >> r[0] >> r[1];
-        --r[0];
-        max = std::min(max, r[1] - r[0]);
+    for (auto& [l, r] : ranges) {
+        std::cin >> l >> r; --l;
+        max = std::min(max, r - l);
     }
     std::sort(ranges.begin(), ranges.end());
 
     const auto check = [&](const int k) -> bool {
-        int cur{0}, last{0};
+        int ord{0}, last{0};
         std::vector<int> score(Q);
         std::set<std::array<int, 2>> inmid;
         for (const auto& [l, r] : ranges) {
             while (!inmid.empty()) {
-                const auto [r, i] = *inmid.begin();
-                if (r <= l) {
-                    score[i] += std::max(r - last, 0);
-                    last = std::max(last, r);
+                const auto [mr, i] = *inmid.begin();
+                if (mr <= l) {
+                    score[i] += std::max(mr - last, 0);
+                    last = std::max(last, mr);
                     inmid.erase(inmid.begin());
                 } else
                     break;
@@ -49,20 +51,17 @@ static void solve() { // by wifi
                     score[(*inmid.begin())[1]] += l - last;
                 last = l;
             }
-            std::array<int, 2> now = {r, cur++};
-            auto [it, _] = inmid.insert(now);
+
+            auto [it, _] = inmid.insert({r, ord++});
             if (it == inmid.begin())
                 continue;
             --it;
-            while (true) {
-                if (score[(*it)[1]] >= k) {
-                    if (it == inmid.begin()) {
-                        inmid.erase(it);
-                        break;
-                    } else
-                        it = std::prev(inmid.erase(it));
-                } else
+            while (score[(*it)[1]] >= k) {
+                if (it == inmid.begin()) {
+                    inmid.erase(it);
                     break;
+                } else
+                    it = std::prev(inmid.erase(it));
             }
         }
 

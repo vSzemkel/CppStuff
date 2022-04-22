@@ -1,4 +1,5 @@
 
+#include <cassert>
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -6,7 +7,12 @@
 
 // Knuth Morris Pratt search algorithm
 
-
+/**
+ * @brief Searches for prefixes of needle in the haystack string
+ * 
+ * @param s string modelled as "needle$haystack"
+ * @return std::vector<int> ret[n] == k iff k-prefix of needle starts at haystack[n - 2 * size(needle)]
+ */
 static std::vector<int> kmp(const std::string& s) {
     const int n = int(s.size());
     std::vector<int> ret(n);
@@ -33,9 +39,12 @@ int main(int, char**)
     if (it == f.end())
         std::cout << "NOT FOUND\n";
     else {
+        const auto off = it - f.begin();
+        assert(pat == text.substr(off - 2 * pat_size, pat_size));
         std::cout << text << '\n';
-        std::cout << std::setw((it - f.begin()) - pat_size) << pat << std::endl;
+        std::cout << std::setw(off - pat_size) << pat << std::endl;
     }
+    std::cout << "PASSED\n";
 }
 
 /*
