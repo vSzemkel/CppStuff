@@ -13,7 +13,7 @@ check(lb);
 
 // by Benq
 template <typename T, typename U>
-T first_true(T lo, T hi, U f) {
+static T first_true(T lo, T hi, U f) {
     hi++;
     assert(lo <= hi); // assuming f is increasing
     while (lo < hi) { // find first index such that f is true
@@ -24,7 +24,7 @@ T first_true(T lo, T hi, U f) {
 }
 
 template <typename T, typename U>
-T last_true(T lo, T hi, U f) {
+static T last_true(T lo, T hi, U f) {
     lo--;
     assert(lo <= hi); // assuming f is decreasing
     while (lo < hi) { // find last index such that f is true

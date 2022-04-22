@@ -6,40 +6,43 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=DMzbY6AZYHC&S=theme
 */
 
 #include <algorithm>
-#include <array>
-#include <bitset>
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 std::ifstream task_in("theme.in");
 std::ofstream task_out("theme.out");
 
+constexpr const int INF = 1e09;
+constexpr const int MIN = 5;
+
+static void solve_usaco() {
+    int N;
+    task_in >> N;
+    std::vector<int> notes(N);
+    for (auto& n : notes)
+        task_in >> n;
+
+    int ans{4};
+    for (int i = 0; i < N - 2 * ans + 1; ++i)
+        for (int j = i + ans + 1; j < N - ans + 1; ++j) {
+            int can{0};
+            const int d = notes[j] - notes[i];
+            while (i + can < j && j + can < N && notes[j + can] - notes[i + can] == d)
+                ++can;
+            ans = std::max(ans, can);
+        }
+
+    if (2 * ans > N)
+        --ans;
+    if (ans < MIN)
+        ans = 0;
+
+    task_out << ans << '\n';
+}
+
 template <typename T, typename U>
-T last_true(T lo, T hi, U f) {
+static T last_true(T lo, T hi, U f) {
     lo--;
-    assert(lo <= hi); // assuming f is decreasing
     while (lo < hi) { // find last index such that f is true
         const T mid = lo + (hi - lo + 1) / 2; // this will work for negative numbers too
         f(mid) ? lo = mid : hi = mid - 1;
@@ -67,8 +70,11 @@ static std::vector<int> kmp(const std::vector<int>& s) {
     return ret;
 }
 
-int main(int, char**)
-{
+/**
+ * @brief Find maximal k that can be a solution to this problem using bisection search
+ * 
+ */
+void solve() {
     int N, p;
     task_in >> N >> p; --N;
     std::vector<int> diffseq(N);
@@ -84,7 +90,7 @@ int main(int, char**)
         for (int i = 0; i <= ub; ++i) {
             nh.clear();
             nh.insert(nh.end(), diffseq.begin() + i, diffseq.begin() + i + k);
-            nh.push_back(1e09);
+            nh.push_back(INF);
             nh.insert(nh.end(), diffseq.begin() + i + k, diffseq.end());
             const auto findings = kmp(nh);
             if (std::find(findings.begin(), findings.end(), k) != findings.end())
@@ -97,10 +103,16 @@ int main(int, char**)
     auto ans = last_true(0, N / 2, check);
     if (2 * ans < N)
         ++ans;
-    if (ans < 5)
+    if (ans < MIN)
         ans = 0;
 
     task_out << ans << '\n';
+}
+
+int main(int, char**)
+{
+    //solve();
+    solve_usaco();
 }
 
 /*
