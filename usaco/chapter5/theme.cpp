@@ -15,51 +15,29 @@ std::ofstream task_out("theme.out");
 constexpr const int INF = 1e09;
 constexpr const int MIN = 5;
 
-static void solve_usaco() { // O(N2)
-    int N;
-    task_in >> N;
-    std::vector<int> notes(N);
-    for (auto& n : notes)
-        task_in >> n;
+static void solve() { // O(N2)
+    int N, p;
+    task_in >> N >> p; --N;
+    std::vector<int> diffseq(N);
+    for (auto& x : diffseq) {
+        int n; task_in >> n;
+        x = n - p;
+        p = n;
+    }
 
     int ans{0};
     for (int off = 1; off < N; ++off) {
         int cur{1};
-        for (int j = N - 1; j - off - 1 >= 0; --j)
-            if (notes[j - off] - notes[j - off - 1] == notes[j] - notes[j - 1]) {
-                if (cur < off) { // do not overlap
-                    ++cur;
-                    ans = std::max(ans, cur);
-                }
-            } else
+        for (int i = 0; i < N - off; ++i)
+            if (diffseq[i] == diffseq[i + off] && cur < off) // && do not overlap
+                ++cur;
+            else {
+                ans = std::max(ans, cur);
                 cur = 1;
+            }
+        ans = std::max(ans, cur);
     }
 
-    if (ans < MIN)
-        ans = 0;
-
-    task_out << ans << '\n';
-}
-
-static void solve_n3() { // O(N3)
-    int N;
-    task_in >> N;
-    std::vector<int> notes(N);
-    for (auto& n : notes)
-        task_in >> n;
-
-    int ans{4};
-    for (int i = 0; i < N - 2 * ans + 1; ++i)
-        for (int j = i + ans + 1; j < N - ans + 1; ++j) {
-            int can{0};
-            const int d = notes[j] - notes[i];
-            while (i + can < j && j + can < N && notes[j + can] - notes[i + can] == d)
-                ++can;
-            ans = std::max(ans, can);
-        }
-
-    if (2 * ans > N)
-        --ans;
     if (ans < MIN)
         ans = 0;
 
@@ -84,7 +62,7 @@ static T last_true(T lo, T hi, U f) {
  * @return std::vector<int> ret[n] == k iff k-prefix of needle starts at haystack[n - 2 * size(needle)]
  */
 template <typename T>
-static std::vector<int> kmp(const T* s, const size_t n) {
+static std::vector<int> kmp(const T* s, const int n) {
     std::vector<int> ret(n);
     for (int k = 0, i = 1; i < n; ++i) { // k is lenght of already found proper (non identity) bound 
         while (k > 0 && s[k] != s[i])
@@ -101,7 +79,7 @@ static std::vector<int> kmp(const T* s, const size_t n) {
  * @brief Find maximal k that can be a solution to this problem using bisection search
  * 
  */
-void solve() { // O(N2*LOG(N/2))
+void solve_general() { // O(N2*LOG(N/2))
     int N, p;
     task_in >> N >> p; --N;
     std::vector<int> diffseq(N);
@@ -137,9 +115,8 @@ void solve() { // O(N2*LOG(N/2))
 
 int main(int, char**)
 {
-    // solve();
-    // solve_n3();
-    solve_usaco();
+    solve();
+    // solve_general();
 }
 
 /*
@@ -155,5 +132,6 @@ Input:
 
 Output:
 
+5
 
 */

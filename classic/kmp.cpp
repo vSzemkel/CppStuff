@@ -35,7 +35,7 @@ static std::vector<int> kmp(const std::string& s) {
  * @return std::vector<int> ret[n] == k iff k-prefix of needle starts at haystack[n - 2 * size(needle)]
  */
 template <typename T>
-static std::vector<int> kmp_raw(const T* s, const size_t n) {
+static std::vector<int> kmp_raw(const T* s, const int n) {
     std::vector<int> ret(n);
     for (int k = 0, i = 1; i < n; ++i) { // k is lenght of already found proper (non identity) bound 
         while (k > 0 && s[k] != s[i])
