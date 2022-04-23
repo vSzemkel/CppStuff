@@ -27,6 +27,27 @@ static std::vector<int> kmp(const std::string& s) {
     return ret;
 }
 
+/**
+ * @brief Searches for prefixes of needle in the haystack string
+ * 
+ * @param s generalized string modelled as "needle$haystack"
+ * @param n length of s
+ * @return std::vector<int> ret[n] == k iff k-prefix of needle starts at haystack[n - 2 * size(needle)]
+ */
+template <typename T>
+static std::vector<int> kmp_raw(const T* s, const size_t n) {
+    std::vector<int> ret(n);
+    for (int k = 0, i = 1; i < n; ++i) { // k is lenght of already found proper (non identity) bound 
+        while (k > 0 && s[k] != s[i])
+            k = ret[k - 1];
+        if (s[k] == s[i])
+            ++k;
+        ret[i] = k;
+    }
+
+    return ret;
+}
+
 int main(int, char**)
 {
     const std::string text{"siusiasiusikusiaksiusiakusia"};

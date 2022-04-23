@@ -15,7 +15,33 @@ std::ofstream task_out("theme.out");
 constexpr const int INF = 1e09;
 constexpr const int MIN = 5;
 
-static void solve_usaco() {
+static void solve_usaco() { // O(N2)
+    int N;
+    task_in >> N;
+    std::vector<int> notes(N);
+    for (auto& n : notes)
+        task_in >> n;
+
+    int ans{0};
+    for (int off = 1; off < N; ++off) {
+        int cur{1};
+        for (int j = N - 1; j - off - 1 >= 0; --j)
+            if (notes[j - off] - notes[j - off - 1] == notes[j] - notes[j - 1]) {
+                if (cur < off) { // do not overlap
+                    ++cur;
+                    ans = std::max(ans, cur);
+                }
+            } else
+                cur = 1;
+    }
+
+    if (ans < MIN)
+        ans = 0;
+
+    task_out << ans << '\n';
+}
+
+static void solve_n3() { // O(N3)
     int N;
     task_in >> N;
     std::vector<int> notes(N);
@@ -53,15 +79,16 @@ static T last_true(T lo, T hi, U f) {
 /**
  * @brief Searches for prefixes of needle in the haystack string
  * 
- * @param s string modelled as "needle$haystack"
+ * @param s generalized string modelled as "needle$haystack"
+ * @param n length of s
  * @return std::vector<int> ret[n] == k iff k-prefix of needle starts at haystack[n - 2 * size(needle)]
  */
-static std::vector<int> kmp(const std::vector<int>& s) {
-    const int n = int(s.size());
+template <typename T>
+static std::vector<int> kmp(const T* s, const size_t n) {
     std::vector<int> ret(n);
     for (int k = 0, i = 1; i < n; ++i) { // k is lenght of already found proper (non identity) bound 
         while (k > 0 && s[k] != s[i])
-            k = ret[k - 1]; // books say there should be ret[k-1] - counterexample needed
+            k = ret[k - 1];
         if (s[k] == s[i])
             ++k;
         ret[i] = k;
@@ -74,7 +101,7 @@ static std::vector<int> kmp(const std::vector<int>& s) {
  * @brief Find maximal k that can be a solution to this problem using bisection search
  * 
  */
-void solve() {
+void solve() { // O(N2*LOG(N/2))
     int N, p;
     task_in >> N >> p; --N;
     std::vector<int> diffseq(N);
@@ -86,15 +113,14 @@ void solve() {
 
     const auto check = [&](const int k) -> bool {
         const auto ub = N - 2 * k;
-        std::vector<int> nh(N + 1);
-        for (int i = 0; i <= ub; ++i) {
-            nh.clear();
-            nh.insert(nh.end(), diffseq.begin() + i, diffseq.begin() + i + k);
-            nh.push_back(INF);
-            nh.insert(nh.end(), diffseq.begin() + i + k, diffseq.end());
-            const auto findings = kmp(nh);
-            if (std::find(findings.begin(), findings.end(), k) != findings.end())
+        std::vector<int> nh = diffseq;
+        nh.insert(nh.begin() + k, INF);
+        auto beg = nh.data();
+        for (int i = 0; i <= ub; ++i, ++beg) {
+            const auto found = kmp(beg, N + 1 - i);
+            if (std::find(found.begin(), found.end(), k) != found.end())
                 return true;
+            std::swap(beg[k], beg[k + 1]);
         }
 
         return false;
@@ -111,7 +137,8 @@ void solve() {
 
 int main(int, char**)
 {
-    //solve();
+    // solve();
+    // solve_n3();
     solve_usaco();
 }
 
