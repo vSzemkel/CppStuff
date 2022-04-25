@@ -14,6 +14,39 @@ std::vector<std::array<int, 2>> mM; // minmax for customers
 std::vector<std::vector<int>> baloons; // requirements
 std::vector<std::vector<std::map<std::pair<int, int>, int64_t>>> cache;
 
+static void solve() {
+    int N, P;
+    std::cin >> N >> P;
+    baloons.assign(N, std::vector<int>(P));
+    cache.assign(N, std::vector<std::map<std::pair<int, int>, int64_t>>(N));
+    for (auto& r : baloons)
+        for (auto& b : r)
+            std::cin >> b;
+    mM.resize(N);
+    for (int i = 0; i < N; ++i) {
+        const auto [m, M] = std::minmax_element(baloons[i].begin(), baloons[i].end());
+        mM[i][0] = *m; mM[i][1] = *M;
+    }
+
+    // 0: -> finish at min
+    // 1: -> finish at max
+    // to end at max we need to transition to min
+    std::vector<std::array<int64_t, 2>> dp(N); // dp[k] holds optimal solution after one of 2 possible transition from k-1
+    dp[0][0] = 2 * mM[0][1] - mM[0][0];
+    dp[0][1] = mM[0][1];
+    for (int i = 1; i < N; ++i) {
+        const auto& prev = dp[i - 1];
+        const auto local = mM[i][1] - mM[i][0];
+        // cost[k] = cost[k-1] + transition_cost + k-sweep_cost
+        dp[i][0] = std::min(prev[0] + std::abs(mM[i - 1][0] - mM[i][1]),
+                            prev[1] + std::abs(mM[i - 1][1] - mM[i][1])) + local;
+        dp[i][1] = std::min(prev[0] + std::abs(mM[i - 1][0] - mM[i][0]),
+                            prev[1] + std::abs(mM[i - 1][1] - mM[i][0])) + local;
+    }
+
+    std::cout << *std::min_element(dp[N - 1].begin(), dp[N - 1].end());
+}
+
 /**
  * @brief One of optimal processes must end on extremal pump setting
  * 
@@ -43,7 +76,7 @@ static int64_t solve_inner(const int first, const int last, int initval, int fin
     return cache[first][last][{initval, finval}] = ans;
 }
 
-static void solve() {
+static void solve2() {
     int N, P;
     std::cin >> N >> P;
     baloons.assign(N, std::vector<int>(P));
