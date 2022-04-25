@@ -5,13 +5,9 @@
 // Pancake Deque
 // https://codingcompetitions.withgoogle.com/codejam/round/000000000087711b/0000000000acd59d
 
-int N;
-std::vector<int> pancakes;
-std::vector<std::vector<int>> cache;
-
 static void solve() {
-    std::cin >> N;
-    pancakes.resize(N);
+    int N; std::cin >> N;
+    std::vector<int> pancakes(N);
     for (auto& p : pancakes)
         std::cin >> p;
  
