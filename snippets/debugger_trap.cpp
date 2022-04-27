@@ -3,11 +3,14 @@
 
 /**
  * @brief Call this in the process you want to attach debugger to
- * After attaching manually change loop variable value
+ * After attaching manually wait > 0.5s
  */
 static void attach_trap() {
     using namespace std::chrono_literals; 
-    bool attached{}; 
-    while (!attached)
-        std::this_thread::sleep_for(1s);
+    auto last = std::chrono::system_clock::now(), now{last + 1s};
+    while (now < last + 1500ms) {
+        last = now;
+        std::this_thread::sleep_for(1s); // set breakpoint here
+        now = std::chrono::system_clock::now();
+    }
 }
