@@ -169,5 +169,8 @@ Input:
 
 Output:
 
+Case #1: 4
+Case #2: 12
+Case #3: 20
 
 */
