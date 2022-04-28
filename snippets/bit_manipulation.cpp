@@ -22,11 +22,17 @@ int to_number = to_char & 0x0f; // to_number == 5
 // from Benq (GNU)
 constexpr int pct(int x) { return __builtin_popcount(x); } // # of bits set
 constexpr int bits(int x) { return x == 0 ? 0 : 31 - __builtin_clz(x); } // floor(log2(x)) 
+// rotate N bits
+static int rot(const int v, const int r) { // rotl iff r>0
+    const auto s = ((r % N) + N) % N;
+    if (!s) return v;
+    return ((v << s) | (v >> (N - s))) & ((1 << N) - 1);
+}
 // bit iteration
 for (int nodes = flag; nodes; ) {
-    const int n = nodes - (nodes & (nodes - 1));
+    const int n = nodes - (nodes & (nodes - 1)); // lowest set
     const int bit_no = bits(n);
-    all_adj |= edge_mask[n];
+    /* */
     nodes -= n;
 }
 // all subsets sums
