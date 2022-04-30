@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -45,22 +46,12 @@ static bool solve_inner(const char c) {
                 return false;
             if (cmn == 1) {
                 if (ans.back() == words[i].first.front()) {
-                    for (int k = 0; k < N; ++k)
-                        if (k != i && !used[k] && pct(words[k].second) == 1 && words[k].first.front() == ans.back()) {
-                            used[k] = true;
-                            ans += words[k].first;
-                        }
                     ans_total |= words[i].second;
                     ans += words[i].first;
                     used[i] = true;
                     continue;
                 }
                 if (ans.front() == words[i].first.back()) {
-                    for (int k = 0; k < N; ++k)
-                        if (k != i && !used[k] && pct(words[k].second) == 1 && ans.front() == words[k].first.back()) {
-                            used[k] = true;
-                            ans = words[k].first + ans;
-                        }
                     ans_total |= words[i].second;
                     ans = words[i].first + ans;
                     used[i] = true;
@@ -102,6 +93,11 @@ static std::string solve() {
     for (const auto& [w, l] : words)
         if (!check_interleaved(w, l))
             return "IMPOSSIBLE";
+
+    // uniform words should precede combined: AAAA before BAAA and AAC
+    std::sort(words.begin(), words.end(), [](const auto& w1, const auto& w2){
+        return w1.second < w2.second;
+    });
 
     result.clear();
     for (const auto& s : stats)
