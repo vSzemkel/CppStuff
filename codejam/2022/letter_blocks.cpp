@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 // Letter Blocks
@@ -12,20 +11,28 @@
 constexpr int pct(int x) { return __builtin_popcount(x); } // # of bits set
 
 int N;
+int total; // chars bitmap
 std::string result;
 std::vector<bool> used;
-std::unordered_map<char, bool> stats; // {char, analyzed}
 std::vector<std::pair<std::string, int>> words; // {word, letters bitmap (A == 1)}
 
-static bool check_interleaved(const std::string& s, const int distinct) {
+/**
+ * @brief Checks if there is no interleaving in string
+ * @return true if there are i < j < k such that s[i] == s[k] and s[i] != s[j]
+ */
+static bool is_interleaved(const std::string& s) {
     const int size = int(s.size());
-    if (size < 2) return true;
+    if (size < 2) return false;
 
     int changes{0};
-    for (int i = 1; i < size; ++i)
+    int bitmap = 1 << (s[0] - 'A');
+    for (int i = 1; i < size; ++i) {
+        bitmap |= 1 << (s[i] - 'A');
         if (s[i - 1] != s[i])
             ++changes;
-    return changes < distinct;
+    }
+
+    return pct(bitmap) <= changes;
 }
 
 static bool solve_inner(const char c) {
@@ -68,7 +75,7 @@ static bool solve_inner(const char c) {
     if (ans.front() == c || solve_inner(ans.front())) {
         result += ans;
         if (ans.back() == c || solve_inner(ans.back())) {
-            stats[c] = false;
+            total &= ~ans_total;
             return true;
         }
     }
@@ -78,20 +85,21 @@ static bool solve_inner(const char c) {
 
 static std::string solve() {
     std::cin >> N;
-    stats.clear();
+    total = 0;
     words.assign(N, {});
     used.assign(N, false);
     for (auto& w : words) {
         std::cin >> w.first;
         for (const char c : w.first) {
-            stats[c] = true;
-            w.second |= (1 << (c - 'A'));
+            const auto m = (1 << (c - 'A'));
+            total |= m;
+            w.second |= m;
         }
     }
 
     // check for invalid input words
     for (const auto& [w, l] : words)
-        if (!check_interleaved(w, l))
+        if (is_interleaved(w))
             return "IMPOSSIBLE";
 
     // uniform words should precede combined: AAAA before BAAA and AAC
@@ -100,11 +108,13 @@ static std::string solve() {
     });
 
     result.clear();
-    for (const auto& s : stats)
-        if (s.second > 0 && !solve_inner(s.first))
+    while (total) {
+        const char start = 'A' + __builtin_ctz(total);
+        if (!solve_inner(start))
             return "IMPOSSIBLE";
+    }
 
-    if (!check_interleaved(result, stats.size()))
+    if (is_interleaved(result))
         return "IMPOSSIBLE";
 
     return result;
