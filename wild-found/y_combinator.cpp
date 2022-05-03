@@ -1,6 +1,14 @@
 
 #include <functional>
 
+// alternative to:
+std::function<void(int)> dfs = [&](int pos) {
+    seen[pos] = true;
+    ord.push_back(pos);
+    for (int i = 0; i < N; ++i)
+        dfs(i);
+};
+
 // see: /codejam/2022/chain_reactions.cpp
 
 namespace std {

@@ -1,5 +1,7 @@
 
 #include <algorithm>
+#include <array>
+#include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -8,6 +10,7 @@
 // https://codingcompetitions.withgoogle.com/codejam/round/0000000000877b42/0000000000afe6a1
 
 
+constexpr const int LETTERS = 26;
 constexpr int pct(int x) { return __builtin_popcount(x); } // # of bits set
 
 int N;
@@ -115,6 +118,64 @@ static std::string solve() {
     }
 
     if (is_interleaved(result))
+        return "IMPOSSIBLE";
+
+    return result;
+}
+
+static std::string solve_alt() {
+    std::cin >> N;
+    std::vector<std::string> tokens(N);
+    std::array<int, LETTERS> counts{}, indeg{}, outdeg{};
+    std::array<std::array<bool, LETTERS>, LETTERS> con{};
+    int total{0};
+    for (auto& w : tokens) {
+        std::cin >> w;
+        int prev = w.front() - 'A';
+        ++counts[prev];
+        const int sz = int(w.size());
+        total += sz;
+        for (int i = 1; i < sz; ++i) {
+            const int ltr = w[i] - 'A';
+            ++counts[ltr];
+            if (prev != ltr) {
+                ++indeg[ltr];
+                ++outdeg[prev];
+                con[prev][ltr] = true;
+            }
+            prev = ltr;
+        }
+    }
+
+    bool valid{true};
+    std::vector<int> order;
+    std::array<bool, LETTERS> seen{};
+    std::function<void(int)> dfs = [&](int ltr) {
+        seen[ltr] = true;
+        order.push_back(ltr);
+        for (int i = 0; i < LETTERS; ++i)
+            if (con[ltr][i]) {
+                if (!seen[i])
+                    dfs(i);
+                else
+                    valid = false;
+            }
+    };
+
+    for (int l = 0; l < LETTERS; ++l)
+        if (indeg[l] == 0 && counts[l] && !seen[l])
+            dfs(l);
+
+    if (!valid || 1 < *std::max_element(indeg.begin(), indeg.end()) || 1 < *std::max_element(outdeg.begin(), outdeg.end()))
+        return "IMPOSSIBLE";
+
+    std::string result;
+    result.reserve(total);
+    for (const int l : order)
+        if (counts[l]) 
+            result += std::string(counts[l], 'A' + l);
+
+    if (int(result.size()) != total)
         return "IMPOSSIBLE";
 
     return result;
