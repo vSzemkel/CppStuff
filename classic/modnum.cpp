@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <iostream>
 #include <optional>
+#include <vector>
 
 // Modnum - integral datatype implementing modulo arithmetic
 
@@ -169,6 +170,24 @@ int main(int, char**)
     modnum_t<int, 360> wheel;
     assert(wheel.range_len(100, 200) == 101);
     assert(wheel.range_len(200, 100) == 261); // 200..359 0..100 -> 160 + 101
+
+    std::vector<int> fact, inv_fact, inverses;
+    const auto init_fact = [&](const size_t max, const int M) {
+        fact.resize(max);
+        inv_fact.resize(max);
+        inverses.resize(max);
+        inverses[1] = fact[1] = inv_fact[1] = fact[0] = inv_fact[0] = 1;
+        for (size_t i = 2; i < max; ++i) {
+            inverses[i] = (int)((int64_t)(M - M / i) * inverses[M % i] % M);
+            inv_fact[i] = (int)((int64_t)inv_fact[i - 1] * inverses[i] % M);
+            fact[i] = (int)((int64_t)fact[i - 1] * i % M);
+        }
+    };
+
+    modnum_t<int> invfac = 15;
+    init_fact(100, 998244353);
+    assert(fact[20] == 401576539);
+    assert(inverses[15] == invfac.inv());
     std::cout << "PASSED\n";
 }
 

@@ -10,12 +10,11 @@
 
 /**
  * @brief Let E be initial sequence
- * Let S(seq) be a sum of sequence elements, eg S(a, b, c) = a + b + c
- * P(seq) be a pairwise sum of a sequence
- * P(a, b, c) = ab + ac + bc
+ * Let S(seq) be a sum of sequence elements, eg. S(a, b, c) = a + b + c
+ * P(seq) be a pairwise sum of a sequence, eg. P(a, b, c) = ab + ac + bc
  * We need to find elements e1..en such that
  * P(E, e1, .., en) == 0
- * After some transformation with pen&paper we find out that only two elements suffices
+ * After some transformation with pen&paper we find out that only two elements suffice
  * 
  * P(E, e1, e2) = P(E, e1) + e2 * S(E, e1)
  * Let e1 == 1 - S(E), then e2 = -P(E, [1 - S(E)])
