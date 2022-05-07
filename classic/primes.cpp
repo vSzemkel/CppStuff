@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <assert.h>
 #include <cmath>
+#include <iostream>
+#include <numeric>
 #include <map>
 #include <vector>
 
@@ -57,6 +59,24 @@ static std::vector<int64_t> factorize(int64_t n) {
     return factorization;
 }
 
+static auto get_all_divisors(const int64_t n) {
+    std::vector<int64_t> ans;
+    const auto nsq = static_cast<int64_t>(std::sqrt(n));
+    for (int i = 1; i <= nsq; ++i) {
+        const auto d = n / i;
+        if (d * i == n) {
+            ans.push_back(i);
+            ans.push_back(d);
+        }
+    }
+
+    const int size = int(ans.size());
+    if (size > 1 && ans[size - 2] == ans.back())
+        ans.pop_back();
+
+    return ans;
+}
+
 // https://cp-algorithms.com/algebra/divisors.html
 static auto get_base_divisors(const int64_t n) {
     const auto factorization = factorize(n);
@@ -69,7 +89,7 @@ static auto get_base_divisors(const int64_t n) {
 
 static int64_t count_divisors(const int64_t n) {
     int64_t ret{1};
-    const auto divisors = get_divisors(n);
+    const auto divisors = get_base_divisors(n);
     for (const auto& [_, c] : divisors)
         ret *= (c + 1);
     return ret;
@@ -77,7 +97,7 @@ static int64_t count_divisors(const int64_t n) {
 
 static int64_t sum_divisors(const int64_t n) {
     int64_t ret{1};
-    const auto divisors = get_divisors(n);
+    const auto divisors = get_base_divisors(n);
     for (const auto& [d, c] : divisors)
         ret *= (std::pow(d, c + 1) - 1) / (d - 1);
     return ret;
@@ -85,16 +105,22 @@ static int64_t sum_divisors(const int64_t n) {
 
 int main(int, char**)
 {
+    const int p = 998244353;
+    assert(is_prime(p));
     auto primes = generate(500);
     assert(primes.size() == 95);
 
     const int64_t n = 2LL * 7 * 7 * 13 * 37 * 107 * 499 * 1039 * 7013;
-    assert(factorize(n) == (std::vector<int64_t>{2, 7, 7, 13, 37, 107, 499, 1039, 7013}));
-    assert(factorize(1'000'000'007) == (std::vector<int64_t>{1'000'000'007}));
-    assert(factorize(1) == (std::vector<int64_t>{1}));
     assert(factorize(0).empty());
+    assert(factorize(1) == (std::vector<int64_t>{1}));
+    assert(factorize(p) == (std::vector<int64_t>{p}));
+    assert(factorize(n) == (std::vector<int64_t>{2, 7, 7, 13, 37, 107, 499, 1039, 7013}));
     assert(count_divisors(n) == 384); // 3 * 2**7
     assert(sum_divisors(2 * 2 * 5 * 7) == 336); // 1 + 2 + 5 + 7 + 4 + 10 + 14 + 35 + 140/2 + 140/5 + 140/7 + 140
+    const auto d888888 = get_all_divisors(888888);
+    assert(count_divisors(888888) == int64_t(d888888.size()));
+    assert(sum_divisors(888888) == std::accumulate(d888888.begin(), d888888.end(), 0LL));
+    std::cout << "PASSED\n";
 }
 
 /* Compile:
