@@ -14,6 +14,17 @@ bool is_palindrome(const std::string& s)
 }
 
 template <typename T>
+static int numlen(const T n) {
+    int len{0}; 
+    T probe{1};
+    while (probe < n) {
+        probe *= 10;
+        ++len;
+    }
+    return len;
+}
+
+template <typename T>
 static bool is_num_palindrome(T n) {
     if (n < 10) return true;
     int len = numlen(n);
@@ -45,17 +56,6 @@ static bool is_bit_palindrome(const T v, const int size) {
         u >>= 1;
     }
     return true;
-}
-
-template <typename T>
-static int numlen(const T n) {
-    int len{0}; 
-    T probe{1};
-    while (probe < n) {
-        probe *= 10;
-        ++len;
-    }
-    return len;
 }
 
 template <typename T>

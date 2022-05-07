@@ -58,7 +58,7 @@ static std::vector<int64_t> factorize(int64_t n) {
 }
 
 // https://cp-algorithms.com/algebra/divisors.html
-static auto get_divisors(const int64_t n) {
+static auto get_base_divisors(const int64_t n) {
     const auto factorization = factorize(n);
     assert(std::is_sorted(factorization.begin(), factorization.end()));
     std::map<int64_t, int> divisors;
