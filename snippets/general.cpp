@@ -8,7 +8,10 @@ vl_t g_input, g_partial;
 std::vector<bool> g_marked;
 int64_t g_rows, g_cols, g_size;
 std::ofstream g_debug("$TASKNAME$.log");
-constexpr const int INF = 1e09, EPS = 1e-09;
+
+constexpr const int INF = 1e09;
+constexpr const int64_t INF = 1e18;
+constexpr const double EPS = 1e-09;
 
 const auto col = [](const int64_t pos) noexcept { return pos % g_cols; };
 const auto row = [](const int64_t pos) noexcept { return pos / g_cols; };
