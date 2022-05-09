@@ -7,10 +7,90 @@
 // Unlock The Padlock
 // https://codingcompetitions.withgoogle.com/kickstart/round/00000000008caa74/0000000000acef55
 
+constexpr const int INF = 1e09;
+
+/**
+ * @brief We keep track of the side with current value zero, no recurence
+ * Handling bounds checking is really tedious in this case
+ * Solution without checkin is accepted by the judge
+ */
+static void solve() {
+    int N, D;
+    std::cin >> N >> D;
+    std::vector<int> disks(N);
+    for (auto& d : disks)
+        std::cin >> d;
+
+    const auto distance = [&](const int a, const int b) {
+        const int c = std::abs(a - b);
+        return std::min(c, D - c);
+    };
+
+    std::vector<std::vector<std::vector<int64_t>>> dp(N, std::vector<std::vector<int64_t>>(N, std::vector<int64_t>{}));
+    for (int rb = 0; rb < N; ++rb)
+        for (int lb = rb; ~lb; --lb)
+            if (lb == rb) {
+                dp[lb][rb].push_back(lb > 0 ? distance(disks[lb - 1], disks[lb]) : INF);
+                dp[lb][rb].push_back(lb < N - 1 ? distance(disks[lb], disks[lb + 1]) : INF);
+            } else {
+                int zero[2] = {-1, -1};
+                if (lb > 0) zero[0] = disks[lb - 1];
+                if (rb < N - 1) zero[1] = disks[rb + 1];
+                for (const int z : zero)
+                    if (~z) {
+                        const int64_t from_left = distance(z, disks[lb]) + dp[lb + 1][rb][0];
+                        const int64_t from_right = distance(z, disks[rb]) + dp[lb][rb - 1][1];
+                        dp[lb][rb].push_back(std::min(from_left, from_right));
+                    } else
+                        dp[lb][rb].push_back(INF);
+            }
+
+    if (N == 1)
+        std::cout << distance(disks.front(), 0);
+    else
+        std::cout << std::min(distance(disks.front(), 0) + dp[1][N - 1][0],
+                              distance(disks.back(),  0)  + dp[0][N - 2][1]);
+}
+
+/**
+ * @brief We keep track of the side with current value zero, no recurence, see above
+ */
+static void solve_heap-buffer-overflow() {
+    int N, D;
+    std::cin >> N >> D;
+    std::vector<int> disks(N);
+    for (auto& d : disks)
+        std::cin >> d;
+
+    const auto distance = [&](const int a, const int b) {
+        const int c = std::abs(a - b);
+        return std::min(c, D - c);
+    };
+
+    std::vector<std::vector<std::vector<int64_t>>> dp(N, std::vector<std::vector<int64_t>>(N, std::vector<int64_t>{}));
+    for (int rb = 0; rb < N; ++rb)
+        for (int lb = rb; ~lb; --lb)
+            if (lb == rb) {
+                dp[lb][rb].push_back(distance(disks[lb - 1], disks[lb]));
+                dp[lb][rb].push_back(distance(disks[lb], disks[lb + 1]));
+            } else
+                for (const int zero : {disks[lb - 1], disks[rb + 1]}) {
+                    const int64_t from_left = distance(zero, disks[lb]) + dp[lb + 1][rb][0];
+                    const int64_t from_right = distance(zero, disks[rb]) + dp[lb][rb - 1][1];
+                    dp[lb][rb].push_back(std::min(from_left, from_right));
+                }
+
+    if (N == 1)
+        std::cout << distance(disks.front(), 0);
+    else
+        std::cout << std::min(distance(disks.front(), 0) + dp[1][N - 1][0],
+                              distance(disks.back(),  0)  + dp[0][N - 2][1]);
+}
+
 /**
  * @brief We keep track of the side with current value zero
  */
-static void solve() {
+static void solve_recursive() {
     int N, D;
     std::cin >> N >> D;
     std::vector<int> disks(N);
