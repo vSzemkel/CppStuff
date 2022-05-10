@@ -30,6 +30,10 @@ static int64_t advance(const int64_t pos, const char dir)
 
 constexpr auto fn_col = [](const int cell){ return cell % g_cols; };
 constexpr auto fn_row = [](const int cell){ return cell / g_cols; };
+constexpr std::pair<int, int> fn_rc = [](const int cell){
+    const div_t rc = div(cell, g_cols);
+    return {rc.quot, rc.rem};
+}
 
 // collect 2 to 4 adjacent cells to pos
 auto adjacents(const int pos)
