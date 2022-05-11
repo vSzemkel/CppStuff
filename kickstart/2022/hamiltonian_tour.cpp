@@ -30,6 +30,23 @@
 // Hamiltonian Tour
 // https://codingcompetitions.withgoogle.com/kickstart/round/00000000008caa74/0000000000acf318
 
+const char* map = "SENW";
+std::unordered_map<char, int> dir = {{'S', 0}, {'E', 1}, {'N', 2}, {'W', 3}};
+
+static std::string chunk(const char from, const char to) {
+    switch ((dir[to] - dir[from] + 4) % 4) {
+        case 0:
+            return std::string(2, from);
+        case 1:
+            return std::string(1, from).append(2, to);
+        case 2:
+            return std::string(1, from).append(1, map[(dir[from] + 1) % 4]).append(2, to);
+        case 3:
+            return std::string(1, to);
+    }
+
+    return {};
+}
 
 static void solve() {
     int R, C;
@@ -40,7 +57,7 @@ static void solve() {
         char c; std::cin >> c;
         seen[i] = c == '#';
     }
-
+    const int total_free = SZ - std::count_if(seen.begin(), seen.end(), [](bool b){ return b; });
     const int dr[4] = {1, 0, -1, 0}; // row
     const int dc[4] = {0, 1, 0, -1}; // col
     std::vector<int> stack(1, 0), order;
@@ -72,12 +89,13 @@ static void solve() {
 
     const int size = int(order.size());
     if (size == 1) {
-        std::cout << "SENW";
+        std::cout << map;
         return;
     }
 
     std::string path;
-    int pr = order[0] / C, pc = order[0] % C;
+    div_t rc = div(order[0], C);
+    int& pr = rc.quot, pc = rc.rem;
     for (int i = 1; i < size; ++i) {
         const div_t rc = div(order[i], C);
         const int& r = rc.quot, c = rc.rem;
@@ -93,7 +111,15 @@ static void solve() {
         pr = r; pc = c;
     }
 
-    std::cout << path;
+    std::string ans;
+    ans.reserve(SZ << 2);
+    ans = (path[0] == 'S') ? "SS" : "SEE";
+    for (int i = 1; i < int(path.size()); ++i)
+        ans += chunk(path[i - 1], path[i]);
+    ans.append((path.back() == 'N') ? "NW" : "W");
+
+    //assert((total_free << 2) == ans.size());
+    std::cout << ans;
 }
 
 int main(int, char**)
@@ -120,7 +146,7 @@ hamiltonian_tour.exe < hamiltonian_tour.in
 
 Input:
 
-6
+8
 1 1
 *
 2 2
@@ -140,6 +166,13 @@ Input:
 **#*
 **#*
 ****
+3 3
+...
+.#.
+...
+2 5
+.#.#.
+.....
 
 Output:
 
