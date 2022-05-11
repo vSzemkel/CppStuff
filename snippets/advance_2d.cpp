@@ -26,6 +26,15 @@ static int64_t advance(const int64_t pos, const char dir)
     return -1;
 }
 
+/**************************** MAZE ************************************/
+
+// see: /kickstart/2022/hamiltonian_tour.cpp
+const char* map = "SENW";
+std::unordered_map<char, int> dir = {{'S', 0}, {'E', 1}, {'N', 2}, {'W', 3}};
+const int dr[4] = {1, 0, -1, 0}; // row "SENW"
+const int dc[4] = {0, 1, 0, -1}; // col
+const int right_wall[4] = {-1, 0, 1, 2};
+
 /**********************************************************************/
 
 constexpr auto fn_col = [](const int cell){ return cell % g_cols; };

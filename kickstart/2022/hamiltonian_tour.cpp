@@ -1,29 +1,9 @@
 
 #include <algorithm>
-#include <array>
-#include <bitset>
 #include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
 #include <string>
-#include <string_view>
 #include <unordered_map>
-#include <unordered_set>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -57,17 +37,21 @@ static void solve() {
         char c; std::cin >> c;
         seen[i] = c == '#';
     }
-    const int total_free = SZ - std::count_if(seen.begin(), seen.end(), [](bool b){ return b; });
-    const int dr[4] = {1, 0, -1, 0}; // row
+    const int dr[4] = {1, 0, -1, 0}; // row "SENW"
     const int dc[4] = {0, 1, 0, -1}; // col
-    std::vector<int> stack(1, 0), order;
+    const int right_wall[4] = {-1, 0, 1, 2};
+    const int total_free = SZ - std::count_if(seen.begin(), seen.end(), [](bool b){ return b; });
+    std::vector<std::pair<int, int>> stack(1, {0, 3}); // {cell, transition}, assume that first one came with E transition
+    std::vector<int> order;
     seen[0] = true;
     while (!stack.empty()) {
-        int next{-1};
-        const div_t rc = div(stack.back(), C);
+        int tour, next{-1};
+        const auto& [cell, last] = stack.back();
+        const div_t rc = div(cell, C);
         const int& r = rc.quot, c = rc.rem;
-        for (int i = 0; i < 4; ++i) {
-            const int s = r + dr[i], d = c + dc[i];
+        for (const int turn : right_wall) {
+            tour = (last + turn + 4) % 4;
+            const int s = r + dr[tour], d = c + dc[tour];
             if (~s && s < R && ~d && d < C && !seen[s * C + d]) {
                 next = s * C + d;
                 seen[next] = true;
@@ -75,9 +59,9 @@ static void solve() {
             }
         }
 
-        order.push_back(stack.back());
+        order.push_back(cell);
         if (~next)
-            stack.push_back(next);
+            stack.push_back({next, tour});
         else
             stack.pop_back();
     }
@@ -118,7 +102,7 @@ static void solve() {
         ans += chunk(path[i - 1], path[i]);
     ans.append((path.back() == 'N') ? "NW" : "W");
 
-    //assert((total_free << 2) == ans.size());
+    assert((total_free << 2) == int(ans.size()));
     std::cout << ans;
 }
 
@@ -146,7 +130,7 @@ hamiltonian_tour.exe < hamiltonian_tour.in
 
 Input:
 
-8
+7
 1 1
 *
 2 2
@@ -166,15 +150,19 @@ Input:
 **#*
 **#*
 ****
-3 3
-...
-.#.
-...
-2 5
-.#.#.
-.....
+3 5
+*****
+*#*#*
+*****
 
 Output:
 
+Case #1: SENW
+Case #2: SSSENNEENWWW
+Case #3: SSSSSEEEEEEENWWNNNEENWWWWWSEESSSWWWNNNNW
+Case #4: SSSENNNW
+Case #5: IMPOSSIBLE
+Case #6: SSSSSEEEEEEENNNNNWSSSSWWWNNNNWSSSSWNNNNW
+Case #7: SSSSSEEEEEEEEENNNNNWWWWWWWSEESSENNEEESSSWWWWWWWNNNNW
 
 */
