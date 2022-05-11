@@ -21,10 +21,11 @@ struct uf_t {
         return find(x) == find(y);
     }
 
-    void unite(const int x, const int y) {
+    bool unite(const int x, const int y) {
         int gx = find(x);
         int gy = find(y);
-        if (gx == gy) return;
+        if (gx == gy)
+            return false;
         if (_rank[gx] < _rank[gy]) // could be tailored, see \classic\arpa_rmq.cpp
             std::swap(gx, gy);
         else if (_rank[gx] == _rank[gy])
@@ -32,6 +33,7 @@ struct uf_t {
         _size[gx] += _size[gy];
         _group[gy] = gx;
         --_count;
+        return true;
     }
 
     int size(const int x) { return _size[find(x)]; }
@@ -68,7 +70,8 @@ int main(int, char**)
     assert(uf.find(2) == 5);
     uf.unite(5, 7);
     uf.unite(5, 4);
-    uf.unite(0, 1);
+    assert(uf.unite(0, 1) == true);
+    assert(uf.unite(0, 1) == false);
     assert(uf.count() == 1);
     for (int i = 0; i < N; ++i)
         assert(uf.find(i) == 5);

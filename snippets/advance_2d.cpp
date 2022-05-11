@@ -30,10 +30,11 @@ static int64_t advance(const int64_t pos, const char dir)
 
 // see: /kickstart/2022/hamiltonian_tour.cpp
 const char* map = "SENW";
-std::unordered_map<char, int> dir = {{'S', 0}, {'E', 1}, {'N', 2}, {'W', 3}};
 const int dr[4] = {1, 0, -1, 0}; // row "SENW"
 const int dc[4] = {0, 1, 0, -1}; // col
 const int right_wall[4] = {-1, 0, 1, 2};
+std::unordered_map<char, int> dir = {{'S', 0}, {'E', 1}, {'N', 2}, {'W', 3}};
+std::map<std::pair<int, int>, char> label = {{{1, 0}, 'S'}, {{0, 1}, 'E'}, {{-1, 0}, 'N'}, {{0, -1}, 'W'}, };
 
 /**********************************************************************/
 

@@ -1,7 +1,9 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdlib>
 #include <iostream>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -11,7 +13,11 @@
 // https://codingcompetitions.withgoogle.com/kickstart/round/00000000008caa74/0000000000acf318
 
 const char* map = "SENW";
+const int dr[4] = {1, 0, -1, 0}; // row "SENW"
+const int dc[4] = {0, 1, 0, -1}; // col
+const int right_wall[4] = {-1, 0, 1, 2};
 std::unordered_map<char, int> dir = {{'S', 0}, {'E', 1}, {'N', 2}, {'W', 3}};
+std::map<std::pair<int, int>, char> label = {{{1, 0}, 'S'}, {{0, 1}, 'E'}, {{-1, 0}, 'N'}, {{0, -1}, 'W'}, };
 
 static std::string chunk(const char from, const char to) {
     switch ((dir[to] - dir[from] + 4) % 4) {
@@ -37,9 +43,7 @@ static void solve() {
         char c; std::cin >> c;
         seen[i] = c == '#';
     }
-    const int dr[4] = {1, 0, -1, 0}; // row "SENW"
-    const int dc[4] = {0, 1, 0, -1}; // col
-    const int right_wall[4] = {-1, 0, 1, 2};
+
     const int total_free = SZ - std::count_if(seen.begin(), seen.end(), [](bool b){ return b; });
     std::vector<std::pair<int, int>> stack(1, {0, 3}); // {cell, transition}, assume that first one came with E transition
     std::vector<int> order;
@@ -84,14 +88,7 @@ static void solve() {
         const div_t rc = div(order[i], C);
         const int& r = rc.quot, c = rc.rem;
         const int dr = r - pr, dc = c - pc;
-        if (dr == 1 && dc == 0)
-            path += 'S';
-        if (dr == 0 && dc == 1)
-            path += 'E';
-        if (dr == -1 && dc == 0)
-            path += 'N';
-        if (dr == 0 && dc == -1)
-            path += 'W';
+        path += label[{dr, dc}];
         pr = r; pc = c;
     }
 
