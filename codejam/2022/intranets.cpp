@@ -1,12 +1,12 @@
 
-#include <assert.h>
 #include <iostream>
 #include <optional>
 #include <vector>
 
-// Modnum - integral datatype implementing modulo arithmetic
+// Intranets
+// https://codingcompetitions.withgoogle.com/codejam/round/0000000000877b42/0000000000afeb38#analysis
 
-template <typename T = int, T M = 998244353>
+template <typename T = int, T M = 1'000'000'007>
 class modnum_t {
   public:
     modnum_t() : value(0) {}
@@ -36,11 +36,6 @@ class modnum_t {
         return modnum_t(*this);
     }
 
-    modnum_t operator^(const int n) const
-    {
-        return modnum_t{pow(value, n)};
-    }
-
     modnum_t& operator+=(const modnum_t& o)
     {
         value += o.value;
@@ -57,7 +52,7 @@ class modnum_t {
 
     modnum_t& operator*=(const modnum_t& o)
     {
-        value = mul(value, o.value);
+        value = modmul(value, o.value);
         return *this;
     }
 
@@ -128,7 +123,7 @@ class modnum_t {
         return a;
     }
 
-    static T mul(T a, T b)
+    static T modmul(T a, T b)
     {
         int64_t r{0};
         while (b) {
@@ -137,23 +132,6 @@ class modnum_t {
             a = add(a, a);
         }
         return r;
-    }
-
-    static T pow(T a, T n)
-    {
-        modnum_t b{a}, ret{1};
-        while (n > 0) {
-            if (n & 1)
-                ret *= b;
-            b = b * b;
-            n >>= 1;
-        }
-        return T(ret);
-    }
-
-    static T catalan(T n)
-    {
-        return T(bin_coeff(2 * n, n) * pow(n + 1, M - 2));
     }
 
     static T range_len(const int a, const int b) { // [a..b]
@@ -173,57 +151,89 @@ class modnum_t {
     T value;
 };
 
+/* This is digest from the solution for Set2
+
+def catalan(n):
+    return binom(2 * n, n) * pow(n + 1, MOD - 2, MOD) % MOD
+
+def numer(n, k):
+    ans = pow(2, (n - 2 * k - 1), MOD)
+    ans *= binom(n - 1, 2 * k)
+    ans %= MOD
+    ans *= binom(2 * k, k)
+    ans %= MOD
+    ans *= pow(k + 1, MOD - 2, MOD)
+    ans %= MOD
+    return ans
+
+def solve():
+    M, K = rrm()
+    ans = numer(M - 1, K - 1)
+    ans *= pow(catalan(M - 1), MOD - 2, MOD)
+    ans %= MOD
+    return ans
+*/
+
+static void solve_set1() {
+    int M, K;
+    std::cin >> M >> K;
+
+    // we label with decreasing priorities
+    // dp[m][k] probability that after labeling some initial edges 
+    // there are m machines connected and they form exactly k intranets
+    // dp[m][k] is in fact the sum for possibly many initial labelling
+    // consider last added edge
+    // CASE1: it connects two not connected machines with probability P1
+    // dp[m][k] += dp[m - 2][k - 1] * P1
+    // CASE2: it connects one connected machine with disconnected one with probability P2
+    // dp[m][k] += dp[m - 1][k] * P2
+    std::vector<std::vector<modnum_t<>>> dp(M + 2, std::vector<modnum_t<>>(K + 2, 0));
+    dp[0][0] = 1;
+    for (int i = 0; i < M; ++i) { // i is number of connected machines
+        const modnum_t<> c1 = (M - i) * (M - i - 1) / 2;
+        const modnum_t<> c2 = i * (M - i);
+        const auto all = c1 + c2;
+        const auto p1 = c1 / all;
+        const auto p2 = c2 / all;
+        for (int j = 0; j <= K; ++j) {
+            dp[i + 2][j + 1] += dp[i][j] * p1;
+            dp[i + 1][j] += dp[i][j] * p2;
+        }
+    }
+
+    std::cout << dp[M][K];
+}
+
 int main(int, char**)
 {
-    modnum_t<int, 20> m = 13;
-    assert(inv(m).value() == 17); // 13 * 17 == 1 (mod 20)
-    modnum_t<int64_t, 20> m2 = 15;
-    assert(!inv(m2).has_value());
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
 
-    assert(neg(m2) == 5);
-    auto m3 = m2++;
-    assert(m2 == 16 && m3 == 15);
-    assert(m2 * m3 == 0);
-
-    modnum_t<int64_t> m4;
-    assert(m4.mul(16351848, 9174561) == 872592476);
-    assert(m4.bin_coeff(197, 8) == 26874261); // 48717346033720 % 998244353
-
-    modnum_t<int, 360> wheel;
-    assert(wheel.range_len(100, 200) == 101);
-    assert(wheel.range_len(200, 100) == 261); // 200..359 0..100 -> 160 + 101
-
-    std::vector<modnum_t<>> fact, inv_fact, inverses;
-    const auto init_fact = [&](const size_t max, const int M) {
-        fact.resize(max);
-        inv_fact.resize(max);
-        inverses.resize(max);
-        inverses[1] = fact[1] = inv_fact[1] = fact[0] = inv_fact[0] = 1;
-        for (size_t i = 2; i < max; ++i) {
-            inverses[i] = (int)((int64_t)(M - M / i) * inverses[M % i] % M);
-            inv_fact[i] = (int)((int64_t)inv_fact[i - 1] * inverses[i] % M);
-            fact[i] = (int)((int64_t)fact[i - 1] * i % M);
-        }
-    };
-
-    modnum_t<> modpow = 158715;
-    assert((modpow ^ 4) == (modpow * modpow * modpow * modpow));
-
-    const auto c = modnum_t<>::catalan(15);
-    assert(c == 9694845);
-
-    modnum_t<> invfac = 15;
-    init_fact(100, 998244353);
-    assert(fact[20] == 401576539);
-    assert(inverses[15] == invfac.inv());
-    assert(fact[17] * inv_fact[10] * inv_fact[17 - 10] == invfac.bin_coeff(17, 10));
-    std::cout << "PASSED\n";
+    int no_of_cases;
+    std::cin >> no_of_cases;
+    for (int g = 1; g <= no_of_cases; ++g) {
+        std::cout << "Case #" << g << ": "; solve_set1(); std::cout << '\n';
+    }
 }
 
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 modnum.cpp -o modnum.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 modnum.cpp -o modnum
+clang++.exe -Wall -Wextra -g3 -O0 -std=c++17 intranets.cpp -o intranets.exe
+g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address intranets.cpp -o intranets
+
+Run:
+intranets.exe < intranets.in
+
+Input:
+
+3
+5 2
+5 1
+6 3
+
+Output:
+
 
 */

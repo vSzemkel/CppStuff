@@ -13,7 +13,7 @@ constexpr const int INF = 1e09;
 constexpr const int64_t INF = 1e18;
 constexpr const double EPS = 1e-09;
 
-std::vector<std::vector<int64_t>> dp(N, std::vector<std::vector<int64_t>>(N, -1LL));
+std::vector<std::vector<int64_t>> dp(N, std::vector<int64_t>(N, -1LL));
 std::vector<std::vector<std::vector<int64_t>>> dp(N, std::vector<std::vector<int64_t>>(N, std::vector<int64_t>(2, -1LL)));
 
 const auto col = [](const int64_t pos) noexcept { return pos % g_cols; };

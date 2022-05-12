@@ -4,6 +4,7 @@
 #include <vector>
 
 // Binominal coefficient
+// For binominal coefficient modulo M, see ./modnum.cpp
 
 constexpr int MAX = 10000;
 double logFactorials[MAX];
