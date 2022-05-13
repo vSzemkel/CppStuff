@@ -8,7 +8,13 @@
 #include <vector>
 
 // Find maximal element on arbitrary subrange
+// see: /kickstart/2019/building_palindromes.cpp
 
+/**
+ * @brief TO DO
+ * - update join
+ * - update SEED to be neutral element for join, do not consider seed (free) slots
+ */
 template <typename T = int64_t>
 struct simple_segment_tree_t
 {
