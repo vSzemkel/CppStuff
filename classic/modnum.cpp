@@ -1,4 +1,5 @@
 
+#include <array>
 #include <assert.h>
 #include <iostream>
 #include <optional>
@@ -163,6 +164,35 @@ class modnum_t {
         return len;
     }
 
+    // a1 = ax + by == std::gcd(a, b)
+    // https://cp-algorithms.com/algebra/extended-euclid-algorithm.html#iterative-version
+    static auto euclid(const T a, const T b) {
+        T x{1}, y{0}, x1{0}, y1{1}, a1{a}, b1{b};
+        while (b1) {
+            const T q = a1 / b1;
+            std::tie(x, x1)  = std::make_tuple(x1, x - q * x1);
+            std::tie(y, y1)  = std::make_tuple(y1, y - q * y1);
+            std::tie(a1, b1) = std::make_tuple(b1, a1 - q * b1);
+        }
+        return std::make_tuple(a1, x, y);
+    }
+
+    // find x: (ax = b) mod M
+    // returns {exists, {solutions}}
+    static std::pair<bool, std::vector<T>> solve(const T a, const T b) {
+        const auto [g, x, _] = euclid(a, M);
+        if (b % g)
+            return {false, {}};
+        std::vector<T> ans(g);
+        const T x0{x * b / g}, s{M / g};
+        T p{x0 - s};
+        for (auto& a : ans) {
+            a = p + s;
+            p = a;
+        }
+        return {true, ans};
+    }
+
   private:
     static T minv(T a, const T m) {
         a %= m;
@@ -211,6 +241,13 @@ int main(int, char**)
 
     const auto c = modnum_t<>::catalan(15);
     assert(c == 9694845);
+
+    const auto euclid = modnum_t<>::euclid(35, 50);
+    assert((euclid == std::make_tuple(5, 3, -2)));
+
+    modnum_t<int, 50> solver;
+    const auto s = solver.solve(35, 10);
+    assert((s.second == std::vector<int>{6 ,16, 26, 36, 46}));
 
     modnum_t<> invfac = 15;
     init_fact(100, 998244353);
