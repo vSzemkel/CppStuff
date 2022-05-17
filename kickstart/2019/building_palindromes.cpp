@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <numeric>
 #include <vector>
 
 // Building Palindromes
@@ -73,24 +74,28 @@ static void solve() {
     std::cout << ans;
 }
 
-static void solve_set1() { // MLE
+static void solve_large() { // outperforms solution for N > 2**26
     int N, Q;
     std::cin >> N >> Q;
     std::string letters;
     std::cin >> letters;
 
-    std::vector<std::vector<int>> dp(N, std::vector<int>(N, 0));
+    // number of particular characters up to position n in the string
+    std::vector<std::vector<int>> dp(26, std::vector<int>(N + 1, 0));
     for (int i = 0; i < N; ++i)
-        dp[i][i] = 1 << (letters[i] - 'A');
-    for (int len = 2; len <= N; ++len)
-        for (int last = len - 1; last < N; ++last)
-            dp[last - len + 1][last] = dp[last - len + 1][last - 1] ^ (1 << (letters[last] - 'A'));
+        ++dp[letters[i] - 'A'][i + 1];
+    for (auto& l : dp)
+        std::partial_sum(l.begin(), l.end(), l.begin());
 
     int ans{0};
     for (int q = 0; q < Q; ++q) {
         int b, e;
         std::cin >> b >> e;
-        if (pct(dp[--b][--e]) < 2)
+        --b;
+        int odd{0};
+        for (const auto& l : dp)
+            odd += (l[e] - l[b]) & 1;
+        if (odd < 2)
             ++ans;
     }
 
