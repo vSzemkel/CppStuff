@@ -26,19 +26,18 @@ static void solve() {
         return eattime[o1] * decay[o2] < eattime[o2] * decay[o1];
     });
 
-    std::vector<std::vector<int64_t>> dp(N + 1, std::vector<int64_t>(MAXT, 0)); // {first elements, time of finishing eating last choosen stone} -> score
-    for (int last = 1; last <= N; ++last) {
-        dp[last] = dp[last - 1];
+    std::vector<int64_t> dp(MAXT, 0), ndp = dp; // scores per time of finishing eating last choosen stone
+    for (int s : order) {
         for (int time = 0; time < MAXT; ++time) {
-            const int id = order[last - 1];
-            const int64_t start = time - eattime[id];
-            const int64_t add = energy[id] - decay[id] * start;
+            const int64_t start = time - eattime[s];
+            const int64_t add = energy[s] - decay[s] * start;
             if (start >= 0 && add > 0)
-                dp[last][time] = std::max(dp[last][time], dp[last - 1][start] + add);
+                ndp[time] = std::max(ndp[time], dp[start] + add);
         }
+        dp = ndp;
     }
 
-    std::cout << *std::max_element(dp[N].begin(), dp[N].end());
+    std::cout << *std::max_element(dp.begin(), dp.end());
 }
 
 int main(int, char**)
