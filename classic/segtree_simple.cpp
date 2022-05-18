@@ -49,10 +49,10 @@ struct simple_segment_tree_t
         }
     }
 
-    static const T SEED{std::numeric_limits<int>::min()}; // TO DO: change value accordingly
+    static inline const T SEED{std::numeric_limits<int>::min()}; // TO DO: change value accordingly
 
   private:
-    static T join(const T& lhs, const T& rhs) {
+    static inline T join(const T& lhs, const T& rhs) {
         return std::max(lhs, rhs); // TO DO: change join implementation accordingly
     }
 
@@ -85,6 +85,7 @@ void fuzz()
         const int pos = rand_in_range(size);
         const int val = rand_in_range(max);
         mst.update(pos, val);
+        input[pos] = val;
         for (int i = lower; i < upper; ++i)
             ret = std::max(ret, input[i]);
         assert(ret == mst.query(lower, upper));
@@ -114,7 +115,7 @@ int main(int, char**)
 
 Compile:
 clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 segtree_simple.cpp -o segtree_simple.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 segtree_simple.cpp -o segtree_simple.o
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 segtree_simple.cpp -o segtree_simple
 
 Run:
 segtree_simple.exe
