@@ -8,6 +8,77 @@
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000050eda/00000000001198c1#problem
 
 
+template <typename T = int>
+struct mpss_elem_t {
+    T sum;  // sum of the elements
+    T pref; // maximal prefix sum
+    T suff; // maximal suffix sum
+};
+
+template <typename T = int>
+struct mpss_t {
+    mpss_t(const int size) : _size(size) {
+        while (_offset < size) _offset *= 2;
+        _segment.resize(2 * _offset);
+    }
+
+    mpss_t(const std::vector<T>& data) : mpss_t(data.size()) {
+        for (int i = 0; i < _size; ++i)
+            update(i, data[i]);
+    }
+
+    void reset() { _segment.assign(_segment.size(), 0); }
+
+    mpss_elem_t<T> query() { return _segment[1]; }
+
+    void update(int i, const int v) {
+        i += _offset;
+        _segment[i].sum = v;
+        for (int z = i; z; z >>= 1)
+            update_seg(z);
+    }
+
+  private:
+    void update_seg(const int i) {
+        auto& cur = _segment[i];
+        if (i >= _offset)
+            cur.pref = cur.suff = std::max(T{}, cur.sum);
+        else {
+            cur.sum = _segment[2 * i].sum + _segment[2 * i + 1].sum;
+            cur.pref = std::max(_segment[2 * i].pref, _segment[2 * i].sum + _segment[2 * i + 1].pref);
+            cur.suff = std::max(_segment[2 * i].suff + _segment[2 * i + 1].sum, _segment[2 * i + 1].suff);
+        }
+    }
+    int _offset{1}, _size;
+    std::vector<mpss_elem_t<T>> _segment;
+};
+
+static void solve() { // O(NlogN) by ecnerwala
+    int N;
+    size_t S;
+    std::cin >> N >> S;
+
+    int64_t ans{0};
+    mpss_t<int64_t> mpss(N); // ust._nodes[k] = sum[k..i]
+    std::unordered_map<int, std::vector<int>> pos; // type -> sorted list of positions
+    for (int i = 0; i < N; ++i) {
+        int t; std::cin >> t;
+        auto& p = pos[t];
+
+        const int x = int(p.size()) - S;
+        if (0 < x)
+            mpss.update(p[x - 1], 0);
+        p.push_back(i);
+        mpss.update(i, 1);
+        if (0 <= x)
+            mpss.update(p[x], -S);
+
+        ans = std::max(ans, mpss.query().suff);
+    }
+
+    std::cout << ans;
+}
+
 template <typename T = int64_t>
 struct updatable_segment_tree_t
 {
@@ -84,7 +155,7 @@ struct updatable_segment_tree_t
     std::vector<T> _changes, _nodes;
 };
 
-static void solve() { // O(NlogN)
+static void solve_uts() { // O(NlogN)
     int N;
     size_t S;
     std::cin >> N >> S;
