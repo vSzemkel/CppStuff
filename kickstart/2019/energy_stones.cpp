@@ -26,15 +26,14 @@ static void solve() {
         return eattime[o1] * decay[o2] < eattime[o2] * decay[o1];
     });
 
-    std::vector<int64_t> dp(MAXT, 0), ndp = dp; // scores per time of finishing eating last choosen stone
+    int time{0}; // time elapsed for case of eating all the stones [0..s-1]
+    std::vector<int64_t> dp(MAXT, 0); // scores per time of finishing eating last choosen stone
     for (int s : order) {
-        for (int time = 0; time < MAXT; ++time) {
-            const int64_t start = time - eattime[s];
-            const int64_t add = energy[s] - decay[s] * start;
-            if (start >= 0 && add > 0)
-                ndp[time] = std::max(ndp[time], dp[start] + add);
+        for (int64_t t = time; ~t; --t) {
+            auto& cur = dp[t + eattime[s]];
+            cur = std::max(cur, dp[t] + std::max(int64_t{}, energy[s] - decay[s] * t));
         }
-        dp = ndp;
+        time += eattime[s];
     }
 
     std::cout << *std::max_element(dp.begin(), dp.end());
@@ -60,7 +59,6 @@ clang++.exe -Wall -Wextra -g3 -O0 -std=c++17 energy_stones.cpp -o energy_stones.
 g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address energy_stones.cpp -o energy_stones
 
 Run:
-py.exe interactive_runner.py py.exe energy_stones_testing_tool.py 1 -- energy_stones.exe
 energy_stones.exe < energy_stones.in
 
 Input:
