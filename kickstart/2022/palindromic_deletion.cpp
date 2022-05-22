@@ -1,12 +1,15 @@
 
+#include <algorithm>
 #include <array>
 #include <assert.h>
 #include <iostream>
 #include <optional>
-#include <tuple>
+#include <string>
 #include <vector>
 
-// Modnum - integral datatype implementing modulo arithmetic
+// Palindromic Deletion
+// https://codingcompetitions.withgoogle.com/kickstart/round/00000000008cb4d1/0000000000b20d16
+
 
 template <typename T = int, T M = 998244353>
 class modnum_t {
@@ -204,64 +207,71 @@ class modnum_t {
     T value;
 };
 
+bool is_palindrome2(const std::string& s, const std::string& m)
+{
+    int l = 0, r = s.size() - 1;
+    while (l < r) { // m has '1' for sure
+        while (m[l] == '0') ++l;
+        while (m[r] == '0') --r;
+        if (s[l++] != s[r--]) return false;
+    }
+    return true;
+}
+
+static void solve_set1() { // TLE
+    int N;
+    std::string S;
+    std::cin >> N >> S;
+
+    auto perm = std::string(N, '1');
+    modnum_t<int, 1000000007> ans{2};
+    for (int len = N - 1; len > 1; --len) {
+        perm[N - len - 1] = '0';
+        const auto weight = ans.bin_coeff(N, len).inv();
+        int cnt{0};
+        do {
+            if (is_palindrome2(S, perm))
+                ++cnt;
+        } while (std::next_permutation(perm.begin(), perm.end()));
+        ans += cnt * weight;
+    }
+
+    std::cout << ans;
+}
+
 int main(int, char**)
 {
-    modnum_t<int, 20> m = 13;
-    assert(inv(m).value() == 17); // 13 * 17 == 1 (mod 20)
-    modnum_t<int64_t, 20> m2 = 15;
-    assert(!inv(m2).has_value());
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
 
-    assert(neg(m2) == 5);
-    auto m3 = m2++;
-    assert(m2 == 16 && m3 == 15);
-    assert(m2 * m3 == 0);
-
-    modnum_t<int64_t> m4;
-    assert(m4.mul(16351848, 9174561) == 872592476);
-    assert(m4.bin_coeff(197, 8) == 26874261); // 48717346033720 % 998244353
-
-    modnum_t<int, 360> wheel;
-    assert(wheel.range_len(100, 200) == 101);
-    assert(wheel.range_len(200, 100) == 261); // 200..359 0..100 -> 160 + 101
-
-    std::vector<modnum_t<>> fact, inv_fact, inverses;
-    const auto init_fact = [&](const size_t max, const int M) {
-        fact.resize(max);
-        inv_fact.resize(max);
-        inverses.resize(max);
-        inverses[1] = fact[1] = inv_fact[1] = fact[0] = inv_fact[0] = 1;
-        for (size_t i = 2; i < max; ++i) {
-            inverses[i] = (int)((int64_t)(M - M / i) * inverses[M % i] % M);
-            inv_fact[i] = (int)((int64_t)inv_fact[i - 1] * inverses[i] % M);
-            fact[i] = (int)((int64_t)fact[i - 1] * i % M);
-        }
-    };
-
-    modnum_t<> modpow = 158715;
-    assert((modpow ^ 4) == (modpow * modpow * modpow * modpow));
-
-    const auto c = modnum_t<>::catalan(15);
-    assert(c == 9694845);
-
-    const auto euclid = modnum_t<>::euclid(35, 50);
-    assert((euclid == std::make_tuple(5, 3, -2)));
-
-    modnum_t<int, 50> solver;
-    const auto s = solver.solve(35, 10);
-    assert((s.second == std::vector<int>{6 ,16, 26, 36, 46}));
-
-    modnum_t<> invfac = 15;
-    init_fact(100, 998244353);
-    assert(fact[20] == 401576539);
-    assert(inverses[15] == invfac.inv());
-    assert(fact[17] * inv_fact[10] * inv_fact[17 - 10] == invfac.bin_coeff(17, 10));
-    std::cout << "PASSED\n";
+    int no_of_cases;
+    std::cin >> no_of_cases;
+    for (int g = 1; g <= no_of_cases; ++g) {
+        std::cout << "Case #" << g << ": "; solve_set1(); std::cout << '\n';
+    }
 }
 
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 modnum.cpp -o modnum.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 modnum.cpp -o modnum
+clang++.exe -Wall -Wextra -g3 -O0 -std=c++17 palindromic_deletion.cpp -o palindromic_deletion.exe
+g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address palindromic_deletion.cpp -o palindromic_deletion
+
+Run:
+palindromic_deletion.exe < palindromic_deletion.in
+
+Input:
+
+2
+2
+ab
+3
+aba
+
+Output:
+
+Case #1: 2
+Case #2: 333333338
 
 */
