@@ -208,15 +208,41 @@ class modnum_t {
     T value;
 };
 
-bool is_palindrome2(const std::string& s, const std::string& m)
-{
-    int l = 0, r = s.size() - 1;
-    while (l < r) { // m has '1' for sure
-        while (m[l] == '0') ++l;
-        while (m[r] == '0') --r;
-        if (s[l++] != s[r--]) return false;
+using mod_t = modnum_t<int, 1000000007>;
+
+static void solve() { // TLE
+    int N;
+    std::string S;
+    std::cin >> N >> S;
+
+    // compute number of subsequence palindrome of S of arbitrary length
+    // dp[left][right][len]
+    std::vector<std::vector<std::vector<mod_t>>> dp(N, std::vector<std::vector<mod_t>>(N, std::vector<mod_t>(N + 1)));
+    for (int i = 0; i < N; ++i) {
+        dp[i][i][1] = 1;
+        for (int j = i; j < N; ++j)
+            dp[i][j][0] = 1;
     }
-    return true;
+    for (int len = 2; len <= N; ++len)
+        for (int last = len - 1; last < N; ++last) {
+            const int first = last - len + 1;
+            for (int l = 1; l <= len; ++l) {
+                if (l > 1 && S[first] == S[last])
+                    dp[first][last][l] = (len > 2) ? dp[first + 1][last - 1][l - 2] : 1;
+                dp[first][last][l] += dp[first][last - 1][l]
+                                    + dp[first + 1][last][l];
+                if (len > 2)
+                    dp[first][last][l] -= dp[first + 1][last - 1][l];
+            }
+        }
+
+    mod_t ans{2};
+    for (int len = N - 1; len > 1; --len) {
+        const auto weight = ans.bin_coeff(N, len).inv();
+        ans += dp[0][N - 1][len] * weight;
+    }
+
+    std::cout << ans;
 }
 
 static void solve_set1() { // TLE
@@ -224,8 +250,18 @@ static void solve_set1() { // TLE
     std::string S;
     std::cin >> N >> S;
 
+    constexpr auto is_palindrome2 = [](const std::string& s, const std::string& m) {
+        int l = 0, r = s.size() - 1;
+        while (l < r) { // m has '1' for sure
+            while (m[l] == '0') ++l;
+            while (m[r] == '0') --r;
+            if (s[l++] != s[r--]) return false;
+        }
+        return true;
+    };
+
     auto perm = std::string(N, '1');
-    modnum_t<int, 1000000007> ans{2};
+    mod_t ans{2};
     for (int len = N - 1; len > 1; --len) {
         perm[N - len - 1] = '0';
         const auto weight = ans.bin_coeff(N, len).inv();
@@ -249,7 +285,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_set1(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 

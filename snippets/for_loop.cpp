@@ -9,6 +9,6 @@
         for (int l = u; ~l; --l)
 
     for (int len = 2; len <= N; ++len)
-        for (int last = len - 1; last < N; ++last)
-            dp[last - len + 1][last] = dp[last - len + 1][last - 1] ^ (1 << (letters[last] - 'A'));
-
+        for (int last = len - 1; last < N; ++last) {
+            const int first = last - len + 1;
+        }
