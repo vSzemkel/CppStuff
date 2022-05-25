@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <cmath>
 #include <iostream>
+#include <optional>
 #include <vector>
 
 // see: /kickstart/2021/star_trappers.cpp
@@ -12,10 +13,9 @@
 constexpr const double EPS = 1e-9;
 constexpr const double INF = 1e18;
 
-template <typename T = int64_t> struct point_t;
-template <typename T = int64_t> using line_t = std::array<point_t<T>, 2>;
+template <typename T> struct line_t;
 
-template <typename T>
+template <typename T = int64_t>
 struct point_t {
     point_t(T _x = T{}, T _y = T{}) : x(_x), y(_y) {}
     int sgn(const T a) const { return (a > EPS) - (a < -EPS); }
@@ -89,6 +89,53 @@ struct point_t {
 };
 
 template <typename T = int64_t>
+struct line_t : std::array<point_t<T>, 2> {
+    line_t(const T x0, const T y0, const T x1, const T y1) {
+        (*this)[0] = {x0, y0};
+        (*this)[1] = {x1, y1};
+    }
+
+    line_t(const point_t<T>& p0, const point_t<T>& p1) {
+        (*this)[0] = p0;
+        (*this)[1] = p1;
+    }
+
+    static bool intersects(const line_t<T>& s1, const line_t<T>& s2) {
+        const auto d1 = s1[0].turning_left(s1[1], s2[0]);
+        const auto d2 = s1[0].turning_left(s1[1], s2[1]);
+        const auto d3 = s2[0].turning_left(s2[1], s1[0]);
+        const auto d4 = s2[0].turning_left(s2[1], s1[1]);
+        if (d1 * d2 < 0 && d3 * d4 < 0)
+            return true;
+        if (s1[0].on_segment(s2) || s1[1].on_segment(s2))
+            return true;
+        if (s2[0].on_segment(s1) || s2[1].on_segment(s1))
+            return true;
+        return false;
+    }
+
+    /**
+     * @brief Finds intersection between two sections in general position (distinct points, non parallel sections)
+     * adapted from: https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+     */
+    static std::optional<point_t<T>> find_intersection(const line_t<T>& s1, const line_t<T>& s2) {
+        const T s1_dx = s1[1].x - s1[0].x;
+        const T s1_dy = s1[1].y - s1[0].y;
+        const T s2_dx = s2[1].x - s2[0].x;
+        const T s2_dy = s2[1].y - s2[0].y;
+
+        const T s = (-s1_dy * (s1[0].x - s2[0].x) + s1_dx * (s1[0].y - s2[0].y)) / (-s2_dx * s1_dy + s1_dx * s2_dy);
+        if (s < 0 || 1 < s)
+            return std::nullopt;
+        const T t = ( s2_dx * (s1[0].y - s2[0].y) - s2_dy * (s1[0].x - s2[0].x)) / (-s2_dx * s1_dy + s1_dx * s2_dy);
+        if (t < 0 || 1 < t)
+            return std::nullopt;
+
+        return point_t<T>{s1[0].x + (t * s1_dx), s1[0].y + (t * s1_dy)};
+    }
+};
+
+template <typename T = int64_t>
 static bool polar_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_cmp(p2); };
 template <typename T = int64_t>
 static bool polar_radius_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_radius_cmp(p2); };
@@ -100,6 +147,9 @@ static T polygon_area2(const std::vector<point_t<T>>& v) { // doubled area for c
     return std::abs(a);
 }
 
+/**
+ * @brief Jarvis's march
+ */
 template <typename T = int64_t>
 static auto convex_hull(std::vector<point_t<T>> points) { // copy is sorted
     decltype(points) upper, lower;
@@ -169,6 +219,7 @@ int main(int, char**)
     assert(!on_line_contin.on_segment(l));
     const point_t<> not_on_line{8, 2};
     assert(!not_on_line.on_segment(l));
+    assert(line_t<>::intersects(l, {{1, 3}, {6, 0}}));
 
     const point_t<double> foot{3, 2}, tf{5, -1};
     const line_t<double> l2{point_t<double>{0, 0}, point_t<double>{6, 4}};
@@ -195,6 +246,9 @@ int main(int, char**)
     std::vector<point_t<>> v = {{0, 0}, {2, 0}, {1, 1}, {1, 2}, {0, 2}};
     assert(polygon_area2(v) == 5);
     assert((convex_hull(v) == std::vector{v[0], v[1], v[3], v[4]}));
+
+    const auto isn = line_t<double>::find_intersection({{0, 0}, {17.3, -2.5}}, {{2, 5.7}, {15.9, -3.14}});
+    assert(isn.has_value() && std::abs(isn.value().x - 14.186111252) < EPS && std::abs(isn.value().y + 2.050016076) < EPS);
     std::cout << "PASSED\n";
 }
 
