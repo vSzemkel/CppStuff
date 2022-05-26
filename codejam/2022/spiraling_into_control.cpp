@@ -10,6 +10,49 @@
 // Spiraling Into Control
 // https://codingcompetitions.withgoogle.com/codejam/round/00000000008778ec/0000000000b15a74
 
+static void solve() { // ecnerwala
+    int N, K;
+    std::cin >> N >> K;
+
+    if (K < N - 1 || K & 1) {
+        std::cout << "IMPOSSIBLE\n";
+        return;
+    }
+
+    const int N2 = N * N;
+    int len{N + 2}, step{0}, skip, b, e; // b->e is a shortcut from ring0->ring1
+    const auto advance = [&](){
+        if (step % 4 == 0) {
+            len -= 2;
+            b = N2 - len * len + 2;
+            e = b + 4 * (len - 1) - 1;
+        } else {
+            b += len - 1;
+            e += len - 3;
+        }
+        skip = e - b - 1;
+        ++step;
+        // std::cerr << b << "->" << e << "skip: " << skip << '\n';
+    };
+
+    advance(); // init
+    std::vector<std::pair<int, int>> ans;
+    for (int to_skip = N2 - 1 - K; to_skip; ) {
+        if (skip <= to_skip) {
+            to_skip -= skip;
+            ans.emplace_back(b, e);
+            advance();
+            advance();
+            advance();
+        }
+        advance();
+    }
+
+    std::cout << ans.size() << '\n';
+    for (const auto& [b, e] : ans)
+        std::cout << b << ' ' << e << '\n';
+}
+
 struct hist_t {
     int node;
     int dist;
@@ -19,8 +62,13 @@ struct hist_t {
 static void solve_set2() {
     int N, K;
     std::cin >> N >> K;
-    const int N2 = N * N;
 
+    if (K < N - 1 || K & 1) {
+        std::cout << "IMPOSSIBLE\n";
+        return;
+    }
+
+    const int N2 = N * N;
     std::map<int, int, std::greater<>> shortcuts;
     for (int i = 3; i <= N; i += 2) {
         const int start = i * i - 1;
@@ -96,7 +144,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_set2();
+        std::cout << "Case #" << g << ": "; solve();
     }
 }
 
