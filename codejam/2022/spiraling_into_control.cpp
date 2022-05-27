@@ -10,7 +10,42 @@
 // Spiraling Into Control
 // https://codingcompetitions.withgoogle.com/codejam/round/00000000008778ec/0000000000b15a74
 
-static void solve() { // ecnerwala
+static void solve() {
+    int N, K;
+    std::cin >> N >> K;
+
+    if (K < N - 1 || K & 1) {
+        std::cout << "IMPOSSIBLE\n";
+        return;
+    }
+
+    const int N2 = N * N;
+    std::vector<std::pair<int, int>> ans, shortcuts;
+    for (int i = 3; i <= N; i += 2) {
+        const int start = i * i - 1;
+        const int stride = i - 1;
+        const int diff = start - (i - 2) * (i - 2);
+        for (int i = 0; i < 4; ++i) {
+            const int b = start - i * stride;
+            shortcuts.emplace_back(b, b - diff + 2 * i);
+        }
+    }
+
+    std::sort(shortcuts.begin(), shortcuts.end());
+    for (int i = int(shortcuts.size()) - 1, diff = 2 * int(shortcuts.size() - 1), to_skip = N2 - 1 - K; to_skip; --i, diff -= 2)
+        if (diff <= to_skip) {
+            ans.push_back(shortcuts[i]);
+            to_skip -= diff;
+            diff -= 6;
+            i -= 3;
+        }
+
+    std::cout << ans.size() << '\n';
+    for (const auto& [b, e] : ans)
+        std::cout << N2 - b + 1 << ' ' << N2 - e + 1 << '\n';
+}
+
+static void solve_ecnerwala() {
     int N, K;
     std::cin >> N >> K;
 
