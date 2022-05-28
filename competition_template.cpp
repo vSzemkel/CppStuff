@@ -30,6 +30,9 @@
 // $TASKNAME$
 // 
 
+// when the problem has a solution
+// what complexity is demanded given the size of data in the last tests set
+// write std::cerr diagnostics
 
 static void solve() {
     int64_t ret{0};
@@ -55,7 +58,7 @@ int main(int, char**)
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g3 -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
+clang++.exe -Wall -Wextra -g -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
 g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address $TASKNAME$.cpp -o $TASKNAME$
 
 Run:

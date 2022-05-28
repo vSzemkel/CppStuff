@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <limits>
+#include <functional>
 #include <memory>
 #include <numeric>
 #include <map>
@@ -75,9 +76,9 @@ struct graph_t
         _low.assign(_size, -1);
         _pred.assign(_size, -1);
         _order.assign(_size, -1);
+        _pred.assign(_size, -1);
         _dist.assign(_size, INF);
         _seen.assign(_size, false);
-        std::iota(_pred.begin(), _pred.end(), 0);
     }
 
     void clear() {
@@ -88,9 +89,10 @@ struct graph_t
         reset();
     }
 
-    auto get_path_to_label(const T& label) {
-        assert(_index.count(label));
-        const auto path = get_path_to(_index[label]);
+    auto get_path_to_label(const T& label) const {
+        const auto found = _index.find(label);
+        assert(found != _index.end());
+        const auto path = get_path_to(found->second);
         std::vector<T> lp;
         lp.reserve(path.size());
         std::transform(path.begin(), path.end(), std::back_inserter(lp), [&](const int i){ return _label[i]; });
@@ -98,7 +100,7 @@ struct graph_t
     }
 
     auto get_path_to(int node) const {
-        assert(0 <= node && node < _size);
+        assert(~_pred[node] && 0 <= node && node < _size);
         std::vector<int> rp;
         do {
             rp.push_back(node);
@@ -262,6 +264,39 @@ struct graph_t
         }
 
         return _pred;
+    }
+
+    std::pair<graph_t<T>, int> mst() {
+        std::priority_queue<std::array<int, 3>, std::vector<std::array<int, 3>>, std::greater<>> pq;
+        for (int i = 0; i < _size; ++i)
+            for (const auto& [j, c] : _adj[i])
+                if (i < j)
+                    pq.push({c, i, j});
+
+        auto uf = _order;
+        std::iota(uf.begin(), uf.end(), 0);
+        const std::function<int(int)> find = [&](const int n){
+            if (uf[n] == n)
+                return n;
+            return uf[n] = find(uf[n]);
+        };
+
+        int cost{0};
+        graph_t ret{_size};
+        ret._index = _index;
+        ret._label = _label;
+        while (!pq.empty()) {
+            const auto& [c, f, t] = pq.top();
+            auto tt = find(t), ff = find(f);
+            if (ff != tt) {
+                uf[ff] = uf[tt];
+                ret.add_edge(f, t, c);
+                cost += c;
+            }
+            pq.pop();
+        }
+
+        return {std::move(ret), cost};
     }
 
     bool have_common_subpath(const int source, int i, int j) const {
@@ -433,7 +468,7 @@ struct graph_t
     std::vector<T> _label;
     std::vector<bool> _seen;
     std::vector<int> _cc, _low; // concomp index, low table for find_bridges
-    std::unique_ptr<int[]> _fw_uptr;
+    std::unique_ptr<int[]> _fw_uptr; // for floyd-warshall variant 1d
     std::vector<int> _dist, _pred, _order;
     std::map<T, int> _index; // unordered will not work with unhashable T
     std::vector<std::vector<edge_t>> _adj;
@@ -587,6 +622,11 @@ int main(int argc, char* argv[])
         for (int i = 1; i < length; ++i)
             std::cout << "->" << path[i];
         std::cout << '\n';
+
+        auto [mstg, mst_cost] = g.mst();
+        mstg.shortest_paths();
+        const auto mst_path = mstg.get_path_to_label('M');
+        assert(mst_cost == 16 && mst_path != path); // E-J instead of K-M
     }
 
     const auto dist = g.floyd_warshall();

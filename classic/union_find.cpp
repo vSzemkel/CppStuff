@@ -5,6 +5,13 @@
 #include <utility>
 #include <vector>
 
+//  std::iota(uf.begin(), uf.end(), 0);
+//  const std::function<int(int)> find = [&](const int n){
+//      if (uf[n] == n)
+//          return n;
+//      return uf[n] = find(uf[n]);
+//  };
+
 struct uf_t {
     uf_t(const int size) : _count(size), _group(size), _rank(size), _size(size, 1) {
         std::iota(_group.begin(), _group.end(), 0);
