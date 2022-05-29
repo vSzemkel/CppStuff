@@ -10,6 +10,13 @@
 // Spiraling Into Control
 // https://codingcompetitions.withgoogle.com/codejam/round/00000000008778ec/0000000000b15a74
 
+/**
+ * The shortest possible path is N - 1, so with at least one shortcut K > N - 1
+ * We are starting and ending on the same chess cell colour -> K must pe even
+ * There is 2*N possible shortcut kinds. Take always the first feasible directing to the corner of inner rectangle
+ * All the subsequent shortcuts differ in length by exactly 2
+ * We know the sum of shortcuts needed to be taken - take first shortcut no exceeding remaining length
+ */
 static void solve() {
     int N, K;
     std::cin >> N >> K;

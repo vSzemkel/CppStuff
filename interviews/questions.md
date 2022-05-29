@@ -13,6 +13,12 @@
 - std container interface to use with algorithms
 - can swap, can lex compare
 
+### Describe Lower Bound algorithm
+- is there any difference between using it with std::vector ans std::set?
+
+### Why there exists a specification of std::vector<bool>
+- what is special in using it
+
 ### Is this code correct I?
 ```
 std::set my_set = {8, 4, 1, 3, 5};

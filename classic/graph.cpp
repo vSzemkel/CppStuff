@@ -281,17 +281,18 @@ struct graph_t
             return uf[n] = find(uf[n]);
         };
 
-        int cost{0};
         graph_t ret{_size};
         ret._index = _index;
         ret._label = _label;
-        while (!pq.empty()) {
+        int cost{0}, count{_size - 1};
+        while (count) {
             const auto& [c, f, t] = pq.top();
-            auto tt = find(t), ff = find(f);
+            const auto tt = find(t), ff = find(f);
             if (ff != tt) {
                 uf[ff] = uf[tt];
                 ret.add_edge(f, t, c);
                 cost += c;
+                --count;
             }
             pq.pop();
         }
