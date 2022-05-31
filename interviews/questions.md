@@ -1,12 +1,17 @@
+### First things first
+- introduce yourself as an interviewer
+- explain your role in the company and recruitment process
+  
 ### What are sanitizers, e.g. address sanitizer
 -fsanitize=address
 -fsanitize=undefined
 -fsanitize=thread
 
 ### What stands after the abbreviation
-- RAII
+- RAII arejajaj
 - CTAD
 - CRTP
+- SSO
 
 ### What is std::array for?
 - stack allocated, fast
