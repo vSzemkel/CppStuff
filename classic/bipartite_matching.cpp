@@ -1,4 +1,5 @@
 
+#include <cassert>
 #include <iostream>
 #include <limits>
 #include <queue>
@@ -28,6 +29,14 @@ class hopcroft_karp_t { // based on https://www.geeksforgeeks.org/hopcroft-karp-
     }
 
     void add_edge(const int c, const int m) { _adj[c + 1].push_back(m + 1); }
+
+    int m_for_c(const int i) const { // match for candidate (c->m)
+        return _pair_c[i + 1] - 1;
+    }
+
+    int c_for_m(const int i) const { // candidate matched with match (m->c)
+        return _pair_m[i + 1] - 1;
+    }
 
     int compute() {
         _dist.resize(_C + 1);
@@ -106,6 +115,13 @@ int main(int, char**)
     g.add_edge(3, 3);
  
     std::cout << "Size of maximum matching is " << g.compute() << '\n';
+    assert(g.m_for_c(0) == 2);
+    assert(g.c_for_m(2) == 0);
+    assert(g.m_for_c(2) == 1);
+    assert(g.c_for_m(1) == 2);
+    for (int i = 0; i < 4; ++i)
+        assert(g.c_for_m(g.m_for_c(i)) == i);
+    std::cout << "PASSED\n";
 }
 
 /*
