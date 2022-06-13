@@ -102,7 +102,7 @@ static void solve() {
         auto& pos = positions[c];
         for (int j = 0; j <= N; ++j)
             ord[j] = j;
-        std::sort(ord.begin(), ord.end(), [&](const int j1, const int j2) {
+        std::stable_sort(ord.begin(), ord.end(), [&](const int j1, const int j2) {
             const int64_t dx1 = children[c].first - jellys[j1].first;
             const int64_t dy1 = children[c].second - jellys[j1].second;
             const int64_t dx2 = children[c].first - jellys[j2].first;
@@ -148,7 +148,7 @@ static void solve() {
             }
 
             const int found_c = c;
-            while (true) { // magick is here
+            while (true) { // there is no guarantee that child is matched with the closest jelly, but we can alter the matching to be so
                 j = order[c][cidx[c]];
                 assert(!used_j[j]);
                 used_j[j] = true;
