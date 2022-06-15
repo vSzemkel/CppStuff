@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -54,7 +55,7 @@ static int64_t solve_inner2(const std::vector<int>& type0, const std::vector<int
     return dp[s0][s1];
 }
 
-static int64_t solve_inner(const std::vector<std::pair<int, bool>>& data) {
+static int64_t solve_inner(const std::vector<std::pair<int, bool>>& data) { // O(N2)
     std::vector<int> type0, type1;
     for (const auto& b : data)
         if (b.second)
@@ -70,6 +71,42 @@ static int64_t solve_inner(const std::vector<std::pair<int, bool>>& data) {
     return solve_inner2(type0, type1);
 }
 
+/**
+ * @Observation3: rightmost shapes of different types should be matched
+ */
+static int64_t solve_inner3(std::vector<std::pair<int, bool>>& data) { // O(N) by tourist
+    const int size = int(data.size());
+    std::sort(data.begin(), data.end());
+    std::vector<int> balance(size + 1);
+    for (int i = 0; i < size; ++i) {
+        data[i].first <<= 1; // for two way trip cost calculation
+        balance[i + 1] = balance[i] + (data[i].second ? 1 : -1);
+    }
+    std::vector<std::vector<int64_t>> pref(2, std::vector<int64_t>(size + 1));
+    for (int s = 0; s < 2; ++s)
+        for (int i = 0; i < size; ++i)
+            pref[s][i + 1] = pref[s][i] + (int(data[i].second) == s ? data[i].first : 0);
+
+    std::vector<int64_t> dp(size + 1);
+    std::unordered_map<int, int> mp; // last known position of arbitrary balance
+    mp[0] = 0;
+    for (int i = 1; i <= size; ++i) {
+        dp[i] = dp[i - 1] + data[i - 1].first; // not matching case
+        if (i > 1)
+            dp[i] = std::min(dp[i], dp[i - 2] + data[i - 1].first + C); // case of last two are compatible
+
+        const auto last = mp.find(balance[i]);
+        if (last != mp.end()) { // case of last two are not compatible
+            const int p = last->second;
+            const int s = data[i - 1].second;
+            dp[i] = std::min(dp[i], dp[p] + pref[s][i] - pref[s][p]);
+        }
+        mp[balance[i]] = i;
+    }
+
+    return dp[size];
+}
+
 static void solve() {
     std::cin >> N >> C;
     std::vector<std::pair<int, bool>> pos, neg;
@@ -81,7 +118,7 @@ static void solve() {
             neg.emplace_back(-X, S);
     }
 
-    std::cout << solve_inner(pos) + solve_inner(neg);
+    std::cout << solve_inner3(pos) + solve_inner3(neg);
 }
 
 int main(int, char**)
