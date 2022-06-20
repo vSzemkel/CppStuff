@@ -33,62 +33,63 @@ struct updatable_segment_tree_t
     }
 
     static inline const T SEED{0}; // TO DO: change value accordingly
+    static inline const T ZERO{0}; // TO DO: change value accordingly
 
   private:
     static T join(const T& lhs, const T& rhs) {
         return std::max(lhs, rhs); // TO DO: change join implementation accordingly
     }
 
-    inline void upd(const int id, const T delta) {
+    inline void _upd(const int id, const T delta) {
         _changes[id] += delta;
         _nodes[id] += delta;
     }
 
-    inline void push(const int id, const int left, const int right) {
-        if (_changes[id] == 0)
+    inline void _push(const int id, const int left, const int right) {
+        if (_changes[id] == ZERO)
             return;
-        upd(left, _changes[id]);
-        upd(right, _changes[id]);
-        _changes[id] = 0;
+        _upd(left, _changes[id]);
+        _upd(right, _changes[id]);
+        _changes[id] = ZERO;
     }
 
     void _build(const int root, const int left, const int right) {
-        _changes[root] = 0;
+        _changes[root] = ZERO;
         _nodes[root] = SEED;
         if (right - left < 2)
             return ;
 
-        const int mid = left + ((right - left) >> 1), il = root << 1, ir = il | 1;
+        const int mid = left + ((right - left) >> 1), il = root << 1, ir = il + 1;
         _build(il, left, mid);
         _build(ir, mid, right);
     }
 
     T _query(const int lower, const int upper, const int root, const int l, const int r) { // range [lower, upper)
-        if (lower >= r || l >= upper)
+        if (lower >= r || upper <= l)
             return 0;
         if (lower <= l && r <= upper)
             return _nodes[root];
 
-        const int mid = l + ((r - l) >> 1), il = root << 1, ir = il | 1;
-        push(root, il, ir);
+        const int mid = l + ((r - l) >> 1), il = root << 1, ir = il + 1;
+        _push(root, il, ir);
         return join(_query(lower, upper, il, l, mid), _query(lower, upper, ir, mid, r));
     }
 
     void _update(const int lower, const int upper, const T delta, const int root, const int l, const int r) {
-        if (lower >= r || l >= upper)
+        if (lower >= r || upper <= l)
             return;
         if (lower <= l && r <= upper) {
-            upd(root, delta);
+            _upd(root, delta);
             return;
         }
         const int mid = l + ((r - l) >> 1), il = root << 1, ir = il | 1;
-        push(root, il, ir);
+        _push(root, il, ir);
         _update(lower, upper, delta, il, l, mid);
         _update(lower, upper, delta, ir, mid, r);
         _nodes[root] = join(_nodes[il], _nodes[ir]);
     }
 
-    int _offset{1}, _size;
+    int _size;
     std::vector<T> _changes, _nodes;
 };
 
