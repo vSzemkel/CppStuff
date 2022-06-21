@@ -7,66 +7,71 @@
 // https://codingcompetitions.withgoogle.com/codejam/round/00000000008779b4/0000000000b45244
 
 
-const int N = 1 << 19;
+int ST_BASE{1}, ST_SIZE{1};
+constexpr const int ST_MAX = 1 << 19;
+constexpr const std::pair<int, int> ST_ZERO{-1, 0};
 
 struct Node {
-    int l, r;
+    int l, r; // [l, r)
     std::pair<int, int> val;
     int toAdd;
 
-    Node() : l(), r(), val{-1, 0}, toAdd(0) {}
+    Node() : l(), r(), val(ST_ZERO), toAdd(0) {}
     Node(int _l, int _r) : l(_l), r(_r), val{0, _r - _l}, toAdd(0) {}
 
-    void add(int x) {
+    void operator+=(const int x) {
         toAdd += x;
         val.first += x;
     }
 };
 
-Node tree[2 * N + 5];
+Node tree[2 * ST_MAX + 5];
 
-void build() {
-    for (int i = 0; i < N; i++)
-        tree[N + i] = Node(i, i + 1);
-    for (int i = N - 1; i > 0; i--)
+void build(const int size) {
+    ST_SIZE = size;
+    while (ST_BASE < size)
+        ST_BASE <<= 1;
+    for (int i = 0; i < ST_BASE; i++) // initialize full tree level
+        tree[ST_BASE + i] = Node(i, i + 1);
+    for (int i = ST_BASE - 1; i > 0; i--)
         tree[i] = Node(tree[2 * i].l, tree[2 * i + 1].r);
 }
 
-void push(int v) {
-    assert(v < N);
+void push(const int v) {
+    assert(v < ST_BASE);
     if (tree[v].toAdd == 0) return;
     for (int u = 2 * v; u < 2 * v + 2; u++)
-        tree[u].add(tree[v].toAdd);
+        tree[u] += tree[v].toAdd;
     tree[v].toAdd = 0;
 }
 
-std::pair<int, int> merge(std::pair<int, int> v, std::pair<int, int> u) {
-    if (v.first != u.first) return max(v, u);
+std::pair<int, int> join(const std::pair<int, int>& v, const std::pair<int, int>& u) {
+    if (v.first != u.first) return std::max(v, u);
     return {v.first, v.second + u.second};
 }
 
-void update(int v) {
-    assert(v < N);
-    tree[v].val = merge(tree[2 * v].val, tree[2 * v + 1].val);
+void update(const int v) {
+    assert(v < ST_BASE);
+    tree[v].val = join(tree[2 * v].val, tree[2 * v + 1].val);
 }
 
-void addOnSegm(int v, int l, int r, int x) {
-    if (l <= tree[v].l && tree[v].r <= r) {
-        tree[v].add(x);
-        return;
+void addOnSegm(const int v, const int l, const int r, const int x) {
+    if (l <= tree[v].l && tree[v].r <= r)
+        tree[v] += x;
+    else {
+        if (l >= tree[v].r || tree[v].l >= r) return;
+        push(v);
+        for (int u = 2 * v; u < 2 * v + 2; u++)
+            addOnSegm(u, l, r, x);
+        update(v);
     }
-    if (l >= tree[v].r || tree[v].l >= r) return;
-    push(v);
-    for (int u = 2 * v; u < 2 * v + 2; u++)
-        addOnSegm(u, l, r, x);
-    update(v);
 }
 
-std::pair<int, int> getSegm(int v, int l, int r) {
+std::pair<int, int> getSegm(const int v, const int l, const int r) {
     if (l <= tree[v].l && tree[v].r <= r) return tree[v].val;
-    if (l >= tree[v].r || tree[v].l >= r) return {-1, 0};
+    if (l >= tree[v].r || tree[v].l >= r) return ST_ZERO;
     push(v);
-    return merge(getSegm(2 * v, l, r), getSegm(2 * v + 1, l, r));
+    return join(getSegm(2 * v, l, r), getSegm(2 * v + 1, l, r));
 }
 
 static void solve() { // some optimizations O(N*LOGN); real 0m0.222s; by Um_nik
@@ -101,7 +106,7 @@ static void solve() { // some optimizations O(N*LOGN); real 0m0.222s; by Um_nik
         addOne(c, ptr[c] + lima[c], ptr[c] + limb[c] + 1, del);
     };
 
-    build();
+    build(2 * N);
     for (int c = 0; c < C; ++c) {
         pos[c].push_back(2 * N);
         color(c, +1);
