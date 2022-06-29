@@ -1,6 +1,6 @@
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <limits>
 #include <numeric>
@@ -9,6 +9,7 @@
 
 // Find maximal element on arbitrary subrange
 // see: /kickstart/2019/diverse_subarray.cpp
+// for segment tree with counting see: /codejam/2022/duck_duck_geese2.cpp
 
 /**
  * @brief TO DO
@@ -21,6 +22,7 @@ struct updatable_segment_tree_t
 {
   public:
     updatable_segment_tree_t(const int size) : _size(size), _changes(size << 2), _nodes(size << 2) {
+        assert(__builtin_popcount(_size) == 1);
         _build(1, 0, _size);
     }
 
@@ -97,7 +99,7 @@ void fuzz()
 {
     constexpr int max = 1000;
     constexpr int trials = 1000;
-    constexpr int size = 763783;
+    constexpr int size = 1 << 19;
     const auto rand_in_range = [](const int ubound){std::random_device seed;std::mt19937 gen{seed()};std::uniform_int_distribution<int> dist(0,ubound-1);return dist(gen);};
 
     std::vector<int> input(size);
@@ -135,7 +137,7 @@ int main(int, char**)
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
 
-    updatable_segment_tree_t<int> ust(5);
+    updatable_segment_tree_t<int> ust(8);
     
     // std::vector<int>{1, 15, 3, 7, 11};
     ust.update(0, 1, 1);
