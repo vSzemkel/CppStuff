@@ -7,8 +7,14 @@
 -fsanitize=undefined
 -fsanitize=thread
 
+### What is undefined behaviour, name a few
+- signed integer overflow
+- general pointer addition
+- dereferencing nullptr
+- use aftre free
+
 ### What stands after the abbreviation
-- RAII arejajaj
+- RAII ar-ej-aj-aj
 - CTAD
 - CRTP
 - SSO
