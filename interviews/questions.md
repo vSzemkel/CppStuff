@@ -3,9 +3,9 @@
 - explain your role in the company and recruitment process
   
 ### What are sanitizers, e.g. address sanitizer
--fsanitize=address
--fsanitize=undefined
--fsanitize=thread
+- -fsanitize=address
+- -fsanitize=undefined
+- -fsanitize=thread
 
 ### What is undefined behaviour, name a few
 - signed integer overflow
@@ -29,6 +29,7 @@
 
 ### Why there exists a specification of std::vector<bool>
 - what is special in using it
+- how it organizes its memory
 
 ### Is this code correct I?
 ```
