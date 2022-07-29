@@ -1,7 +1,8 @@
 ### First things first
 - introduce yourself as an interviewer
 - explain your role in the company and recruitment process
-  
+- give a candidate a chance to ask questions
+
 ### What are sanitizers, e.g. address sanitizer
 - -fsanitize=address
 - -fsanitize=undefined
@@ -26,6 +27,8 @@
 
 ### Describe Lower Bound algorithm
 - is there any difference between using it with std::vector ans std::set?
+
+### Describe Heap datastructure
 
 ### Why there exists a specification of std::vector<bool>
 - what is special in using it
