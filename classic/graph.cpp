@@ -227,18 +227,15 @@ struct graph_t
         _pred[source] = -1;
         while (!pq.empty()) {
             const auto node = pq.top()[1]; pq.pop();
-            if (!_seen[node]) {
-                if (node == target)
-                    return;
-                _seen[node] = true;
-                for (const auto& e : _adj[node]) {
-                    const auto next = e[0];
-                    const auto cand = _dist[node] + e[1];
-                    if (cand < _dist[next]) {
-                        _dist[next] = cand;
-                        _pred[next] = node;
-                        pq.push({cand, next});
-                    }
+            if (node == target)
+                return;
+            for (const auto& e : _adj[node]) {
+                const auto next = e[0];
+                const auto cand = _dist[node] + e[1];
+                if (cand < _dist[next]) {
+                    _dist[next] = cand;
+                    _pred[next] = node;
+                    pq.push({cand, next});
                 }
             }
         }
