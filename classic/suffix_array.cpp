@@ -80,20 +80,62 @@ auto naive_suffix_array(const std::string& s) { // O(N2logN)
     return ret;
 }
 
+template <typename T, typename U>
+static T first_true(T lo, T hi, U f) {
+    hi++;
+    assert(lo <= hi); // assuming f is increasing
+    while (lo < hi) { // find first index such that f is true
+        const T mid = lo + (hi - lo) / 2; // this will work for negative numbers too
+        f(mid) ? hi = mid : lo = mid + 1;
+    }
+    return lo;
+}
+
+template <typename T, typename U>
+static T last_true(T lo, T hi, U f) {
+    lo--;
+    assert(lo <= hi);
+    while (lo < hi) { // find last index such that f is true
+        const T mid = lo + (hi - lo + 1) / 2; // this will work for negative numbers too
+        f(mid) ? lo = mid : hi = mid - 1;
+    }
+    return lo;
+}
+
 int main(int, char**)
 {
-    const std::string s = "ababbaaaabbaababaaaabaaabbbab";
-    const auto order = naive_suffix_array(s);
+    const std::string s = "ababbaaaabbaababaaaababbabbbbbaaababbaaabbbab";
+    auto order = naive_suffix_array(s);
     suffix_array_t sa;
     const auto order2 = sa.suffix_array(s);
     assert(order == order2);
+    int i{0};
     for (const int o : order)
-        std::cout << s.substr(o) << '\n';
+        std::cout << s.substr(o) << ' ' << i++ << ' ' << o << '\n';
+
+    // Find all occurences of a pattern
+    const std::string pat = "babb";
+    std::cout << "\nPattern " << pat << " found in text\n" << s << '\n';
+    const auto check_first = [&](const int pos){ return s.substr(order[pos]) >= pat; };
+    const auto check_last = [&](const int pos) {
+        const auto can = s.substr(order[pos]);
+        const auto len = int(std::min(pat.size(), can.size()));
+        return s.substr(order[pos], len) <= pat.substr(0, len);
+    };
+    const int first = first_true(0, int(s.size()), check_first);
+    const int last = last_true(0, int(s.size()), check_last);
+    std::sort(order.begin() + first, order.begin() + last + 1);
+    for (int i = first; i <= last; ++i)
+        std::cout << std::string(order[i], ' ') << s.substr(order[i]) << '\n';
+
+    // Check if pattern occurs in text
+    const bool occurs = s.substr(order[first]).starts_with(pat);
+    assert(occurs);
 }
 
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++17 suffix_array.cpp -o suffix_array.exe
+clang++.exe -Wall -Wextra -g -O0 -std=c++20 suffix_array.cpp -o suffix_array.exe
 
 */
