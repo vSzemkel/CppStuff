@@ -2,19 +2,19 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <cmath>
 #include <iostream>
 #include <numeric>
 #include <queue>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
 // Pizza Delivery
 // https://codingcompetitions.withgoogle.com/kickstart/round/00000000008cb0f5/0000000000ba86e6
 
-using toll_t = std::pair<char, int64_t>;
+using toll_t = std::pair<char, int>;
 constexpr int N{0}, E{1}, W{2}, S{3};
+constexpr int DR[] = {-1, 0, 0, +1};
+constexpr int DC[] = {0, +1, -1, 0};
 
 /**
  * Observation1: Integer division in C++ is intricate
@@ -34,6 +34,61 @@ static int64_t calculate_toll(const int64_t cur, const toll_t& toll) {
     }
 
     return 0;
+}
+
+static void solve() { // neal_wu
+    int L, P, M, R, C;
+    std::cin >> L >> P >> M >> R >> C;
+    std::array<toll_t, 4> tolls;
+    for (auto& [op, fac] : tolls)
+        std::cin >> op >> fac;
+
+    const int L2 = L * L;
+    std::vector<int> address(L2), payment(L2);
+    for (int i = 0; i < P; ++i) {
+        int r, c, p;
+        std::cin >> r >> c >> p;
+        const int pos = (r - 1) * L + c - 1;
+        address[pos] = 1 << i;
+        payment[pos] = p;
+    }
+
+    const int FULL = 1 << P;
+    const int64_t INF = 1e18;
+    std::vector<std::vector<int64_t>> dp(L2, std::vector<int64_t>(FULL, -INF)); // {pos, set} -> score
+    dp[(R - 1) * L + C - 1][0] = 0; // start position, empty set
+    for (int z = M; z; --z) {
+        std::vector<std::vector<int64_t>> ndp(L2, std::vector<int64_t>(FULL, -INF));
+        for (int pos = 0; pos < L2; ++pos)
+            for (int m = 0; m < FULL; ++m) {
+                if (dp[pos][m] == -INF) // unreachable
+                    continue;
+                ndp[pos][m] = std::max(ndp[pos][m], dp[pos][m]);
+                const int r = pos / L, c = pos % L;
+                for (int dir = 0; dir < 4; ++dir) {
+                    const int nr = r + DR[dir];
+                    const int nc = c + DC[dir];
+                    if (~nr && ~nc && nr < L && nc < L) {
+                        const auto npos = nr * L + nc;
+                        const auto ns = calculate_toll(dp[pos][m], tolls[dir]);
+                        ndp[npos][m] = std::max(ndp[npos][m], ns);
+
+                        const int nm = m | address[npos];
+                        const int npay = (m & address[npos]) ? 0 : payment[npos];
+                        ndp[npos][nm] = std::max(ndp[npos][nm], ns + npay);
+                    }
+                }
+            }
+        dp = std::move(ndp);
+    }
+
+    int64_t ans = -INF;
+    for (int pos = 0; pos < L2; ++pos)
+        ans = std::max(ans, dp[pos][FULL - 1]);
+    if (ans == -INF)
+        std::cout << "IMPOSSIBLE";
+    else
+        std::cout << ans;
 }
 
 static void solve_set1() {
@@ -105,7 +160,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_set1(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 

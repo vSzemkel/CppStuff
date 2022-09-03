@@ -107,3 +107,19 @@ struct state_t {
   private:
     static constexpr const int d4c[4] = {0, 1, 0, -1}, d4r[4] = {-1, 0, 1, 0}; // 0 == N; 1 == E; 2 == S; 3 == W clockwise
 };
+
+/**********************************************************************/
+// see: /kickstart/2022/pizza_delivery.cpp
+
+constexpr int N{0}, E{1}, W{2}, S{3};
+constexpr int DR[] = {-1, 0, 0, +1};
+constexpr int DC[] = {0, +1, -1, 0};
+
+for (int dir = 0; dir < 4; ++dir) {
+    const int nr = r + DR[dir];
+    const int nc = c + DC[dir];
+    if (~nr && ~nc && nr < L && nc < L) {
+        const auto ns = calculate_toll(dp[pos][m], tolls[dir]);
+        // ...
+    }
+}
