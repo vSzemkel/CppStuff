@@ -20,6 +20,10 @@
 - CRTP
 - SSO
 
+### What is smart poiner
+- whats wrong with std::auto_ptr<>
+- name them, describe diferences
+
 ### What is std::array for?
 - stack allocated, fast
 - std container interface to use with algorithms
@@ -29,6 +33,7 @@
 - is there any difference between using it with std::vector ans std::set?
 
 ### Describe Heap datastructure
+- what is the cost of initializing the heap datastructure
 
 ### Why there exists a specification of std::vector<bool>
 - what is special in using it

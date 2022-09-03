@@ -1,0 +1,140 @@
+
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <iostream>
+#include <numeric>
+#include <queue>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+// Pizza Delivery
+// https://codingcompetitions.withgoogle.com/kickstart/round/00000000008cb0f5/0000000000ba86e6
+
+using toll_t = std::pair<char, int64_t>;
+constexpr int N{0}, E{1}, W{2}, S{3};
+
+/**
+ * Observation1: Integer division in C++ is intricate
+ * Observation2: This can easily overflow 2^31
+ */
+
+inline static int64_t floor_div(const int64_t a, const int64_t b) {
+    return a / b - ((a ^ b) < 0 && a % b != 0);
+}
+
+static int64_t calculate_toll(const int64_t cur, const toll_t& toll) {
+    switch (toll.first) {
+        case '+': return cur + toll.second;
+        case '-': return cur - toll.second;
+        case '*': return cur * toll.second;
+        case '/': return floor_div(cur, toll.second);
+    }
+
+    return 0;
+}
+
+static void solve_set1() {
+    int L, P, M, R, C;
+    std::cin >> L >> P >> M >> R >> C;
+    std::array<toll_t, 4> tolls;
+    for (auto& [op, fac] : tolls)
+        std::cin >> op >> fac;
+    assert(P == 0);
+
+    const int L2 = L * L;
+    std::vector<int64_t> score(L2, -1e18), time(L2);
+    std::queue<std::array<int64_t, 4>> qq; // {after moves, with score, row, col}
+    qq.push({0, 0, --R, --C});
+    while (!qq.empty()) {
+        const auto [t, s, r, c] = qq.front();
+        qq.pop();
+        if (t == M)
+            continue;
+
+        if (0 <= r - 1) { // N
+            const auto pos = (r - 1) * L + c;
+            const auto ns = calculate_toll(s, tolls[N]);
+            if (score[pos] < ns || (score[pos] == ns && t + 1 < time[pos])) {
+                score[pos] = ns;
+                time[pos] = t + 1;
+                qq.push({t + 1, ns, r - 1, c});
+            }
+        }
+        if (c + 1 < L) { // E
+            const auto pos = r * L + c + 1;
+            const auto ns = calculate_toll(s, tolls[E]);
+            if (score[pos] < ns || (score[pos] == ns && t + 1 < time[pos])) {
+                score[pos] = ns;
+                time[pos] = t + 1;
+                qq.push({t + 1, ns, r, c + 1});
+            }
+        }
+        if (0 <= c - 1) { // W
+            const auto pos = r * L + c - 1;
+            const auto ns = calculate_toll(s, tolls[W]);
+            if (score[pos] < ns || (score[pos] == ns && t + 1 < time[pos])) {
+                score[pos] = ns;
+                time[pos] = t + 1;
+                qq.push({t + 1, ns, r, c - 1});
+            }
+        }
+        if (r + 1 < L) { // S
+            const auto pos = (r + 1) * L + c;
+            const auto ns = calculate_toll(s, tolls[S]);
+            if (score[pos] < ns || (score[pos] == ns && t + 1 < time[pos])) {
+                score[pos] = ns;
+                time[pos] = t + 1;
+                qq.push({t + 1, ns, r + 1, c});
+            }
+        }
+    }
+
+    const int64_t ans = *std::max_element(score.begin(), score.end());
+    std::cout << std::max(ans, int64_t{});
+}
+
+int main(int, char**)
+{
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+
+    int no_of_cases;
+    std::cin >> no_of_cases;
+    for (int g = 1; g <= no_of_cases; ++g) {
+        std::cout << "Case #" << g << ": "; solve_set1(); std::cout << '\n';
+    }
+}
+
+/*
+
+Compile:
+clang++.exe -Wall -Wextra -g -O0 -std=c++17 pizza_delivery.cpp -o pizza_delivery.exe
+g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address pizza_delivery.cpp -o pizza_delivery
+
+Run:
+pizza_delivery.exe < pizza_delivery.in
+
+Input:
+
+2
+3 0 1 1 2
++ 1
+- 2
++ 3
+/ 4
+3 0 1 2 3
+- 2
+- 2
+- 2
+- 2
+
+Output:
+
+Case #1: 3
+Case #2: 0
+
+*/
