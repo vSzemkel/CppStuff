@@ -39,6 +39,8 @@
 - what is special in using it
 - how it organizes its memory
 
+### Describe the difference between stack and heap allocated memory
+
 ### Is this code correct I?
 ```
 std::set my_set = {8, 4, 1, 3, 5};

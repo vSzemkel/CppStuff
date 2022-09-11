@@ -83,8 +83,9 @@ static void solve() { // neal_wu
     }
 
     int64_t ans = -INF;
+    const auto last = FULL - 1;
     for (int pos = 0; pos < L2; ++pos)
-        ans = std::max(ans, dp[pos][FULL - 1]);
+        ans = std::max(ans, dp[pos][last]);
     if (ans == -INF)
         std::cout << "IMPOSSIBLE";
     else
