@@ -26,6 +26,10 @@ constexpr std::vector<std::string> split(std::string_view strv, std::string_view
 
 template <class C, class S>
 std::string join(const C& container, const S& separator) {
+    if (container.empty()) {
+        return {};
+    }
+
     std::ostringstream ret;
     for (const auto& s : container) {
         ret << separator << s;
@@ -36,6 +40,10 @@ std::string join(const C& container, const S& separator) {
 
 template <class C, size_t N>
 std::string join(const C& container, const char (&separator)[N]) {
+    if (container.empty()) {
+        return {};
+    }
+
     std::ostringstream ret;
     for (const auto& s : container) {
         ret << separator << s;
