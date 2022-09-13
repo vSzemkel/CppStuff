@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <iterator>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -31,25 +32,12 @@ std::string join(const C& container, const S& separator) {
     }
 
     std::ostringstream ret;
-    for (const auto& s : container) {
+    ret << *std::begin(container);
+    std::for_each(std::next(std::begin(container)), std::end(container), [&](const auto& s){
         ret << separator << s;
-    }
+    });
 
-    return ret.str().data() + separator.size();
-}
-
-template <class C, size_t N>
-std::string join(const C& container, const char (&separator)[N]) {
-    if (container.empty()) {
-        return {};
-    }
-
-    std::ostringstream ret;
-    for (const auto& s : container) {
-        ret << separator << s;
-    }
-
-    return ret.str().data() + N - 1;
+    return ret.str();
 }
 
 int main(int, char**)
@@ -63,6 +51,7 @@ int main(int, char**)
     const std::string sep{", "};
     assert(join(split(text), sep) == "aaa, bbb, ccc");
     assert(join(split(text), ", ") == "aaa, bbb, ccc");
+    assert(join(std::vector<std::string>{}, "sep").empty());
 }
 
 /*
