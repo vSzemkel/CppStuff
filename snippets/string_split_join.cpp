@@ -3,6 +3,7 @@
 #include <iterator>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 
@@ -31,11 +32,19 @@ std::string join(const C& container, const S& separator) {
         return {};
     }
 
+    auto tail = container.size() - 1;
+    auto first = std::begin(container);
+    if (tail == 0) {
+        return *first;
+    }
+
     std::ostringstream ret;
-    ret << *std::begin(container);
-    std::for_each(std::next(std::begin(container)), std::end(container), [&](const auto& s){
-        ret << separator << s;
-    });
+    ret << *first;
+    while (tail) {
+        first = std::next(first);
+        ret << separator << *first;
+        --tail;
+    }
 
     return ret.str();
 }
@@ -52,6 +61,8 @@ int main(int, char**)
     assert(join(split(text), sep) == "aaa, bbb, ccc");
     assert(join(split(text), ", ") == "aaa, bbb, ccc");
     assert(join(std::vector<std::string>{}, "sep").empty());
+    assert(join(std::vector<std::string>{"abcde","01234","q","ppp"}, "*").size() + 1 == sizeof("abcde*01234*q*ppp"));
+    assert(join(std::unordered_set<std::string>{"abcde","01234","q","ppp"}, "*").size() + 1 == sizeof("abcde*01234*q*ppp"));
 }
 
 /*
