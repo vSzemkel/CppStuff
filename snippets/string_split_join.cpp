@@ -32,19 +32,16 @@ std::string join(const C& container, const S& separator) {
         return {};
     }
 
-    auto tail = container.size() - 1;
-    auto first = std::begin(container);
+    const auto tail = container.size() - 1;
+    const auto first = std::begin(container);
     if (tail == 0) {
         return *first;
     }
 
-    std::ostringstream ret;
-    ret << *first;
-    while (tail) {
-        first = std::next(first);
-        ret << separator << *first;
-        --tail;
-    }
+    std::ostringstream ret(*first, std::ios_base::out | std::ios_base::ate);
+    std::for_each_n(std::next(first), tail, [&](const auto& s) {
+        ret << separator << s;
+    });
 
     return ret.str();
 }

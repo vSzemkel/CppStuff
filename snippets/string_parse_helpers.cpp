@@ -5,6 +5,13 @@
 #include <unordered_map>
 #include <unordered_set>
 
+/**
+ * @brief Extracts object attribute names
+ * 
+ * @param expression Text to be searched
+ * @param entities Object names collection
+ * @return vector of attribute names
+ */
 static auto parse_object_attributes(const std::string& expression, const std::vector<const char*>& entities) {
     std::unordered_map<std::string, std::unordered_set<std::string>> ret;
     for (const auto table : entities) {
@@ -32,6 +39,13 @@ static auto parse_object_attributes(const std::string& expression, const std::ve
     return ret;
 }
 
+/**
+ * @brief Result points to top level parentheses content after a functor
+ * 
+ * @param expression Text to be searched
+ * @param functor A token and an openning parenthese
+ * @return vector of references to expression substrings (no ownership)
+ */
 static auto parse_parentheses_content(const std::string& expression, const std::string& functor) {
     assert(!functor.empty() && functor.back() == '(');
     std::vector<std::string_view> ret;
