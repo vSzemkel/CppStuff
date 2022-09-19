@@ -2,10 +2,72 @@
 #include <algorithm>
 #include <iostream>
 #include <numeric>
+#include <set>
+#include <utility>
 #include <vector>
 
 // Scheduling a Meeting
 // https://codingcompetitions.withgoogle.com/kickstart/round/00000000008cb409/0000000000bef943
+
+/**
+ * @brief Rebalance two sets of managers of size K and N - K
+ * K set contains managers with K-lowest number of meetings
+ */
+static void solve() { // by Geothermal O(MlogN)
+    int N, K, X, D, M;
+    std::cin >> N >> K >> X >> D >> M;
+
+    std::vector<int> meetings(N); // number of meetings a manager has in current window
+    std::vector<std::pair<int, std::pair<int, int>>> events; // pos -> {manager, delta}
+    for (int z = M; z; --z) {
+        int m, b, e;
+        std::cin >> m >> b >> e; // [b, e)
+        --m;
+        events.emplace_back(b + 1, std::pair{m, +1});
+        events.emplace_back(e + X, std::pair{m, -1});
+    }
+
+    std::sort(events.begin(), events.end());
+
+    int64_t totalIn{0};
+    std::set<std::pair<int, int>> inSet, outSet;
+    for (int i = 0; i < K; ++i)
+        inSet.emplace(0, i);
+    for (int i = K; i < N; ++i)
+        outSet.emplace(0, i);
+
+    int64_t pos{0}, ans{M};
+    for (int i = 0; i <= D; ++i) {
+        while (pos < 2 * M && events[pos].first == i) {
+            const auto [manager, delta] = events[pos].second;
+            const std::pair<int, int> cur = {meetings[manager], manager};
+            if (inSet.count(cur)) {
+                inSet.erase(cur);
+                meetings[manager] += delta;
+                inSet.emplace(meetings[manager], manager);
+                totalIn += delta;
+            } else {
+                outSet.erase(cur);
+                meetings[manager] += delta;
+                outSet.emplace(meetings[manager], manager);
+            }
+            ++pos;
+        }
+
+        while (!inSet.empty() && !outSet.empty() && inSet.rbegin()->first > outSet.begin()->first) {
+            const auto toIn = *outSet.begin();
+            const auto toOut = *inSet.rbegin();
+            totalIn -= toOut.first - toIn.first;
+            outSet.insert(inSet.extract(toOut));
+            inSet.insert(outSet.extract(toIn));
+        }
+
+        if (i >= X)
+            ans = std::min(ans, totalIn);
+    }
+
+    std::cout << ans;
+}
 
 /**
  * @brief For every time window compute number of meetings each manager has
@@ -16,7 +78,7 @@ static void solve_set1() { // TLE: O(D * NlogN)
     int N, K, X, D, M;
     std::cin >> N >> K >> X >> D >> M;
 
-    std::vector<int> meetings(N, 0); // number of meetings a manager has in current window
+    std::vector<int> meetings(N); // number of meetings a manager has in current window
     std::vector<std::vector<int>> increase_events(D + 1), decrease_events(D + 1);
     for (int z = M; z; --z) {
         int m, b, e;
@@ -30,7 +92,7 @@ static void solve_set1() { // TLE: O(D * NlogN)
         decrease_events[e].push_back(m);
     }
 
-    int64_t ans = 1e09;
+    int64_t ans = M;
     for (int i = 0; i <= D - X; ++i) {
         for (const int j : increase_events[i])
             ++meetings[j];
@@ -54,7 +116,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_set1(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 
