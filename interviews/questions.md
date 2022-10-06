@@ -95,3 +95,36 @@ static int numlen(T n) {
 - assert(numlen(1) == 1)
 - assert(numlen((1LL<<63) - 1) == 19)
 - assert(numlen(n) == 1 + (int)std::log10(n))
+
+### How many issues do you see in the snippet below
+
+class Foo {
+     int A;
+
+     Foo() : A = 0
+     {}
+
+     int Increment() const {
+         ++A;
+         return A;
+     }
+};
+
+int main( void ) {
+    Foo test;
+    test.Increment();
+}
+
+- A member initialization
+- private constructor
+- Increment declared const
+- Increment is private
+
+### What are results of lower/upper bounds
+
+std::vector<int> bound_test = {0, 0, 1, 1, 1, 2, 2};
+const auto lb = std::lower_bound(bound_test.begin(), bound_test.end(), 1);
+const auto ub = std::upper_bound(bound_test.begin(), bound_test.end(), 1);
+
+assert(lb - bound_test.begin() == 2);
+assert(ub - bound_test.begin() == 5);
