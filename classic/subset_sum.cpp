@@ -53,7 +53,7 @@ static bool subset_sum(const int target) {
     for (int i = 0; i < N; ++i)
         for (int t = target; t >= items[i]; --t) {
             choosen[i + 1][t] = !dp[t] && dp[t - items[i]];
-            dp[t] = dp[t] | dp[t - items[i]];
+            dp[t] = dp[t] || dp[t - items[i]];
         }
 
     return dp[target];
