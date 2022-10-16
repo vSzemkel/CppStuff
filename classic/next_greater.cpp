@@ -7,6 +7,7 @@
 
 // Next Greater
 // For every array element i, find j : a[i] < a[j] or -1 if not exists
+// see: /kickstart/2022/happy_subarrays.cpp
 
 constexpr int g_size = 100000;
 std::array<int, g_size> g_input, g_result;
@@ -22,10 +23,9 @@ static void solve() {
         }
         stack.push_back(i);
     }
-    while (!stack.empty()) {
-        g_result[stack.back()] = -1;
-        stack.pop_back();
-    }
+    for (const int not_matched : stack)
+        g_result[not_matched] = -1;
+    // stack.clear();
 }
 
 int main(int, char**)
