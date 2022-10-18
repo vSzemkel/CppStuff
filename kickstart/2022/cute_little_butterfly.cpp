@@ -1,30 +1,9 @@
 
 #include <algorithm>
 #include <array>
-#include <bitset>
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
 #include <functional>
-#include <limits>
 #include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -97,12 +76,12 @@ static void solve() { // by IBory
         // move down
         for (const auto& [x, p] : f) {
             std::array<int64_t, 3> canl, canr;
-            canr[0] = st_right.query(0, x) + p;
+            canr[0] = st_right.query(0, x + 1) + p;
             canr[1] = st_right.query(x, MAXN) + p - 2 * E;
             canr[2] = st_left.query(0, MAXN) + p - E;
             score_right[x] = *std::max_element(canr.begin(), canr.end());
             canl[0] = st_left.query(x, MAXN) + p;
-            canl[1] = st_left.query(0, x) + p - 2 * E;
+            canl[1] = st_left.query(0, x + 1) + p - 2 * E;
             canl[2] = st_right.query(0, MAXN) + p - E;
             score_left[x] = *std::max_element(canl.begin(), canl.end());
         }
@@ -146,13 +125,27 @@ clang++.exe -Wall -Wextra -g -O0 -std=c++17 cute_little_butterfly.cpp -o cute_li
 g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address cute_little_butterfly.cpp -o cute_little_butterfly
 
 Run:
-py.exe interactive_runner.py py.exe cute_little_butterfly_testing_tool.py 1 -- cute_little_butterfly.exe
 cute_little_butterfly.exe < cute_little_butterfly.in
 
 Input:
 
+2
+4 10
+1 1 2
+1 2 2
+2 1 2
+2 2 2
+6 5
+1 1 4
+1 3 1
+3 4 5
+4 3 2
+5 2 1
+3 2 10
 
 Output:
 
+Case #1: 6
+Case #2: 17
 
 */

@@ -1,6 +1,6 @@
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <limits>
 #include <numeric>
@@ -9,6 +9,7 @@
 
 // Find maximal element on arbitrary subrange
 // see: /kickstart/2019/building_palindromes.cpp
+// see: /kickstart/2022/cute_little_butterfly.cpp
 
 /**
  * @brief TO DO
