@@ -75,15 +75,16 @@ static void solve() { // by IBory
         std::map<int, int64_t> score_left, score_right;
         // move down
         for (const auto& [x, p] : f) {
-            std::array<int64_t, 3> canl, canr;
-            canr[0] = st_right.query(0, x + 1) + p;
-            canr[1] = st_right.query(x, MAXN) + p - 2 * E;
-            canr[2] = st_left.query(0, MAXN) + p - E;
-            score_right[x] = *std::max_element(canr.begin(), canr.end());
-            canl[0] = st_left.query(x, MAXN) + p;
-            canl[1] = st_left.query(0, x + 1) + p - 2 * E;
-            canl[2] = st_right.query(0, MAXN) + p - E;
-            score_left[x] = *std::max_element(canl.begin(), canl.end());
+            score_right[x] = p + std::max({
+                st_right.query(0, x + 1),
+                st_right.query(x, MAXN) - 2 * E,
+                st_left.query(0, MAXN) - E
+            });
+            score_left[x] = p + std::max({
+                st_left.query(x, MAXN),
+                st_left.query(0, x + 1) - 2 * E,
+                st_right.query(0, MAXN) - E
+            });
         }
         // move horizontaly
         const auto hor = int(f.size());
