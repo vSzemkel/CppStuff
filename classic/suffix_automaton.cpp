@@ -17,6 +17,7 @@ struct suff_auto_state_t {
 
 struct suff_auto_t {
     suff_auto_t(const std::string_view s) {
+        assert(!s.empty());
         _nodes.reserve(s.size() * 2);
         _nodes.push_back(suff_auto_state_t{{}, 0, -1, {}});
         for (const char c : s)
@@ -24,6 +25,24 @@ struct suff_auto_t {
 
         for (auto suffix = _last; ~suffix; suffix = _nodes[suffix].link)
             _nodes[suffix].terminal = true;
+    }
+
+    int find(const std::string_view t) {
+        int cur{0};
+        bool found{true};
+        const char* c = t.data();
+        const int len = int(t.size());
+        for (int z = len; z; --z) {
+            const auto next = _nodes[cur].next;
+            const auto it = next.find(*c);
+            if (it == next.end())
+                return -1;
+
+            cur = it->second;
+            ++c;
+        }
+
+        return _nodes[cur].len - len;
     }
 
     std::vector<suff_auto_state_t> _nodes;
@@ -65,6 +84,19 @@ int main(int, char**)
     suff_auto_t sa{"abcbc"};
     assert(sa._nodes[sa._last].len == 5);
     assert(sa._size == 8);
+
+    const int offset{27};
+    std::string_view text{"ahdynklzanaskwydryosbqfntlhsiusiakagnwmcbarqwacjyplxmyaw"};
+    std::string_view patt(text.data() + offset, 7);
+    sa = text;
+
+    // Check if substring is not in text
+    assert(sa.find("dupa") == -1);
+    // First occurence position
+    assert(sa.find(patt) == offset);
+    // Find empty string
+    assert(sa.find("") == 0);
+
     std::cout << "PASSED\n";
 }
 
