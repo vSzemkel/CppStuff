@@ -155,7 +155,7 @@ struct updatable_segment_tree_t
     std::vector<T> _changes, _nodes;
 };
 
-static void solve_uts() { // O(NlogN)
+static void solve_ust() { // O(NlogN)
     int N;
     size_t S;
     std::cin >> N >> S;
@@ -223,7 +223,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve_ust(); std::cout << '\n';
     }
 }
 
