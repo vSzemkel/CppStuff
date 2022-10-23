@@ -3,13 +3,11 @@
 #include <iostream>
 #include <set>
 #include <utility>
+#include <vector>
 
-/**
- * @brief Collection of disconnected ranges
- * Ranges are closed: [l..r]
- * Renges are disconnected iff r1 < l2
- * see: /kickstart/2019/wiggle_walk.cpp
- */
+// Wiggle Walk
+// https://codingcompetitions.withgoogle.com/kickstart/round/0000000000050ff2/0000000000150aac
+
 struct range_set_t {
     using range_t = std::pair<int, int>;
 
@@ -64,54 +62,73 @@ struct range_set_t {
     std::set<range_t> _ranges;
 };
 
+static void solve() {
+    std::string S;
+    int N, R, C, r, c;
+    std::cin >> N >> R >> C >> r >> c >> S;
+
+    std::vector<range_set_t> rowspan(C + 1); // vertical
+    std::vector<range_set_t> colspan(R + 1); // horizontal
+    rowspan[c].add(r);
+    colspan[r].add(c);
+    range_set_t::range_t span;
+    for (const char d : S) {
+        switch (d) {
+            case 'N':
+            case 'S':
+                span = rowspan[c].get(r);
+                r = (d == 'N') ? span.first - 1 : span.second + 1;
+                break;
+            case 'E':
+            case 'W':
+                span = colspan[r].get(c);
+                c = (d == 'W') ? span.first - 1 : span.second + 1;
+                break;
+        }
+
+        colspan[r].add(c);
+        rowspan[c].add(r);
+    }
+
+    std::cout << r << ' ' << c;
+}
+
 int main(int, char**)
 {
-    range_set_t rs;
-    assert(rs.check(24) == false);
-    assert(rs.get(24) == range_set_t::NO_RANGE);
-    rs.add(24);
-    assert(rs.check(23) == false);
-    assert(rs.check(24) == true);
-    assert(rs.check(25) == false);
-    assert((rs.get(24) == std::pair{24, 24}));
-    rs.add(25);
-    assert(rs.check(23) == false);
-    assert(rs.check(24) == true);
-    assert(rs.check(25) == true);
-    assert(rs.check(26) == false);
-    assert((rs.get(24) == std::pair{24, 25}));
-    rs.add(23);
-    assert(rs.check(22) == false);
-    assert(rs.check(23) == true);
-    assert(rs.check(24) == true);
-    assert(rs.check(25) == true);
-    assert(rs.check(26) == false);
-    assert((rs.get(24) == std::pair{23, 25}));
-    rs.add(27);
-    assert(rs.check(22) == false);
-    assert(rs.check(23) == true);
-    assert(rs.check(24) == true);
-    assert(rs.check(25) == true);
-    assert(rs.check(26) == false);
-    assert(rs.check(27) == true);
-    assert(rs.check(28) == false);
-    assert((rs.get(24) == std::pair{23, 25}));
-    rs.add(26);
-    assert(rs.check(22) == false);
-    assert(rs.check(23) == true);
-    assert(rs.check(24) == true);
-    assert(rs.check(25) == true);
-    assert(rs.check(26) == true);
-    assert(rs.check(27) == true);
-    assert(rs.check(28) == false);
-    assert((rs.get(24) == std::pair{23, 27}));
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
 
-    std::cout << "PASSED\n";
+    int no_of_cases;
+    std::cin >> no_of_cases;
+    for (int g = 1; g <= no_of_cases; ++g) {
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+    }
 }
 
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++17 range_set.cpp -o range_set.exe
+clang++.exe -Wall -Wextra -g -O0 -std=c++17 wiggle_walk.cpp -o wiggle_walk.exe
+g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address wiggle_walk.cpp -o wiggle_walk
+
+Run:
+wiggle_walk.exe < wiggle_walk.in
+
+Input:
+
+3
+5 3 6 2 3
+EEWNS
+4 3 3 1 1
+SESE
+11 5 8 3 4
+NEESSWWNESE
+
+Output:
+
+Case #1: 3 2
+Case #2: 3 3
+Case #3: 3 7
 
 */
