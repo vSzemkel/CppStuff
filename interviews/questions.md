@@ -33,11 +33,14 @@
 - is there any difference between using it with std::vector ans std::set?
 
 ### Describe Heap datastructure
+- find a second largest element in a container
 - what is the cost of initializing the heap datastructure
 
 ### Why there exists a specification of std::vector<bool>
 - what is special in using it
 - how it organizes its memory
+
+### Given a graph with weighted edges and two vertices, can we always compute the shortest path between them
 
 ### Describe the difference between stack and heap allocated memory
 
