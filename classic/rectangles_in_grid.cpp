@@ -1,6 +1,6 @@
 
-#include <assert.h>
 #include <iostream>
+#include <cassert>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -10,7 +10,7 @@
 // Maximal square, maximal rectangle, largest in histogram
 
 
-constexpr const int R = 10 ,C = 20;
+constexpr const int R = 10, C = 20;
 const std::string grid =
 "01000110000000000000"
 "01111111000111100010"
