@@ -35,10 +35,9 @@ static histrest_t max_rect_in_histogram(const std::vector<int>& histogram) {
     return ret;
 }
 
-static void solve_set1() {
+static void solve() {
     int R, C, K;
     std::cin >> R >> C >> K;
-    assert(K == 0);
 
     std::vector<std::vector<int>> data(R, std::vector<int>(C));
     for (int r = 0; r < R; ++r)
@@ -49,11 +48,15 @@ static void solve_set1() {
     for (int r = 0; r < R; ++r) {
         for (int c = 0; c < C; ++c) {
             const int v = data[r][c];
+            int mi{v}, ma{v};
             histogram[c][r] = 1;
-            int d = c - 1;
-            while (~d && data[r][d] == v) {
+            for (int d = c - 1; ~d; --d) {
+                const int cur = data[r][d];
+                mi = std::min(mi, cur);
+                ma = std::max(ma, cur);
+                if (ma - mi > K)
+                    break;
                 ++histogram[d][r];
-                --d;
             }
         }
     }
@@ -76,7 +79,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_set1(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 
@@ -87,27 +90,27 @@ clang++.exe -Wall -Wextra -g -O0 -std=c++17 circuit_board.cpp -o circuit_board.e
 g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address circuit_board.cpp -o circuit_board
 
 Run:
-py.exe interactive_runner.py py.exe circuit_board_testing_tool.py 1 -- circuit_board.exe
 circuit_board.exe < circuit_board.in
 
 Input:
 
 3
-1 4 0
+1 4 2
 3 1 3 3
-2 3 0
-4 4 5
-7 6 6
-4 5 0
-2 2 4 4 20
-8 3 3 3 12
-6 6 3 3 3
-1 6 8 6 4
+3 3 2
+0 5 0
+8 12 3
+7 10 1
+4 4 8
+20 10 20 10
+10 4 5 20
+20 5 4 10
+10 20 10 20
 
 Output:
 
-Case #1: 2
-Case #2: 2
-Case #3: 6
+Case #1: 4
+Case #2: 3
+Case #3: 4
 
 */
