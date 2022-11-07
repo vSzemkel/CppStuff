@@ -8,7 +8,46 @@
 // Catch Some
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000050ff2/0000000000150a0d
 
-static void solve() {
+static void solve_mem_sparing() { // O(N2) CPU, O(N) Mem
+    int N, K;
+    std::cin >> N >> K;
+    std::vector<int> positions(N), colors(N);
+    for (auto& p : positions)
+        std::cin >> p;
+    for (auto& c : colors)
+        std::cin >> c;
+
+    std::unordered_map<int, std::vector<int>> world; // color -> positions
+    for (int i = 0; i < N; ++i)
+        world[colors[i]].push_back(positions[i]);
+    for (auto& [c, p] : world)
+        std::sort(p.begin(), p.end());
+    const auto C = world.size();
+
+    // [j][b] - from first i colors take j dogs. b == one of 1..i colors is the last one
+    std::vector<std::vector<int64_t>> dp(K + 1, std::vector<int64_t>(2, 1e18));
+    for (size_t c = 0; c <= C; ++c) // taking 0 dogs from any state is free
+        dp[0][0] = dp[0][1] = 0;
+
+    for (const auto& [c, p] : world) { // take i from [1..count-1] colors and j from count-th color
+        const int size = int(p.size());
+        for (int i = K; ~i; --i) { 
+            auto& prev =  dp[i];
+            for (int j = 0; j <= size; ++j) {
+                if (i + j > K) break;
+                auto& cur = dp[i + j];
+                const int dist = j ? p[j - 1] : 0;
+                cur[0] = std::min(cur[0], prev[0] + 2 * dist);
+                cur[1] = std::min(cur[1], prev[1] + 2 * dist);
+                cur[1] = std::min(cur[1], prev[0] + dist);
+            }
+        }
+    }
+
+    std::cout << dp[K][1];
+}
+
+static void solve() { // O(N2) CPU, O(N2) Mem
     int N, K;
     std::cin >> N >> K;
     std::vector<int> positions(N), colors(N);
@@ -58,7 +97,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve_mem_sparing(); std::cout << '\n';
     }
 }
 

@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 
     std::ifstream src{g_seedname};
     if (!src.good()) {
-        std::cout << "Template file: " << g_seedname << " not found.\n";
+        std::cerr << "Template file: " << g_seedname << " not found.\n";
         return 2;
     }
 
@@ -78,12 +78,8 @@ int main(int argc, char* argv[])
 }
 
 /*
-clang++.exe -Wall -ggdb3 -O3 -std=c++17 competition_init.cpp -o competition_init.exe
+clang++.exe -Wall -ggdb3 -O3 -std=c++20 competition_init.cpp -o competition_init.exe
 
-Input:
-
-
-Output:
-
+competition_init task_name
 
 */
