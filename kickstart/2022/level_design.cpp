@@ -64,7 +64,23 @@ static void solve() {
 
     std::sort(cycles.begin(), cycles.end());
     for (int level = 1; level <= N; ++level) {
+        int ans = 1e09;
+        const auto it = std::lower_bound(cycles.begin(), cycles.end(), level);
+        if (it != cycles.end())
+            ans = *it - level;
+        if (ans > 1) {
+            int count{0}, sum{0};
+            int pos = it - cycles.begin() - 1;
+            while (~pos && sum < level) {
+                sum += cycles[pos];
+                ++count;
+                --pos;
+            }
+            if (sum >= level)
+                ans = std::min(ans, count - 1 + sum - level);
+        }
 
+        std::cout << ans << ' ';
     }
 }
 
