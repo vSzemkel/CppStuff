@@ -8,6 +8,7 @@
 
 // Permutation swapsort
 // Given a permutation sort it with minimum number of swaps
+// For identifying cycles DSU can be used: /classic/union_find.cpp
 // see: /kickstart/2022/level_design.cpp
 
 constexpr const int size = 35;

@@ -32,17 +32,16 @@ static void solve() {
 }
 
 static void inner_solve_set1(int acc, int mem, int cost) { // O(3^N)
-    if (acc >= L) {
+    if (acc >= L || cost > ans) {
         if (acc == L && cost < ans)
             ans = cost;
         return;
     }
 
-    if (cost + 1 < ans)
-        inner_solve_set1(acc + 1, mem, cost + 1);
-    if (0 < mem && cost + 2 < ans)
+    inner_solve_set1(acc + 1, mem, cost + 1);
+    if (0 < mem)
         inner_solve_set1(acc + mem, mem, cost + 2);
-    if (mem < acc && cost + 4 < ans)
+    if (mem < acc)
         inner_solve_set1(acc, acc, cost + 4);
 }
 
@@ -83,13 +82,13 @@ Input:
 
 3
 17
-18
+120
 1974
 
 Output:
 
 Case #1: 15
-Case #2: 14
+Case #2: 28
 Case #3: 50
 
 */

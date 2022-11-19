@@ -54,7 +54,7 @@ constexpr const int N = 10;
 
 int main(int, char**)
 {
-    uf_t uf(N);
+    uf_t uf{N};
     assert(uf.find(5) == 5);
     assert(uf.count() == 10);
     assert(uf.size(5) == 1);
@@ -82,6 +82,16 @@ int main(int, char**)
     assert(uf.count() == 1);
     for (int i = 0; i < N; ++i)
         assert(uf.find(i) == 5);
+
+    // find cyclic permutations
+    int perm[N] = {0, 2, 1, 4, 5, 3, 7, 8, 9, 6};
+    uf_t fcp{N};
+    for (int i = 0; i < N; ++i)
+        fcp.unite(i, perm[i]);
+    assert(fcp.count() == 4);
+    assert(fcp.size(4) == 3);
+    assert(fcp.connected(3, 4) && fcp.connected(4, 5) && fcp.connected(5, 3));
+
     std::cout << "PASSED\n";
 }
 
