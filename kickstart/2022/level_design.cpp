@@ -1,37 +1,15 @@
 
-#include <algorithm>
-#include <array>
-#include <bitset>
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <limits>
+#include <deque>
 #include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 // Level Design
 // https://codingcompetitions.withgoogle.com/kickstart/round/00000000008cb1b6/0000000000c47792
 
-static void solve() {
+constexpr const int INF = 1e09;
+
+static void solve() { // koodos to tabr
     int N;
     std::cin >> N;
     std::vector<int> permut(N);
@@ -47,40 +25,108 @@ static void solve() {
 
     // identify cycles
     std::vector<bool> visited(N);
-    std::vector<int> cycles;
+    std::map<int, int> cycles_counts; // size -> number of occurences
     for (int i = 0; i < N; ++i) {
         if (visited[i])
             continue;
         visited[i] = true;
-        cycles.push_back(1);
-        auto& cycle = cycles.back();
+        int size{1};
         auto next = rev_ind[i];
         while (!visited[next]) {
             visited[next] = true;
-            ++cycle;
+            ++size;
             next = rev_ind[next];
         }
+        ++cycles_counts[size];
     }
 
-    std::sort(cycles.begin(), cycles.end());
-    for (int level = 1; level <= N; ++level) {
-        int ans = 1e09;
-        const auto it = std::lower_bound(cycles.begin(), cycles.end(), level);
-        if (it != cycles.end())
-            ans = *it - level;
-        if (ans > 1) {
-            int count{0}, sum{0};
-            int pos = it - cycles.begin() - 1;
-            while (~pos && sum < level) {
-                sum += cycles[pos];
-                ++count;
-                --pos;
+    std::vector<int> dp(N + 1, INF); // dp[i] cost of making i-cycle
+    dp[0] = -1;
+    for (const auto& [sz, cnt] : cycles_counts) {
+        const int size{sz}; // MSVC specific, prevents error: reference to local binding 'size' declared in enclosing function 'solve'
+        std::vector<int> ndp(N + 1, INF);
+        for (int d = 0; d < size; ++d) { // for every new (available) cycle size
+            std::deque<int> deq;
+            for (int it = 0; it * size + d <= N; ++it) { // how many cycles of size x we take
+                const auto Get = [&](int when) {
+                    return dp[when * size + d] + (it - when);
+                };
+                while (!deq.empty() && Get(deq.back()) >= Get(it)) {
+                    deq.pop_back();
+                }
+                deq.push_back(it);
+                ndp[it * size + d] = Get(deq.front());
+                if (deq.front() == it - cnt) {
+                    deq.pop_front();
+                }
             }
-            if (sum >= level)
-                ans = std::min(ans, count - 1 + sum - level);
         }
+        dp = std::move(ndp);
+    }
 
-        std::cout << ans << ' ';
+    int from_right = INF;
+    for (int dest = N; ~dest; --dest) {
+        dp[dest] = std::min(dp[dest], from_right + 1);
+        from_right = std::min(from_right, dp[dest]);
+    }
+
+    for (int i = 1; i <= N; ++i) {
+        std::cout << dp[i] << ' ';
+    }
+}
+
+static void solve_set1() {
+    int N;
+    std::cin >> N;
+    std::vector<int> permut(N);
+    for (auto& n : permut) {
+        std::cin >> n;
+        --n;
+    }
+
+    // prepare reverse index
+    std::vector<int> rev_ind(N);
+    for (int i = 0; i < N; ++i)
+        rev_ind[permut[i]] = i;
+
+    // identify cycles
+    std::vector<bool> visited(N);
+    std::map<int, int> cycles_counts; // size -> number of occurences
+    for (int i = 0; i < N; ++i) {
+        if (visited[i])
+            continue;
+        visited[i] = true;
+        int size{1};
+        auto next = rev_ind[i];
+        while (!visited[next]) {
+            visited[next] = true;
+            ++size;
+            next = rev_ind[next];
+        }
+        ++cycles_counts[size];
+    }
+
+    std::vector<int> dp(N + 1, INF); // dp[i] cost of making i-cycle
+    dp[0] = -1;
+    for (const auto& [size, cnt] : cycles_counts) {
+        std::vector<int> ndp(N + 1, INF);
+        ndp[0] = -1;
+        for (int dest = 1; dest <= N; ++dest) {
+            for (int full = 0; full <= cnt && full * size <= dest; ++full) {
+                ndp[dest] = std::min(ndp[dest], dp[dest - (full * size)] + full);
+            }
+        }
+        dp = std::move(ndp);
+    }
+
+    int from_right = INF;
+    for (int dest = N; ~dest; --dest) {
+        dp[dest] = std::min(dp[dest], from_right + 1);
+        from_right = std::min(from_right, dp[dest]);
+    }
+
+    for (int i = 1; i <= N; ++i) {
+        std::cout << dp[i] << ' ';
     }
 }
 
@@ -116,5 +162,7 @@ Input:
 
 Output:
 
+Case #1: 0 1 2 
+Case #2: 0 1 0 1
 
 */
