@@ -1,99 +1,170 @@
 
 #include <cassert>
+#include <chrono>
 #include <iostream>
 #include <deque>
 #include <queue>
+#include <random>
+#include <thread>
 #include <tuple>
 #include <vector>
+
 
 // Cheap Jumps
 // Given an array of size N of non negative integrals, you are to find
 // a jump sequence from index 0 to N-1 with minimal sum of visited slots
 // Single jump has length in range from 1 to J
 
-using jump_t = std::tuple<int64_t, size_t, size_t>; // <cost in to, from, to>
+constexpr const int64_t INF = 1e18;
+using jump_t = std::tuple<int64_t, int64_t, int64_t>; // <cost in to, from, to>
 
-size_t N, J;
+int64_t N, J;
 std::vector<int64_t> input;
+
+static std::mt19937 g_gen{std::random_device{}()};
+static auto cost(const jump_t& j) { return std::get<0>(j); }
+static auto dest(const jump_t& j) { return std::get<2>(j); }
+
+template <typename T = int>
+static auto distribution(const T ubound) {
+    std::uniform_int_distribution<T> dist(0, ubound - 1);
+    return dist;
+}
+
+struct stopwatch_t {
+    stopwatch_t() { _start = std::chrono::high_resolution_clock::now(); }
+    ~stopwatch_t() {
+        const auto d =  std::chrono::high_resolution_clock::now() - _start;
+        if (d.count() > std::giga::num)
+            std::cout << std::chrono::duration<double>(d).count() << " sec.";
+        else
+            std::cout << std::chrono::duration<double, std::milli>(d).count() << " ms.";
+    }
+  private:
+     std::chrono::high_resolution_clock::time_point _start;
+};
 
 /**
  * @brief Jump to the current position from rmq result of previous at most J slots
  * 
  * @return Cost of the traversal
  */
-auto solve_rmq() {
-    std::deque<jump_t> dq;
-    std::vector<size_t> prev(N);
-
-    int64_t ret = input.back();
+static auto solve_rmq(bool supress_msg = false) { // O(N)
     if (N <= J)
-        return ret;
-    for (size_t i = 0; i < J; ++i) {
-        while (!dq.empty() && input[i] < std::get<0>(dq.back()))
-            dq.pop_back();
-        dq.emplace_back(input[i], static_cast<size_t>(-1), i);
-    }
-    for (size_t i = 0; i < N; ++i) {
-        if (!dq.empty() && std::get<1>(dq.front()) < i - J)
-            dq.pop_front();
-        const auto [cost, from, to] = dq.front();
-        ret += cost;
-        prev[to] = from;
-        while (!dq.empty() && input[i] < std::get<0>(dq.back()))
-            dq.pop_back();
-        dq.emplace_back(input[i], to, i);
-    }
-    prev[N - 1] = std::get<2>(dq.front());
+        return input.back();
 
-    size_t slot = N - 1;
-    std::vector<size_t> path;
+    std::deque<jump_t> dq;
+    std::vector<int64_t> prev(N);
+    for (int64_t i = 0; i < J; ++i) {
+        while (!dq.empty() && input[i] < input[dest(dq.back())])
+            dq.pop_back();
+        prev[i] = -1;
+        dq.emplace_back(input[i], -1, i);
+    }
+    for (int64_t i = J; i < N; ++i) {
+        if (!dq.empty() && J < i - dest(dq.front()))
+            dq.pop_front();
+        const auto [total, from, to] = dq.front();
+        prev[to] = from;
+        while (!dq.empty() && total + input[i] < cost(dq.back()))
+            dq.pop_back();
+        dq.emplace_back(total + input[i], to, i);
+    }
+    prev[N - 1] = dest(dq.front());
+
+    int64_t slot = N - 1;
+    std::vector<int64_t> path;
     while (~slot) {
         path.push_back(slot);
         slot = prev[slot];
     }
 
-    std::cout << ret << "\nSTART_RMQ -> ";
-    for (auto it = path.rbegin(); it != path.rend(); ++it)
-        std::cout << (*it) + 1 << " -> ";
-    std::cout << "END\n";
+    const auto ret = cost(dq.front()) + input.back();
+    if (!supress_msg) {
+        std::cout << ret << "\nSTART_RMQ -> ";
+        for (auto it = path.rbegin(); it != path.rend(); ++it)
+            std::cout << (*it) + 1 << " -> ";
+        std::cout << "END\n";
+    }
 
     return ret;
 }
 
-auto solve_mst() {
-    std::vector<size_t> prev(N);
-    std::vector<bool> visited(N);
-    std::priority_queue<jump_t, std::vector<jump_t>, std::greater<>> pq;
-    for (size_t i = 0; i < J && i < N; ++i)
-        pq.emplace(input[i], -1, i);
-    while (true) {
-        const auto [_, from, to] = pq.top();
-        pq.pop();
-        prev[to] = from;
-        visited[to] = true;
-        if (to == N - 1) break;
-        for (size_t i = 1; i <= J; ++i) {
-            const auto next = to + i;
-            if (next < N && !visited[next])
-                pq.push(jump_t{input[next], to, next});
+static auto solve_mst(bool supress_msg = false) { // O(N * J)
+    if (N <= J)
+        return input.back();
+
+    std::queue<int64_t> qq;
+    std::vector<int64_t> prev(N + 1), score(N + 1, INF);
+    std::vector<bool> inque(N + 1);
+    score[0] = 0;
+    prev[0] = -1;
+    qq.push(0);
+    while (!qq.empty()) {
+        const auto cur = qq.front();
+        qq.pop();
+        inque[cur] = false;
+        for (int64_t i = 1; i <= J; ++i) {
+            const auto next = cur + i;
+            if (next <= N && score[cur] + input[next - 1] < score[next]) {
+                score[next] = score[cur] + input[next - 1];
+                prev[next] = cur;
+                if (!inque[next]) {
+                    inque[next] = true;
+                    qq.emplace(next);
+                }
+            }
         }
     }
 
-    int64_t ret{0};
-    size_t slot = N - 1;
-    std::vector<size_t> path;
+    int64_t slot = N;
+    std::vector<int64_t> path;
     while (~slot) {
-        ret += input[slot];
         path.push_back(slot);
         slot = prev[slot];
     }
+    path.pop_back();
 
-    std::cout << ret << "\nSTART_MST -> ";
-    for (auto it = path.rbegin(); it != path.rend(); ++it)
-        std::cout << (*it) + 1 << " -> ";
-    std::cout << "END\n";
+    if (!supress_msg) {
+        std::cout << score.back() << "\nSTART_MST -> ";
+        for (auto it = path.rbegin(); it != path.rend(); ++it)
+            std::cout << *it << " -> ";
+        std::cout << "END\n";
+    }
 
-    return ret;
+    return score.back();
+}
+
+static auto solve_brt(bool supress_msg = false) { // O(N * J)
+    int64_t ret = input.back();
+    if (N <= J)
+        return ret;
+
+    std::vector<int64_t> dp(N + 1, INF), prev(N + 1, -1);
+    dp[0] = 0;
+    for (int64_t i = 1; i <= N; ++i) 
+        for (int64_t j = 1; j <= J; ++j)
+            if (0 <= i - j && dp[i - j] + input[i - 1] < dp[i]) {
+                dp[i] = dp[i - j] + input[i - 1];
+                prev[i] = i - j;
+            }
+
+    int64_t slot = N;
+    std::vector<int64_t> path;
+    while (~slot) {
+        path.push_back(slot);
+        slot = prev[slot];
+    }
+    path.pop_back();
+
+    if (!supress_msg) {
+        std::cout << dp[N] << "\nSTART_BRT -> ";
+        for (auto it = path.rbegin(); it != path.rend(); ++it)
+            std::cout << *it << " -> ";
+        std::cout << "END\n";
+    }
+
+    return dp[N];
 }
 
 int main(int, char**)
@@ -111,10 +182,36 @@ int main(int, char**)
             std::cin >> s;
 
         std::cout << "Case #" << g << ": ";
-        const auto ret_mst = solve_mst();
-        const auto ret_rmq = solve_rmq();
-        //assert(ret_mst == ret_rmq);
+        const auto ret_mst = solve_mst(true);
+        const auto ret_rmq = solve_rmq(true);
+        const auto ret_brt = solve_brt();
+        assert(ret_mst == ret_rmq && ret_rmq == ret_brt);
     }
+
+    N = 1e06;
+    J = 1000;
+    input.resize(N);
+    auto dist = distribution<int64_t>(1000);
+    for (auto& n : input)
+        n = dist(g_gen);
+
+    int64_t ret_mst, ret_rmq, ret_brt;
+    std::cout << "\nBRT TIME: ";
+    {
+        stopwatch_t sw;
+        ret_brt = solve_brt(true);
+    }
+    std::cout << "\nMST TIME: ";
+    {
+        stopwatch_t sw;
+        ret_mst = solve_mst(true);
+    }
+    std::cout << "\nRMQ TIME: ";
+    {
+        stopwatch_t sw;
+        ret_rmq = solve_rmq(true);
+    }
+    assert(ret_mst == ret_rmq && ret_rmq == ret_brt);
 }
 
 /*
@@ -144,5 +241,9 @@ Case #2: 4
 0 -> 1 -> 7 -> END
 Case #3: 66
 0 -> 1 -> 5 -> 6 -> 10 -> 12 -> 16 -> 19 -> END
+
+BRT TIME: 6.60428 sec.
+MST TIME: 6.25823 sec.
+RMQ TIME: 277.776 ms.
 
 */
