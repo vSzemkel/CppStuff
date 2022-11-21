@@ -43,9 +43,9 @@ static void solve() { // koodos to tabr
     std::vector<int> dp(N + 1, INF); // dp[i] cost of making i-cycle
     dp[0] = -1;
     for (const auto& [sz, cnt] : cycles_counts) {
-        const int size{sz}; // MSVC specific, prevents error: reference to local binding 'size' declared in enclosing function 'solve'
+        const int size{sz}; // Clang 15 specific, prevents error: reference to local binding 'size' declared in enclosing function 'solve'
         std::vector<int> ndp(N + 1, INF);
-        for (int d = 0; d < size; ++d) { // for every new (available) cycle size
+        for (int d = 0; d < size; ++d) { // for every K % size
             std::deque<int> deq;
             for (int it = 0; it * size + d <= N; ++it) { // how many cycles of size x we take
                 const auto Get = [&](int when) {
@@ -65,7 +65,7 @@ static void solve() { // koodos to tabr
     }
 
     int from_right = INF;
-    for (int dest = N; ~dest; --dest) {
+    for (int dest = N; dest; --dest) {
         dp[dest] = std::min(dp[dest], from_right + 1);
         from_right = std::min(from_right, dp[dest]);
     }
@@ -109,18 +109,13 @@ static void solve_set1() {
     std::vector<int> dp(N + 1, INF); // dp[i] cost of making i-cycle
     dp[0] = -1;
     for (const auto& [size, cnt] : cycles_counts) {
-        std::vector<int> ndp(N + 1, INF);
-        ndp[0] = -1;
-        for (int dest = 1; dest <= N; ++dest) {
-            for (int full = 0; full <= cnt && full * size <= dest; ++full) {
-                ndp[dest] = std::min(ndp[dest], dp[dest - (full * size)] + full);
-            }
-        }
-        dp = std::move(ndp);
+        for (int dest = N; dest; --dest)
+            for (int full = 0; full <= cnt && full * size <= dest; ++full)
+                dp[dest] = std::min(dp[dest], dp[dest - (full * size)] + full);
     }
 
     int from_right = INF;
-    for (int dest = N; ~dest; --dest) {
+    for (int dest = N; dest; --dest) {
         dp[dest] = std::min(dp[dest], from_right + 1);
         from_right = std::min(from_right, dp[dest]);
     }
@@ -139,7 +134,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve_set1(); std::cout << '\n';
     }
 }
 
