@@ -39,6 +39,7 @@ struct stopwatch_t {
             std::cout << std::chrono::duration<double>(d).count() << " sec.";
         else
             std::cout << std::chrono::duration<double, std::milli>(d).count() << " ms.";
+        std::cout << std::endl;
     }
   private:
      std::chrono::high_resolution_clock::time_point _start;
@@ -49,14 +50,14 @@ struct stopwatch_t {
  * 
  * @return Cost of the traversal
  */
-static auto solve_rmq(bool supress_msg = false) { // O(N)
+static auto solve_rmq(bool show_msg = false) { // O(N)
     if (N <= J)
         return input.back();
 
     std::deque<jump_t> dq;
     std::vector<int64_t> prev(N);
     for (int64_t i = 0; i < J; ++i) {
-        while (!dq.empty() && input[i] < input[dest(dq.back())])
+        while (!dq.empty() && input[i] < cost(dq.back()))
             dq.pop_back();
         prev[i] = -1;
         dq.emplace_back(input[i], -1, i);
@@ -80,7 +81,7 @@ static auto solve_rmq(bool supress_msg = false) { // O(N)
     }
 
     const auto ret = cost(dq.front()) + input.back();
-    if (!supress_msg) {
+    if (show_msg) {
         std::cout << ret << "\nSTART_RMQ -> ";
         for (auto it = path.rbegin(); it != path.rend(); ++it)
             std::cout << (*it) + 1 << " -> ";
@@ -90,7 +91,7 @@ static auto solve_rmq(bool supress_msg = false) { // O(N)
     return ret;
 }
 
-static auto solve_mst(bool supress_msg = false) { // O(N * J)
+static auto solve_mst(bool show_msg = false) { // O(N * J) slightly better then BRT
     if (N <= J)
         return input.back();
 
@@ -101,13 +102,12 @@ static auto solve_mst(bool supress_msg = false) { // O(N * J)
     prev[0] = -1;
     qq.push(0);
     while (!qq.empty()) {
-        const auto cur = qq.front();
-        qq.pop();
+        const auto& cur = qq.front();
         inque[cur] = false;
-        for (int64_t i = 1; i <= J; ++i) {
-            const auto next = cur + i;
-            if (next <= N && score[cur] + input[next - 1] < score[next]) {
-                score[next] = score[cur] + input[next - 1];
+        for (int64_t next = cur + 1, z = J; z && next <= N; --z, ++next) {
+            const auto ncost = score[cur] + input[next - 1];
+            if (ncost < score[next]) {
+                score[next] = ncost;
                 prev[next] = cur;
                 if (!inque[next]) {
                     inque[next] = true;
@@ -115,6 +115,7 @@ static auto solve_mst(bool supress_msg = false) { // O(N * J)
                 }
             }
         }
+        qq.pop();
     }
 
     int64_t slot = N;
@@ -125,7 +126,7 @@ static auto solve_mst(bool supress_msg = false) { // O(N * J)
     }
     path.pop_back();
 
-    if (!supress_msg) {
+    if (show_msg) {
         std::cout << score.back() << "\nSTART_MST -> ";
         for (auto it = path.rbegin(); it != path.rend(); ++it)
             std::cout << *it << " -> ";
@@ -135,7 +136,7 @@ static auto solve_mst(bool supress_msg = false) { // O(N * J)
     return score.back();
 }
 
-static auto solve_brt(bool supress_msg = false) { // O(N * J)
+static auto solve_brt(bool show_msg = false) { // O(N * J)
     int64_t ret = input.back();
     if (N <= J)
         return ret;
@@ -157,7 +158,7 @@ static auto solve_brt(bool supress_msg = false) { // O(N * J)
     }
     path.pop_back();
 
-    if (!supress_msg) {
+    if (show_msg) {
         std::cout << dp[N] << "\nSTART_BRT -> ";
         for (auto it = path.rbegin(); it != path.rend(); ++it)
             std::cout << *it << " -> ";
@@ -182,13 +183,13 @@ int main(int, char**)
             std::cin >> s;
 
         std::cout << "Case #" << g << ": ";
-        const auto ret_mst = solve_mst(true);
         const auto ret_rmq = solve_rmq(true);
+        const auto ret_mst = solve_mst();
         const auto ret_brt = solve_brt();
         assert(ret_mst == ret_rmq && ret_rmq == ret_brt);
     }
 
-    N = 1e06;
+    N = 1e07;
     J = 1000;
     input.resize(N);
     auto dist = distribution<int64_t>(1000);
@@ -196,20 +197,20 @@ int main(int, char**)
         n = dist(g_gen);
 
     int64_t ret_mst, ret_rmq, ret_brt;
-    std::cout << "\nBRT TIME: ";
-    {
-        stopwatch_t sw;
-        ret_brt = solve_brt(true);
-    }
-    std::cout << "\nMST TIME: ";
-    {
-        stopwatch_t sw;
-        ret_mst = solve_mst(true);
-    }
     std::cout << "\nRMQ TIME: ";
     {
         stopwatch_t sw;
-        ret_rmq = solve_rmq(true);
+        ret_rmq = solve_rmq();
+    }
+    std::cout << "MST TIME: ";
+    {
+        stopwatch_t sw;
+        ret_mst = solve_mst();
+    }
+    std::cout << "BRT TIME: ";
+    {
+        stopwatch_t sw;
+        ret_brt = solve_brt();
     }
     assert(ret_mst == ret_rmq && ret_rmq == ret_brt);
 }
@@ -218,7 +219,7 @@ int main(int, char**)
 
 Compile:
 clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 cheap_jumps.cpp -o cheap_jumps.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 cheap_jumps.cpp -o cheap_jumps.o
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 cheap_jumps.cpp -o cheap_jumps
 
 Run:
 cheap_jumps.exe < cheap_jumps.in
@@ -242,8 +243,8 @@ Case #2: 4
 Case #3: 66
 0 -> 1 -> 5 -> 6 -> 10 -> 12 -> 16 -> 19 -> END
 
-BRT TIME: 6.60428 sec.
-MST TIME: 6.25823 sec.
-RMQ TIME: 277.776 ms.
+RMQ TIME: 131.844 ms.
+MST TIME: 10.4384 sec.
+BRT TIME: 11.1556 sec.
 
 */

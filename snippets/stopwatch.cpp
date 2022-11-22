@@ -11,6 +11,7 @@ struct stopwatch_t {
             std::cout << std::chrono::duration<double>(d).count() << " sec.";
         else
             std::cout << std::chrono::duration<double, std::milli>(d).count() << " ms.";
+        // std::cout << std::endl;
     }
   private:
      std::chrono::high_resolution_clock::time_point _start;
