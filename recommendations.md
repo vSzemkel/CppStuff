@@ -6,6 +6,7 @@ Below are some preferences regarding coding practices. They are opinionated but 
 - use package manager
 - use precompiled headers
 - use sanitizers when errors are difficult to spot
+- use static analyzer
 - develop and test in debug mode
 - in the editor enable show white spaces option
 - formalize expected code formatting [style](.clang-format)
