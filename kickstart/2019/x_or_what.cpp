@@ -1,31 +1,7 @@
 
 #include <algorithm>
-#include <array>
-#include <bitset>
 #include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 // X or What
@@ -34,12 +10,6 @@
 static int score(const int x) {
     return (__builtin_popcount(x) & 1) ? 0 : 1;
 }
-
-struct tree_node_t {
-    int value;  // value of all leafs xor-ed
-    int score;  // max length of xor-even subsequence in subtree
-    int length; // number of leafs in subtree
-};
 
 template <typename T>
 struct simple_segment_tree_t
@@ -75,21 +45,16 @@ struct simple_segment_tree_t
         }
     }
 
-    static inline const T SEED{-1, 0, 1}; // TO DO: change value accordingly
+    static inline const T SEED{-1}; // TO DO: change value accordingly
 
   private:
     static inline T join(const T& lhs, const T& rhs) {
-        if (lhs.value < 0)
+        if (lhs < 0)
             return rhs;
-        if (rhs.value < 0)
+        if (rhs < 0)
             return lhs;
 
-        const auto l =  2 * lhs.length;
-        const auto v = lhs.value ^ rhs.value;
-        if (score(v))
-            return {v, l, l};
-
-        return {v, std::max(lhs.score, rhs.score), l};
+        return lhs ^ rhs;
     }
 
     std::vector<T> _nodes;
@@ -99,21 +64,27 @@ struct simple_segment_tree_t
 static void solve() {
     int N, Q;
     std::cin >> N >> Q;
-    std::vector<tree_node_t> input(N);
-    for (auto& n : input) {
-        std::cin >> n.value;
-        n.score = score(n.value);
-        n.length = 1;
-    }
+    std::vector<int> input(N);
+    for (auto& n : input)
+        std::cin >> n;
 
-    simple_segment_tree_t<tree_node_t> st{input};
+    simple_segment_tree_t<int> st{input};
     for (int z = Q; z; --z) {
         int pos, val;
         std::cin >> pos >> val;
-        st.update(pos, {val, score(val), 1});
+        st.update(pos, val);
 
-        // TODO: scan for all possible max xor-even sequence endings
-        std::cout << st.query(0, N).score << ' ';
+        bool found{};
+        for (int len = N; len && !found; --len)
+            for (int begin = 0; begin + len  <= N; ++begin)
+                if (score(st.query(begin, begin + len))) {
+                    found = true;
+                    std::cout << len << ' ';
+                    break;
+                }
+        
+        if (!found)
+            std::cout << "0 ";
     }
 }
 
