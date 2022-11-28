@@ -1,88 +1,84 @@
 
-#include <algorithm>
-#include <cassert>
 #include <iostream>
+#include <set>
 #include <vector>
 
 // X or What
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000051061/0000000000161426
 
-static int score(const int x) {
-    return (__builtin_popcount(x) & 1) ? 0 : 1;
+static bool is_xor_even(const int x) {
+    return (__builtin_popcount(x) & 1) == 0;
 }
 
-template <typename T>
-struct simple_segment_tree_t
-{
-  public:
-    simple_segment_tree_t(const std::vector<T>& input) {
-        const int input_size = (int)input.size();
-        while (_offset < input_size) _offset *= 2;
-        _nodes.assign(2 * _offset, SEED);
-        std::copy(input.begin(), input.end(), _nodes.begin() + _offset);
-        for (int n = _offset - 1; n > 0; --n)
-            _nodes[n] = join(_nodes[2 * n], _nodes[2 * n + 1]);
-    }
-
-    T query(int lower, int upper) const { // range [lower, upper)
-        T ret{SEED};
-        for (lower += _offset, upper += _offset; lower < upper; lower >>= 1, upper >>= 1) { 
-            if (lower & 1)
-                ret = join(ret, _nodes[lower++]); 
-            if (upper & 1)
-                ret = join(ret, _nodes[--upper]);
-        }
-
-        return ret;
-    }
-
-    void update(int pos, const T val) {
-        pos += _offset;
-        _nodes[pos] = val;
-        while (pos > 1) {
-            pos /= 2;
-            _nodes[pos] = join(_nodes[2 * pos], _nodes[2 * pos + 1]);
-        }
-    }
-
-    static inline const T SEED{-1}; // TO DO: change value accordingly
-
-  private:
-    static inline T join(const T& lhs, const T& rhs) {
-        if (lhs < 0)
-            return rhs;
-        if (rhs < 0)
-            return lhs;
-
-        return lhs ^ rhs;
-    }
-
-    std::vector<T> _nodes;
-    int _offset{1};
-};
-
+/**
+ * Observation1: xor_odd ^ xor_odd == xor_even ^ xor_even == xor_even
+ * Observation2: xor_odd ^ xor_even == xor_even ^ xor_odd == xor_odd
+ * Observation3: largest xor_even subarray has even number of xor_odd numbers
+ */
 static void solve() {
     int N, Q;
     std::cin >> N >> Q;
+    std::set<int> xor_odd;
     std::vector<int> input(N);
-    for (auto& n : input)
-        std::cin >> n;
+    for (int i = 0; i < N; ++i) {
+        std::cin >> input[i];
+        if (!is_xor_even(input[i]))
+            xor_odd.insert(i);
+    }
 
-    simple_segment_tree_t<int> st{input};
     for (int z = Q; z; --z) {
         int pos, val;
         std::cin >> pos >> val;
-        st.update(pos, val);
+        xor_odd.erase(pos);
+        if (!is_xor_even(val))
+            xor_odd.insert(pos);
+        input[pos] = val;
+
+        if (xor_odd.size() % 2 == 0) {
+            std::cout << N << ' ';
+            continue;
+        }
+
+        std::cout << std::max(*xor_odd.rbegin(), N - *xor_odd.begin() - 1) << ' ';
+    }
+}
+
+static void solve_set1() {
+    int N, Q, acc{0};
+    std::cin >> N >> Q;
+    std::vector<int> input(N);
+    for (auto& n : input) {
+        std::cin >> n;
+        acc ^= n;
+    }
+
+    for (int z = Q; z; --z) {
+        int pos, val;
+        std::cin >> pos >> val;
+        acc ^= input[pos] ^ val;
+        input[pos] = val;
+
+        if (is_xor_even(acc)) {
+            std::cout << N << ' ';
+            continue;
+        }
 
         bool found{};
-        for (int len = N; len && !found; --len)
-            for (int begin = 0; begin + len  <= N; ++begin)
-                if (score(st.query(begin, begin + len))) {
+        auto head = acc;
+        for (int len = N - 1; !found && len; --len) {
+            head ^= input[len];
+            auto cur = head;
+            for (int begin = 0; begin + len  <= N; ++begin) {
+                if (is_xor_even(cur)) {
                     found = true;
                     std::cout << len << ' ';
                     break;
                 }
-        
+
+                cur ^= input[begin] ^ input[begin + len];
+            }
+        }
+
         if (!found)
             std::cout << "0 ";
     }
@@ -124,5 +120,7 @@ Input:
 
 Output:
 
+Case #1: 4 3 4
+Case #2: 4
 
 */
