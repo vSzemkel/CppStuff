@@ -12,7 +12,7 @@
 - signed integer overflow
 - general pointer addition
 - dereferencing nullptr
-- use aftre free
+- use after free
 
 ### What stands after the abbreviation
 - RAII ar-ej-aj-aj
@@ -43,6 +43,9 @@
 ### Given a graph with weighted edges and two vertices, can we always compute the shortest path between them
 
 ### Describe the difference between stack and heap allocated memory
+
+### Can all int values (4 bytes) be exactly represented as floats (4 bytes)?
+significant is 23+1 bits only: (1 << 24) == 16777216
 
 ### Is this code correct I?
 ```

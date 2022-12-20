@@ -14,23 +14,26 @@ static auto distribution(const T ubound) {
 
 const auto median_sorted = [](const std::vector<int>& data) -> double {
     const auto sz = data.size();
+    const auto half = sz / 2;
     if (sz & 1)
-        return data[sz / 2];
-    else
-        return double(data[sz / 2 - 1] + data[sz / 2]) / 2;
+        return data[half];
+    else {
+        const auto a = data[half - 1];
+        return a + double(data[half] - a) / 2;
+    }
 };
 
 const auto median_unsorted = [](std::vector<int>& data) -> double {
     const auto sz = data.size();
+    const auto half = sz / 2;
     if (sz & 1) {
-        std::nth_element(data.begin(), data.begin() + sz / 2, data.end());
-        return data[sz / 2];
+        std::nth_element(data.begin(), data.begin() + half, data.end());
+        return data[half];
     } else {
-        std::nth_element(data.begin(), data.begin() + sz / 2 - 1, data.end());
-        const auto a = data[sz / 2 - 1];
-        std::nth_element(data.begin(), data.begin() + sz / 2, data.end());
-        const auto b = data[sz / 2];
-        return a + double(b - a) / 2;
+        std::nth_element(data.begin(), data.begin() + half - 1, data.end());
+        const auto a = data[half - 1];
+        std::nth_element(data.begin(), data.begin() + half, data.end());
+        return a + double(data[half] - a) / 2;
     }
 };
 
