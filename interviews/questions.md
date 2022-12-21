@@ -29,6 +29,9 @@
 - std container interface to use with algorithms
 - can swap, can lex compare
 
+### What is socket
+- after initialization it abstracts network connection with file-like handler
+
 ### Describe Lower Bound algorithm
 - is there any difference between using it with std::vector ans std::set?
 
