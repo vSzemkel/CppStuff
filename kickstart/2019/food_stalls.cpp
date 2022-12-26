@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <queue>
 #include <unordered_set>
 #include <vector>
 
@@ -10,18 +11,54 @@
 constexpr const int64_t INF = 1e18; // big cost
 
 /**
- * @brief Let's add new stalls in increasing position only
+ * @brief Observation: if stalls positions are given, warehouse position is in the middle of them
  */
 static void solve() {
     int K, N;
     std::cin >> K >> N;
-    std::vector<int> position(N), cost(N);
-    for (auto& p : position)
-        std::cin >> p;
-    for (auto& c : cost)
-        std::cin >> c;
+    std::vector<std::pair<int,int>> location(N); // {position, cost}
+    for (auto& p : location)
+        std::cin >> p.first;
+    for (auto& c : location)
+        std::cin >> c.second;
+    std::sort(location.begin(), location.end());
 
-    // TODO: complete this
+    int64_t ans{INF};
+    const int left = K / 2;
+    const int right = K - left;
+    for (int w = left; w < N - right; ++w) {
+        int64_t lsum{0};
+        std::priority_queue<int64_t> pq;
+        for (int i = 0; i < left; ++i) {
+            const int c = location[w].first - location[i].first + location[i].second;
+            lsum += c;
+            pq.push(c);
+        }
+        for (int i = left; i < w; ++i) {
+            const int c = location[w].first - location[i].first + location[i].second;
+            pq.push(c);
+            lsum += c - pq.top();
+            pq.pop();
+        }
+
+        pq = std::priority_queue<int64_t>{};
+        int64_t rsum{0};
+        for (int i = w + 1, z = right; z; --z, ++i) {
+            const int c = location[i].first - location[w].first + location[i].second;
+            rsum += c;
+            pq.push(c);
+        }
+        for (int i = w + right + 1; i < N; ++i) {
+            const int c = location[i].first - location[w].first + location[i].second;
+            pq.push(c);
+            rsum += c - pq.top();
+            pq.pop();
+        }
+
+        ans = std::min(ans, lsum + location[w].second + rsum);
+    }
+
+    std::cout << ans;
 }
 
 static void solve_naive() {
@@ -71,7 +108,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_naive(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 

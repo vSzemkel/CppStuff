@@ -28,7 +28,7 @@ struct node_t {
  * @remark Original list is destroyed
  */
 std::shared_ptr<node_t> reverse(std::shared_ptr<node_t> list) {
-    std::shared_ptr<node_t> reversed{};
+    decltype(list) reversed{};
     while (list) {
         auto cur = list;
         list = list->next;
