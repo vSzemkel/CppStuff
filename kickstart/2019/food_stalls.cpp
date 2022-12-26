@@ -23,40 +23,47 @@ static void solve() {
         std::cin >> c.second;
     std::sort(location.begin(), location.end());
 
-    int64_t ans{INF};
     const int left = K / 2;
     const int right = K - left;
-    for (int w = left; w < N - right; ++w) {
-        int64_t lsum{0};
-        std::priority_queue<int64_t> pq;
-        for (int i = 0; i < left; ++i) {
-            const int c = location[w].first - location[i].first + location[i].second;
-            lsum += c;
-            pq.push(c);
-        }
-        for (int i = left; i < w; ++i) {
-            const int c = location[w].first - location[i].first + location[i].second;
-            pq.push(c);
-            lsum += c - pq.top();
-            pq.pop();
-        }
+    std::vector<int64_t> lans(N, INF), rans(N, INF);
 
-        pq = std::priority_queue<int64_t>{};
-        int64_t rsum{0};
-        for (int i = w + 1, z = right; z; --z, ++i) {
-            const int c = location[i].first - location[w].first + location[i].second;
-            rsum += c;
-            pq.push(c);
-        }
-        for (int i = w + right + 1; i < N; ++i) {
-            const int c = location[i].first - location[w].first + location[i].second;
-            pq.push(c);
-            rsum += c - pq.top();
-            pq.pop();
-        }
-
-        ans = std::min(ans, lsum + location[w].second + rsum);
+    int64_t sum{0};
+    std::priority_queue<int64_t> pq;
+    for (int i = 0; i < left; ++i) {
+        const int c = location[i].second - location[i].first;
+        sum += c;
+        pq.push(c);
     }
+    lans[left] = sum;
+    for (int i = left; i < N - right - 1; ++i) {
+        const int c = location[i].second - location[i].first;
+        pq.push(c);
+        sum += c - pq.top();
+        pq.pop();
+        lans[i + 1] = sum;
+    }
+
+    sum = 0;
+    pq = std::priority_queue<int64_t>{};
+    auto revloc = location;
+    std::reverse(revloc.begin(), revloc.end());
+    for (int i = 0; i < right; ++i) {
+        const int c = revloc[i].second + revloc[i].first;
+        sum += c;
+        pq.push(c);
+    }
+    rans[right] = sum;
+    for (int i = right; i < N - left - 1; ++i) {
+        const int c = revloc[i].second + revloc[i].first;
+        pq.push(c);
+        sum += c - pq.top();
+        pq.pop();
+        rans[i + 1] = sum;
+    }
+
+    int64_t ans{INF};
+    for (int w = left; w < N - right; ++w)
+        ans = std::min(ans, lans[w] + rans[N - w - 1] + location[w].second + (left - right) * location[w].first);
 
     std::cout << ans;
 }
