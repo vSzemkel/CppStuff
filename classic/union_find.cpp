@@ -1,9 +1,11 @@
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <numeric>
 #include <utility>
 #include <vector>
+
+// see: /kickstart/2019/cherries_mesh.cpp
 
 //  std::iota(uf.begin(), uf.end(), 0);
 //  const std::function<int(int)> find = [&](const int n){
