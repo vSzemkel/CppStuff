@@ -8,10 +8,10 @@
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000050edb/00000000001707b8
 
 /**
- * @bservation: for slot with totals: TA and TB taking A we loose A * (TB / TA)
+ * @observation: for slot with totals: TA and TB taking A we loose A * (TB / TA)
  * @conclusion: take A in order starting from slots with minimal (TB / TA)
  */
-static void solve() {
+static void solve() { // O(DlogS)
     int D, S;
     std::cin >> D >> S;
     std::vector<std::tuple<double, int64_t, int64_t>> slots(S); // {factor, code, eat}
