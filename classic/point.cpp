@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <cmath>
 #include <iostream>
+#include <numeric>
 #include <optional>
 #include <vector>
 
@@ -137,7 +138,7 @@ struct line_t : std::array<point_t<T>, 2> {
 
 template <typename T = int64_t>
 struct polygon_t : std::vector<point_t<T>> {
-    T area2() const {
+    T area2() const { // points are perimeter ordered
         if (this->size() < 3)
             return T{};
 
@@ -165,14 +166,10 @@ struct polygon_t : std::vector<point_t<T>> {
         return perm;
     }
 
-    point_t<T> center_of_gravity() const { // points not colinear for size > 2
+    point_t<T> center_of_gravity() const {
         const auto sz = this->size();
         if (sz == 0)
             return {};
-        if (sz == 1)
-            return this->front();
-        if (sz == 2)
-            return (this->front() + this->back()) / 2;
 
         T signedArea{};
         point_t<T> ret{};
@@ -185,9 +182,10 @@ struct polygon_t : std::vector<point_t<T>> {
             prev = &cur;
         }
 
-        assert(signedArea);
-        signedArea *= 3;
-        return ret / signedArea;
+        if (signedArea != 0)
+            return ret / (signedArea * 3);
+
+        return std::accumulate(this->begin(), this->end(), point_t<T>{}) / this->size();
     }
 
     auto convex_hull() const {
