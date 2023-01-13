@@ -140,6 +140,7 @@ struct polygon_t : std::vector<point_t<T>> {
     T area2() const {
         if (this->size() < 3)
             return T{};
+
         T ar2{};
         auto prev = &this->back();
         for (const auto& cur : *this) {
@@ -151,6 +152,9 @@ struct polygon_t : std::vector<point_t<T>> {
     }
 
     auto perimeter_len() const { // points are perimeter ordered
+        if (this->empty())
+            return T{};
+
         T perm{0};
         auto prev = &this->back();
         for (const auto& cur : *this) {
