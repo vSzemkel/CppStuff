@@ -136,6 +136,85 @@ struct line_t : std::array<point_t<T>, 2> {
 };
 
 template <typename T = int64_t>
+struct polygon_t : std::vector<point_t<T>> {
+    T area2() const {
+        const auto sz = int(this->size());
+        if (sz < 3)
+            return T{};
+        T a = this->back().cross(this->front());
+        for (int i = 0; i < sz - 1; ++i)
+            a += (*this)[i].cross((*this)[i + 1]);
+        return std::abs(a);
+    }
+
+    auto perimeter_len() const { // points are perimeter ordered
+        T perm{0};
+        for (int z = int(this->size()) - 1; z; --z)
+            perm += ((*this)[z] - (*this)[z - 1]).len();
+        perm += (this->back() - this->front()).len();
+        return perm;
+    }
+
+    point_t<T> center_of_gravity() const { // points not colinear for size > 2
+        T retx{}, rety{}, signedArea{};
+        const auto sz = int(this->size());
+        if (sz > 0) {
+            auto [prevx, prevy] = this->back();
+            if (sz == 1)
+                return {prevx, prevy};
+            if (sz == 2)
+                return {((*this)[0].x + prevx) / 2, ((*this)[0].y + prevy) / 2};
+            for (int i = 0; i < sz; ++i) {
+                const auto [curx, cury] = (*this)[i];
+                // Shoelace formula
+                const auto A = (prevx * cury) - (curx * prevy);
+                signedArea += A;
+                // Calculating coordinates of centroid of polygon
+                retx += (prevx + curx) * A;
+                rety += (prevy + cury) * A;
+                prevx = curx;
+                prevy = cury;
+            }
+
+            signedArea *= 3;
+            retx /= signedArea;
+            rety /= signedArea;
+        }
+
+        return {retx, rety};
+    }
+
+    auto convex_hull() const {
+        auto points = *this; // copy to be sorted
+        decltype(points) upper, lower;
+        std::sort(points.begin(), points.end());
+        for (const auto& p : points) {
+            int usz = int(upper.size());
+            while (usz >= 2 && p.turning_left(upper[usz - 1], upper[usz - 2]) == -1) {
+                upper.pop_back();
+                --usz;
+            }
+            upper.push_back(p);
+            int lsz = int(lower.size());
+            while (lsz >= 2 && lower[lsz - 2].turning_left(lower[lsz - 1], p) == -1) {
+                lower.pop_back();
+                --lsz;
+            }
+            lower.push_back(p);
+        }
+
+        std::reverse(upper.begin(), upper.end());
+        lower.pop_back();
+        lower.insert(lower.end(), upper.begin(), upper.end());
+        lower.pop_back();
+
+        return lower;
+    }
+};
+template <typename T>
+polygon_t(std::vector<point_t<T>>) -> polygon_t<T>;
+
+template <typename T = int64_t>
 static bool polar_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_cmp(p2); };
 template <typename T = int64_t>
 static bool polar_radius_cmp(const point_t<T>& p1, const point_t<T>& p2) { return p1.polar_radius_cmp(p2); };
@@ -177,7 +256,7 @@ static auto convex_hull(std::vector<point_t<T>> points) { // copy is sorted
     return lower;
 }
 
-template <typename T = int64_t>
+template <typename T = double>
 static auto perimeter_len(const std::vector<point_t<T>>& points) { // points are perimeter ordered
     T perm{0};
     for (int z = int(points.size()) - 1; z; --z)
@@ -243,9 +322,13 @@ int main(int, char**)
     const point_t<double> t3{0.15, 5.81};
     assert(std::abs(point_t<double>::area(t1, t2, t3) - (t1 - t2).len() * (t3 - t3.foot(line_t<double>{t1, t2})).len() / 2) < EPS);
 
-    std::vector<point_t<>> v = {{0, 0}, {2, 0}, {1, 1}, {1, 2}, {0, 2}};
-    assert(polygon_area2(v) == 5);
-    assert((convex_hull(v) == std::vector{v[0], v[1], v[3], v[4]}));
+    std::vector<point_t<double>> v{{0, 0}, {2, 0}, {1, 1}, {1, 2}, {0, 2}};
+    polygon_t p{v};
+    assert(p.area2() - 5 < EPS);
+    const auto ch = p.convex_hull();
+    assert((ch == std::vector{v[0], v[1], v[3], v[4]}));
+    assert(p.perimeter_len() - 6 - std::sqrt(2) < EPS);
+    assert((p.center_of_gravity() - point_t<double>{double(2) / 3, double(13) / 15} < point_t<double>{EPS, EPS}));
 
     const auto isn = line_t<double>::find_intersection({{0, 0}, {17.3, -2.5}}, {{2, 5.7}, {15.9, -3.14}});
     assert(isn.has_value() && std::abs(isn.value().x - 14.186111252) < EPS && std::abs(isn.value().y + 2.050016076) < EPS);
