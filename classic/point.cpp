@@ -156,32 +156,30 @@ struct polygon_t : std::vector<point_t<T>> {
     }
 
     point_t<T> center_of_gravity() const { // points not colinear for size > 2
-        T retx{}, rety{}, signedArea{};
         const auto sz = int(this->size());
-        if (sz > 0) {
-            auto [prevx, prevy] = this->back();
-            if (sz == 1)
-                return {prevx, prevy};
-            if (sz == 2)
-                return {((*this)[0].x + prevx) / 2, ((*this)[0].y + prevy) / 2};
-            for (int i = 0; i < sz; ++i) {
-                const auto [curx, cury] = (*this)[i];
-                // Shoelace formula
-                const auto A = (prevx * cury) - (curx * prevy);
-                signedArea += A;
-                // Calculating coordinates of centroid of polygon
-                retx += (prevx + curx) * A;
-                rety += (prevy + cury) * A;
-                prevx = curx;
-                prevy = cury;
-            }
+        if (sz == 0)
+            return {};
+        if (sz == 1)
+            return this->front();
+        if (sz == 2)
+            return (this->front() + this->back()) / 2;
 
-            signedArea *= 3;
-            retx /= signedArea;
-            rety /= signedArea;
+        T retx{}, rety{}, signedArea{};
+        auto [prevx, prevy] = this->back();
+        for (int i = 0; i < sz; ++i) {
+            const auto [curx, cury] = (*this)[i];
+            // Shoelace formula
+            const auto A = (prevx * cury) - (curx * prevy);
+            signedArea += A;
+            // Calculating coordinates of centroid of polygon
+            retx += (prevx + curx) * A;
+            rety += (prevy + cury) * A;
+            prevx = curx;
+            prevy = cury;
         }
 
-        return {retx, rety};
+        signedArea *= 3;
+        return point_t<T>{retx, rety} / signedArea;
     }
 
     auto convex_hull() const {
