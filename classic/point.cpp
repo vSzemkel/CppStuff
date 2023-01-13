@@ -138,25 +138,31 @@ struct line_t : std::array<point_t<T>, 2> {
 template <typename T = int64_t>
 struct polygon_t : std::vector<point_t<T>> {
     T area2() const {
-        const auto sz = int(this->size());
-        if (sz < 3)
+        if (this->size() < 3)
             return T{};
-        T a = this->back().cross(this->front());
-        for (int i = 0; i < sz - 1; ++i)
-            a += (*this)[i].cross((*this)[i + 1]);
-        return std::abs(a);
+        T ar2{};
+        auto prev = &this->back();
+        for (const auto& cur : *this) {
+            ar2 += prev->cross(cur);
+            prev = &cur;
+        }
+
+        return std::abs(ar2);
     }
 
     auto perimeter_len() const { // points are perimeter ordered
         T perm{0};
-        for (int z = int(this->size()) - 1; z; --z)
-            perm += ((*this)[z] - (*this)[z - 1]).len();
-        perm += (this->back() - this->front()).len();
+        auto prev = &this->back();
+        for (const auto& cur : *this) {
+            perm += (cur - *prev).len();
+            prev = &cur;
+        }
+
         return perm;
     }
 
     point_t<T> center_of_gravity() const { // points not colinear for size > 2
-        const auto sz = int(this->size());
+        const auto sz = this->size();
         if (sz == 0)
             return {};
         if (sz == 1)
@@ -164,22 +170,20 @@ struct polygon_t : std::vector<point_t<T>> {
         if (sz == 2)
             return (this->front() + this->back()) / 2;
 
-        T retx{}, rety{}, signedArea{};
-        auto [prevx, prevy] = this->back();
-        for (int i = 0; i < sz; ++i) {
-            const auto [curx, cury] = (*this)[i];
+        T signedArea{};
+        point_t<T> ret{};
+        auto prev = &this->back();
+        for (const auto& cur : *this) {
             // Shoelace formula
-            const auto A = (prevx * cury) - (curx * prevy);
+            const auto A = prev->cross(cur);
             signedArea += A;
-            // Calculating coordinates of centroid of polygon
-            retx += (prevx + curx) * A;
-            rety += (prevy + cury) * A;
-            prevx = curx;
-            prevy = cury;
+            ret = ret + (*prev + cur) * A;
+            prev = &cur;
         }
 
+        assert(signedArea);
         signedArea *= 3;
-        return point_t<T>{retx, rety} / signedArea;
+        return ret / signedArea;
     }
 
     auto convex_hull() const {
