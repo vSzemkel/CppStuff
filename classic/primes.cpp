@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 #include <numeric>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 // Primes - generation and factorization
@@ -79,13 +79,15 @@ static auto get_all_divisors(const int64_t n) {
 static auto get_base_divisors(const int64_t n) {
     const auto factorization = factorize(n);
     assert(std::is_sorted(factorization.begin(), factorization.end()));
-    std::map<int64_t, int> divisors;
+    std::unordered_map<int64_t, int> divisors;
     for (const auto d : factorization)
         ++divisors[d];
     return divisors;
 }
 
 static int64_t count_divisors(const int64_t n) {
+    if (n < 2)
+        return 1;
     int64_t ret{1};
     const auto divisors = get_base_divisors(n);
     for (const auto& [_, c] : divisors)

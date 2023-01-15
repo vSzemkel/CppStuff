@@ -1,16 +1,92 @@
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <iostream>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 // Street Checkers
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000050edb/00000000001707b9
 
-std::unordered_set<int> good, bad;
+static std::vector<int64_t> factorize(int64_t n) {
+    std::vector<int64_t> factorization;
+    if (n < 1) return factorization;
+
+    for (int d : {2, 3, 5}) {
+        while (n % d == 0) {
+            factorization.push_back(d);
+            n /= d;
+        }
+    }
+
+    int i{0}, increments[] = {6, 4, 2, 4, 2, 4, 6, 2};
+    for (int64_t d = 7; d * d <= n; d += increments[i]) {
+        while (n % d == 0) {
+            factorization.push_back(d);
+            n /= d;
+        }
+        i = (i + 1) % 8;
+    }
+
+    if (n > 1 || factorization.empty())
+        factorization.push_back(n);
+
+    return factorization;
+}
+
+// https://cp-algorithms.com/algebra/divisors.html
+static auto get_base_divisors(const int64_t n) {
+    const auto factorization = factorize(n);
+    assert(std::is_sorted(factorization.begin(), factorization.end()));
+    std::unordered_map<int64_t, int> divisors;
+    for (const auto d : factorization)
+        ++divisors[d];
+    return divisors;
+}
+
+static int64_t count_divisors(const int64_t n) {
+    if (n < 2)
+        return 1;
+    int64_t ret{1};
+    const auto divisors = get_base_divisors(n);
+    for (const auto& [_, c] : divisors)
+        ret *= (c + 1);
+    return ret;
+}
+
+std::unordered_map<int, int> divisor_count;
 
 static void solve() {
+    int L, R;
+    std::cin >> L >> R;
+
+    int ans{0};
+    for (int x = L; x <= R; ++x) {
+        int totalDiv, oddDiv;
+        if (divisor_count.count(x))
+            totalDiv = divisor_count[x];
+        else
+            totalDiv = divisor_count[x] = count_divisors(x);
+
+        int e{x};
+        while ((e & 1) == 0) e >>= 1;
+        if (divisor_count.count(e))
+            oddDiv = divisor_count[e];
+        else
+            oddDiv = divisor_count[e] = count_divisors(e);
+
+        if (std::abs(totalDiv - 2 * oddDiv) < 3)
+            ++ans;
+    }
+
+    std::cout << ans;
+}
+
+std::unordered_set<int> good, bad;
+
+static void solve_naive() {
     int L, R;
     std::cin >> L >> R;
 
