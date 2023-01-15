@@ -61,18 +61,16 @@ static std::vector<int64_t> factorize(int64_t n) {
 
 static auto get_all_divisors(const int64_t n) {
     std::vector<int64_t> ans;
-    const auto nsq = static_cast<int64_t>(std::sqrt(n));
-    for (int i = 1; i <= nsq; ++i) {
-        const auto d = n / i;
-        if (d * i == n) {
-            ans.push_back(i);
+    int c{1};
+    for (; c * c < n; ++c) {
+        const auto d = n / c;
+        if (c * d == n) {
+            ans.push_back(c);
             ans.push_back(d);
         }
     }
-
-    const int size = int(ans.size());
-    if (size > 1 && ans[size - 2] == ans.back())
-        ans.pop_back();
+    if (c * c == n)
+        ans.push_back(c);
 
     return ans;
 }

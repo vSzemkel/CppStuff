@@ -59,7 +59,7 @@ int main(int, char**)
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
+cls && clang++.exe -Wall -Wextra -g -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
 g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address $TASKNAME$.cpp -o $TASKNAME$
 
 Run:
