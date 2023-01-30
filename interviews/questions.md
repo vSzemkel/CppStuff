@@ -24,6 +24,10 @@
 - whats wrong with std::auto_ptr<>
 - name them, describe diferences
 
+### What is SRWLock primitive in Windows
+- is it available from C++ ? (std::shared_mutex / std::unique_lock / std::shared_lock)
+- is it available from C# ? (System.Threading.ReaderWriterLock)
+
 ### What is std::array for?
 - stack allocated, fast
 - std container interface to use with algorithms
