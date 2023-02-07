@@ -107,8 +107,13 @@ int main(int, char**)
 {
     const int p = 998244353;
     assert(is_prime(p));
-    auto primes = generate(500);
+    auto primes = generate(16); // square case
+    assert(primes.size() == 6);
+    primes = generate(500);
     assert(primes.size() == 95);
+    primes = generate(1e09); // real 0m7.684s
+    assert(primes.size() == 50847534);
+
 
     const int64_t n = 2LL * 7 * 7 * 13 * 37 * 107 * 499 * 1039 * 7013;
     assert(factorize(0).empty());
