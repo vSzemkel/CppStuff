@@ -9,7 +9,7 @@
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000050edc/00000000001864bc
 
 static void solve() {
-    int N, S;
+    int64_t N, S;
     std::cin >> N >> S;
     std::vector<std::set<int>> people(N); // person -> set of skills
     std::map<std::set<int>, int64_t> counts; // skill set -> number of mentors with this set
