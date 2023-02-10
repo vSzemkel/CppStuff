@@ -22,7 +22,7 @@ static void solve() {
     std::vector<std::vector<int>> uniform_height_cost(N, std::vector<int>(N));
     for (int i = 0; i < N; ++i) {
         int mx{0};
-        std::unordered_map<int, int> count; 
+        std::unordered_map<int, int> count;
         for (int j = i; j < N; ++j) {
             auto& cur = count[data[j]];
             ++cur;

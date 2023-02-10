@@ -1,7 +1,6 @@
 
 #include <algorithm>
 #include <iostream>
-#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -10,7 +9,7 @@
 // Ties break at random. Which voivodeships names can eventually be preserved after full merge?
 
 static void solve() {
-    int pos{0}, N{0};
+    int pos{}, N{};
     std::cin >> N;
     std::vector<int> partial(N);
     std::vector<std::pair<int, int>> vships(N);
@@ -19,18 +18,14 @@ static void solve() {
         v.second = ++pos;
     }
 
+    pos = 0;
     std::sort(vships.begin(), vships.end());
-    std::transform(vships.begin(), vships.end(), partial.begin(), [](const auto& v){ return v.first; });
-    std::partial_sum(partial.begin(), partial.end(), partial.begin());
+    std::transform(vships.begin(), vships.end(), partial.begin(), [&](const auto& v){
+        pos += v.first;
+        return pos;
+    });
 
-    int ret{N - 1};
-    const int MAX = vships.back().first;
-    for (int i = ret - 1; i >= 0; --i)
-        if (partial[i] >= MAX)
-            --ret;
-        else
-            break;
-
+    const int ret = std::lower_bound(partial.begin(), partial.end(), vships.back().first) - partial.begin();
     std::sort(vships.begin() + ret, vships.end(), [](const auto& v1, const auto& v2){
         return v1.second < v2.second;
     });
