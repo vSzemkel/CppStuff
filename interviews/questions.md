@@ -91,6 +91,23 @@ int riddle(const char* s) {
 - it returns a pointer range size minus initial s pointer location, after overflowing
 - assert(ret * -1 == (int)s)
 
+### Given a 64 bit number, please invert 42nd bit
+```
+if we assume least significant bit to have number 0, then
+value ^= (1 << 42)
+if we assume least significant bit to have number 1, then
+value ^= (1 << 41)
+```
+
+### Check if given set of integers have a subset with sum of its elements being exactly the half of the sum of all elements
+1, 3, 4, 5, 8, 9 – counterexample for the naive solution. This is NP problem.
+9 + 4 + 3 != 8 + 5 + 1
+9 + 5 + 1 == 8 + 4 + 3
+
+### Given an array of K numbers, write out all the subsets, line by line
+
+### Ship game: given a board, identify number of ships off all size
+
 ### Write a function that computes digit length for positive integral
 
 ```
