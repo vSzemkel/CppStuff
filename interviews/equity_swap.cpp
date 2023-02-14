@@ -12,21 +12,24 @@
 bool g_swapped;
 std::vector<int> g_a, g_b;
 
-template <typename T> std::vector<T> fill(const size_t size){ std::vector<T> cont(size); std::copy_n(std::istream_iterator<T>{std::cin}, size, cont.begin()); return cont; };
-
 static void print(int posa, int valb)
 {
     int posb = std::find(g_b.begin(), g_b.end(), valb) - g_b.begin();
     if (g_swapped) std::swap(posa, posb);
-    std::cout << "{" << posa << ", " << posb << "}";
+    std::cout << "Swap A[" << posa << "] and B[" << posb << ']';
 }
 
 static void solve() // O((M+N)log(min(M,N)))
 {
     int sza, szb;
     std::cin >> sza >> szb;
-    g_a = fill<int>(sza);
-    g_b = fill<int>(szb);
+    g_a.resize(sza);
+    for (auto& a : g_a)
+        std::cin >> a;
+    g_b.resize(szb);
+    for (auto& b : g_b)
+        std::cin >> b;
+
     g_swapped = sza < szb;
     if (g_swapped) {
         std::swap(sza, szb);
@@ -39,12 +42,12 @@ static void solve() // O((M+N)log(min(M,N)))
     int diff = suma - sumb;
     if (diff % 2 == 0) {
         diff >>= 1;
-        auto ab = g_b;
-        std::sort(ab.begin(), ab.end());
+        auto b_copy = g_b;
+        std::sort(b_copy.begin(), b_copy.end());
         for (int posa = 0; posa < sza; ++posa) {
             const auto vala = g_a[posa];
-            const auto it = std::lower_bound(ab.begin(), ab.end(), vala - diff);
-            if (it < ab.end() && diff == vala - *it) {
+            const auto it = std::lower_bound(b_copy.begin(), b_copy.end(), vala - diff);
+            if (it < b_copy.end() && diff == vala - *it) {
                 print(posa, *it);
                 return;
             }
