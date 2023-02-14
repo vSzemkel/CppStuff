@@ -7,7 +7,30 @@
 // Book Reading
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000050e02/000000000018fd0d
 
-static void solve() { // O(NlogN + Q)
+static void solve() { // O(QlogN )
+    int N, M, Q;
+    std::cin >> N >> M >> Q;
+    std::vector<bool> torn_outs(N + 1);
+    for (int z = M; z; --z) {
+        int p; std::cin >> p;
+        torn_outs[p] = true;
+    }
+
+    int64_t ans{};
+    std::vector<int> memo(N + 1); // memo[x] is number of pages that are multiples of x and not torn out
+    for (int z = Q; z; --z) {
+        int r; std::cin >> r;
+        if (memo[r] == 0)
+            for (int j = r; j <= N; j += r)
+                if (!torn_outs[j])
+                    ++memo[r];
+        ans += memo[r];
+    }
+
+    std::cout << ans;
+}
+
+static void solve_good_enough() { // O(NlogN + Q)
     int N, M, Q;
     std::cin >> N >> M >> Q;
     std::vector<bool> torn_outs(N + 1);
