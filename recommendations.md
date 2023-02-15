@@ -44,6 +44,7 @@ Below are some preferences regarding coding practices. They are opinionated but 
 >- `(a + b – 1) / b` better then `std::ceil(float(a) / b)`
 - avoid overflows: prefer `a + (b – a) / 2` to `(a + b) / 2`
 - use streams for in-loop std::strings manipulations
+- use unordered containers when key order doesn't matter
 - allocate memory to reduce cache misses (row major vs column major)
 - use modules or pimpl for large enough class implementations 
 
