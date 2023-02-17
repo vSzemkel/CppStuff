@@ -4,6 +4,8 @@
 #include <x86intrin.h>  // Not just <immintrin.h> for compilers other than icc
 #endif
 
+// for bits higher then 32
+int64_t two42 = int64_t{1} << 42
 // value of the lowest set bit
 n & -n
 // turn off lowest set bit

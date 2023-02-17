@@ -33,3 +33,8 @@ static T last_true(T lo, T hi, U f) {
     }
     return lo;
 }
+
+// sample MONOTONIC check function
+const auto check = [&](const int64_t v) {
+    return v * v * v <= 1974;
+};
