@@ -94,14 +94,14 @@ int riddle(const char* s) {
 ### Given a 64 bit number, please invert 42nd bit
 ```
 if we assume least significant bit to have number 0, then
-value ^= (1 << 42)
+value ^= (uint64_t{1} << 42)
 if we assume least significant bit to have number 1, then
-value ^= (1 << 41)
+value ^= (uint64_t{1} << 41)
 ```
 
 ### Check if given set of integers have a subset with sum of its elements being exactly the half of the sum of all elements
-1, 3, 4, 5, 8, 9 – counterexample for the naive solution. This is NP problem.
-9 + 4 + 3 != 8 + 5 + 1
+1, 3, 4, 5, 8, 9 – counterexample for the naive solution. This is NP problem.<br>
+9 + 4 + 3 != 8 + 5 + 1<br>
 9 + 5 + 1 == 8 + 4 + 3
 
 ### Given an array of K numbers, write out all the subsets, line by line
@@ -152,9 +152,11 @@ int main( void ) {
 
 ### What are results of lower/upper bounds
 
+```
 std::vector<int> bound_test = {0, 0, 1, 1, 1, 2, 2};
 const auto lb = std::lower_bound(bound_test.begin(), bound_test.end(), 1);
 const auto ub = std::upper_bound(bound_test.begin(), bound_test.end(), 1);
+```
 
-assert(lb - bound_test.begin() == 2);
+assert(lb - bound_test.begin() == 2);<br>
 assert(ub - bound_test.begin() == 5);
