@@ -48,3 +48,21 @@ for (int m = 1, hi = 0; m < MAX; ++m) {
     } else 
         sums[m] = sums[pred] + A[bits(m - pred)];
 }
+
+// how many subsets has a property
+// check seeds
+const auto MX = 1 << N;
+std::vector<int64_t> memo(MX);
+for (int m = 0; m < MX; ++m) {
+    int64_t sum{};
+    for (int i = 0; i < N; ++i)
+        if (m & (1 << i))
+            sum += B[i];
+    if (H <= sum)
+        absentB[m] = 1;
+}
+// count possibilities
+for (int i = 0; i < N; ++i)
+    for (int m = 0; m < MX; ++m)
+        if ((m & (1 << i)) == 0)
+            memo[m] += memo[m ^ (1 << i)];
