@@ -1,30 +1,7 @@
 
 #include <algorithm>
-#include <array>
-#include <bitset>
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
 #include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -32,14 +9,15 @@
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000050edd/00000000001a2835
 
 constexpr const int INF = 1e09;
-constexpr const int SPIN = 4;
-constexpr const int SLASHED = 2;
-constexpr const int BACK_SLASHED = 1;
+constexpr const int LONGEST = 1;
+constexpr const int SEC_LONGEST = 2;
 
+/**
+ * @Observation: setting longest and second to longest diagonal determines other moves
+ */
 static void solve() {
     int N;
     std::cin >> N;
-    const int par = N & 1;
     const std::string pat(N, '#');
     std::vector<std::string> board(N);
     for (auto& r : board)
@@ -47,52 +25,53 @@ static void solve() {
 
     int ans{INF};
     const auto turn = [](char& c){ c = (c == '.' ? '#' : '.'); };
-    for (int m = 0; m < (1 << (2 + par)); ++m) {
+    for (int m = 0; m < 4; ++m) {
+        // arrange selected diagonals
         int cur{0};
         auto copy = board;
-        if (m & SPIN)
-            for (int t = 0, b = N - 1; t < b; ++t, --b)
-                std::swap(copy[t], copy[b]);
-        if (m & SLASHED) {
+        if (m & LONGEST) {
             ++cur;
             for (int z = N, r = N - 1, c = 0; z; --z, --r, ++c)
                 turn(copy[r][c]);
         }
-        if (m & BACK_SLASHED) {
+        if (m & SEC_LONGEST) {
             ++cur;
-            for (int z = N - par, r = 0, c = par; z; --z, ++r, ++c)
+            for (int z = N - 1, r = N - 1, c = 1; z; --z, --r, ++c)
                 turn(copy[r][c]);
         }
 
-        for (int r = N - 1, c = 0; c <= r; --r, ++c)
+        // for every orthogonal diag set if selected diagonal needs change
+        for (int z = 2 * N - 1, p = 0, r = N - 1, c = 0; z; --z, p = 1 - p) {
+            const int x = std::min(r, c);
+            int s = r - x;
+            int d = c - x;
             if (copy[r][c] == '.') {
                 ++cur;
-                for (int y = 2 * c + 1, s = N - y, d = 0; y; --y, ++s, ++d)
+                while (s < N && d < N)
+                    turn(copy[s++][d++]);
+            }
+            p ? --r : ++c;
+        }
+
+        // for every parallel diag set if selected diagonal needs change
+        for (int r = 0; r < N; ++r)
+            if (copy[r][0] == '.') {
+                ++cur;
+                for (int z = r + 1, s = r, d = 0; z; --z, --s, ++d)
                     turn(copy[s][d]);
             }
-        for (int r = 0, c = N - 1; r < c; ++r, --c)
-            if (copy[r][c] == '.') {
+        for (int c = 1; c < N; ++c)
+            if (copy[N - 1][c] == '.') {
                 ++cur;
-                for (int y = 2 * (N - c) - 1, s = 0, d = N - y; y; --y, ++s, ++d)
+                for (int z = N - c, s = N - 1, d = c; z; --z, --s, ++d)
                     turn(copy[s][d]);
             }
 
-        for (int r = 0, c = par; r < N / 2; ++r, ++c)
-            if (copy[r][c] == '.') {
-                ++cur;
-                for (int y = 2 * r + 1 + par, s = 2 * r + par, d = 0; y; --y, --s, ++d)
-                    turn(copy[s][d]);
-            }
-        for (int r = N - 1 - par, c = N - 1; r >= N / 2; --r, --c)
-            if (copy[r][c] == '.') {
-                ++cur;
-                for (int y = N - r, s = N - 1, d = r; y; --y, --s, ++d)
-                    turn(copy[s][d]);
-            }
-
+        // validity check
         if (std::all_of(copy.begin(), copy.end(), [&pat](auto& r){ return r == pat; }))
             ans = std::min(ans, cur);
     }
+
     std::cout << ans;
 }
 
@@ -116,7 +95,6 @@ cls && clang++.exe -Wall -Wextra -g -O0 -std=c++17 diagonal_puzzle.cpp -o diagon
 g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address diagonal_puzzle.cpp -o diagonal_puzzle
 
 Run:
-py.exe interactive_runner.py py.exe diagonal_puzzle_testing_tool.py 1 -- diagonal_puzzle.exe
 diagonal_puzzle.exe < diagonal_puzzle.in
 
 Input:
@@ -132,11 +110,17 @@ Input:
 ##.##
 ###.#
 #####
-2
-##
-##
+5
+#.###
+..###
+##.#.
+####.
+##..#
 
 Output:
 
+Case #1: 3
+Case #2: 2
+Case #3: 6
 
 */
