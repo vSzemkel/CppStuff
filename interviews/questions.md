@@ -123,6 +123,10 @@ value ^= (uint64_t{1} << 42); // if we assume least significant bit to have numb
 value ^= (uint64_t{1} << 41); // if we assume least significant bit to have number 1
 ```
 
+### Write 2^42 as hex
+
+hex(1<<42)  =>  0x40000000000
+
 ### Check if given set of integers have a subset with sum of its elements being exactly the half of the sum of all elements
 
 1, 3, 4, 5, 8, 9 – counterexample for the naive solution. This is NP problem.\
