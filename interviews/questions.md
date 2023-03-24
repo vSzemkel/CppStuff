@@ -66,6 +66,11 @@
 
 significant is 23+1 bits only: (1 << 24) == 16777216
 
+### Explain the meaning of noexcept keyword
+
+- as a declarator
+- as an operator
+
 ### Is this code correct I?
 
 ```C++

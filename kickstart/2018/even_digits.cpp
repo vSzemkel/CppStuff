@@ -1,10 +1,8 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <iostream>
 #include <string>
-#include <vector>
 
 // Even Digits
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000050edf/00000000000510ed
@@ -25,8 +23,7 @@ static void solve() {
             const int msd = S[0] - '0';
             const int64_t n = std::atoll(S.c_str());
             const int64_t sz = S.size() - 1;
-            S[0] = '0';
-            const int64_t tail = std::atoll(S.c_str());
+            const int64_t tail = n % pow10[sz];
             ans = std::min(tail + min_sub[sz - 1], (msd + 1) * pow10[sz + (msd == 9 ? 1 : 0)] - n);
         }
     }
@@ -40,8 +37,7 @@ int main(int, char**)
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
 
-    int64_t f{1};
-    std::generate(pow10.begin(), pow10.end(), [&f](){ 
+    std::generate(pow10.begin(), pow10.end(), [f = int64_t{1}]() mutable { 
         const auto n = f; f *= 10; return n; 
     });
     min_sub[0] = 2;
@@ -74,5 +70,9 @@ Input:
 
 Output:
 
+Case #1: 0
+Case #2: 3
+Case #3: 1
+Case #4: 2
 
 */
