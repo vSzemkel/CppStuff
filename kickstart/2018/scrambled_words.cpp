@@ -12,7 +12,9 @@
 // Scrambled Words
 // https://codingcompetitions.withgoogle.com/kickstart/round/0000000000050edf/0000000000051004
 
-using freq_t = std::array<int, 26>;
+constexpr const int LETTERS = 26;
+using freq_t = std::array<int, LETTERS>;
+using cache_t = std::array<std::map<freq_t, bool>, LETTERS * LETTERS>;
 
 static freq_t scan(std::string_view sv) {
     freq_t ret{};
@@ -21,16 +23,18 @@ static freq_t scan(std::string_view sv) {
     return ret;
 }
 
-static void solve() {
+static void solve() { // real    10m28.795s when 1m30 allowed
     int L; std::cin >> L;
     std::vector<std::string> words(L);
-    std::vector<freq_t> midwords;
-    midwords.reserve(L);
-    for (auto& w : words) {
+    for (auto& w : words)
         std::cin >> w;
-        const auto m = w.substr(1, w.size() - 2);
-        midwords.push_back(scan(m));
-    }
+    std::sort(words.begin(), words.end(), [](const auto& w1, const auto& w2){
+        return w1.size() < w2.size();
+    });
+    std::vector<freq_t> midwords(L);
+    std::transform(words.begin(), words.end(), midwords.begin(), [](const auto& w){
+        return scan(w.substr(1, w.size() - 2));
+    });
     char c0, c1;
     int64_t N, A, B, C, D;
     std::cin >> c0 >> c1 >> N >> A >> B >> C >> D;
@@ -43,20 +47,24 @@ static void solve() {
         const auto tmp = n1;
         n1 = (A * n1 + B * n0 + C) % D;
         n0 = tmp;
-        const char next = 'a' + n1 % 26;
+        const char next = 'a' + n1 % LETTERS;
         text.push_back(next);
         charpos[next].insert(i);
     }
 
-
+    cache_t cache;
     int64_t ans{0};
-    std::unordered_map<int, std::map<freq_t, bool>> cache;
+    size_t last_length{0};
     for (int i = 0; i < L; ++i) {
         const auto& w = words[i];
+        if (w.size() != last_length) {
+            cache.fill({});
+            last_length = w.size();
+        }
         const auto wf = w.front();
         const auto wb = w.back();
         const auto& m = midwords[i];
-        const auto key = int(wf) * 27 + wb;
+        const auto key = (wf - 'a') * LETTERS + (wb - 'a');
         const auto checked = cache[key].find(m);
         if (checked != cache[key].end()) {
             if (checked->second)
