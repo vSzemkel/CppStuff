@@ -2,10 +2,8 @@
 #include <array>
 #include <algorithm>
 #include <iostream>
-#include <map>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -25,18 +23,12 @@ static freq_t scan(std::string_view sv) {
 /**
  * @observation: for words of equal size we can share the freq_t values
 */
-static void solve() { // real    10m28.795s when 1m30 allowed
+static void solve() {
     int L; std::cin >> L;
     std::vector<std::string> words(L);
     for (auto& w : words)
         std::cin >> w;
-    std::sort(words.begin(), words.end(), [](const auto& w1, const auto& w2){
-        return w1.size() < w2.size();
-    });
-    std::vector<freq_t> midwords(L);
-    std::transform(words.begin(), words.end(), midwords.begin(), [](const auto& w){
-        return scan(w.substr(1, w.size() - 2));
-    });
+
     char c0, c1;
     int64_t N, A, B, C, D;
     std::cin >> c0 >> c1 >> N >> A >> B >> C >> D;
@@ -54,9 +46,17 @@ static void solve() { // real    10m28.795s when 1m30 allowed
         charpos[next].insert(i);
     }
 
+    std::sort(words.begin(), words.end(), [](const auto& w1, const auto& w2){
+        return w1.size() < w2.size();
+    });
+    std::vector<freq_t> midwords(L);
+    std::transform(words.begin(), words.end(), midwords.begin(), [](const auto& w){
+        return scan(w.substr(1, w.size() - 2));
+    });
+
     int64_t ans{0};
     size_t last_length{0};
-    std::unordered_map<int, freq_t> cache;
+    std::vector<freq_t> memo(N);
     for (int i = 0; i < L; ++i) {
         const auto& w = words[i];
         const auto& m = midwords[i];
@@ -75,33 +75,24 @@ static void solve() { // real    10m28.795s when 1m30 allowed
         if (!possible)
             continue;
 
+        const auto msz = words[i].size() - 2;
         if (w.size() != last_length) {
-            cache.clear();
             last_length = w.size();
+            auto cur = scan(std::string_view{text.data(), msz});
+            for (int i = 0, z = N - last_length + 1; z; --z, ++i) {
+                --cur[text[i] - 'a'];
+                ++cur[text[i + msz] - 'a'];
+                memo[i] = cur;
+            }
         }
 
         const auto& start = charpos[wf - 'a'];
         const auto& end = charpos[wb - 'a'];
-        const auto msz = words[i].size() - 2;
-        bool found{};
         for (const int s : start)
-            if (end.count(s + msz + 1) > 0) {
-                const auto checked = cache.find(s);
-                if (checked != cache.end()) {
-                    if (checked->second == m) {
-                        found = true;
-                        break;
-                    }
-                } else {
-                    const auto& mw = cache[s] = scan(std::string_view{text.data() + s + 1, msz});
-                    if (mw == m) {
-                        found = true;
-                        break;
-                    }
-                }
+            if (end.count(s + msz + 1) > 0 && memo[s] == m) {
+                ++ans;
+                break;
             }
-        if (found)
-            ++ans;
     }
 
     std::cout << ans;
@@ -116,7 +107,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve(); std::cout << std::endl;//'\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 

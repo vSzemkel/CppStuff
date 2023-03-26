@@ -24,3 +24,13 @@ static int numlen(const uint64_t n) {
     }
     return len;
 }
+
+constexpr const int LETTERS = 26;
+using freq_t = std::array<int, LETTERS>;
+
+static freq_t scan(std::string_view sv) {
+    freq_t ret{};
+    for (const char c : sv)
+        ++ret[c - 'a'];
+    return ret;
+}

@@ -9,7 +9,7 @@ static constexpr const char ZERO = '0';
 const auto rand_in_range = [](const int64_t ubound){std::random_device seed;std::mt19937 gen{seed()};std::uniform_int_distribution<int64_t> dist(0,ubound-1);return dist(gen);};
 
 static char flip(const char c) { // '0' <-> '1'
-    return 2 * '0' - b + 1;
+    return 2 * '0' - c + 1;
 }
 
 template <typename T = int>
