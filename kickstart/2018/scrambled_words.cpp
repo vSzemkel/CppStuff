@@ -14,7 +14,6 @@
 
 constexpr const int LETTERS = 26;
 using freq_t = std::array<int, LETTERS>;
-using cache_t = std::array<std::map<freq_t, bool>, LETTERS * LETTERS>;
 
 static freq_t scan(std::string_view sv) {
     freq_t ret{};
@@ -23,6 +22,9 @@ static freq_t scan(std::string_view sv) {
     return ret;
 }
 
+/**
+ * @observation: for words of equal size we can share the freq_t values
+*/
 static void solve() { // real    10m28.795s when 1m30 allowed
     int L; std::cin >> L;
     std::vector<std::string> words(L);
@@ -39,49 +41,65 @@ static void solve() { // real    10m28.795s when 1m30 allowed
     int64_t N, A, B, C, D;
     std::cin >> c0 >> c1 >> N >> A >> B >> C >> D;
     std::string text = {c0, c1};
-    std::unordered_map<char, std::unordered_set<int>> charpos;
-    charpos[c0].insert(0);
-    charpos[c1].insert(1);
+    std::vector<std::unordered_set<int>> charpos(LETTERS);
+    charpos[c0 - 'a'].insert(0);
+    charpos[c1 - 'a'].insert(1);
     int n0{c0}, n1{c1};
     for (int i = 2; i < N; ++i) {
         const auto tmp = n1;
         n1 = (A * n1 + B * n0 + C) % D;
         n0 = tmp;
-        const char next = 'a' + n1 % LETTERS;
-        text.push_back(next);
+        const char next = n1 % LETTERS;
+        text.push_back('a' + next);
         charpos[next].insert(i);
     }
 
-    cache_t cache;
     int64_t ans{0};
     size_t last_length{0};
+    std::unordered_map<int, freq_t> cache;
     for (int i = 0; i < L; ++i) {
         const auto& w = words[i];
-        if (w.size() != last_length) {
-            cache.fill({});
-            last_length = w.size();
-        }
+        const auto& m = midwords[i];
         const auto wf = w.front();
         const auto wb = w.back();
-        const auto& m = midwords[i];
-        const auto key = (wf - 'a') * LETTERS + (wb - 'a');
-        const auto checked = cache[key].find(m);
-        if (checked != cache[key].end()) {
-            if (checked->second)
-                ++ans;
+
+        bool possible{true};
+        auto full_scan = m;
+        ++full_scan[wf - 'a'];
+        ++full_scan[wb - 'a'];
+        for (int i = 0, z = LETTERS; z; --z, ++i)
+            if (int(charpos[i].size()) < full_scan[i]) {
+                possible = false;
+                break;
+            }
+        if (!possible)
             continue;
+
+        if (w.size() != last_length) {
+            cache.clear();
+            last_length = w.size();
         }
-        const auto& start = charpos[wf];
-        const auto& end = charpos[wb];
+
+        const auto& start = charpos[wf - 'a'];
+        const auto& end = charpos[wb - 'a'];
         const auto msz = words[i].size() - 2;
         bool found{};
         for (const int s : start)
-            if (end.count(s + msz + 1) > 0)
-                if (scan(std::string_view{text.data() + s + 1, msz}) == m) {
-                    found = true;
-                    break;
+            if (end.count(s + msz + 1) > 0) {
+                const auto checked = cache.find(s);
+                if (checked != cache.end()) {
+                    if (checked->second == m) {
+                        found = true;
+                        break;
+                    }
+                } else {
+                    const auto& mw = cache[s] = scan(std::string_view{text.data() + s + 1, msz});
+                    if (mw == m) {
+                        found = true;
+                        break;
+                    }
                 }
-        cache[key][m] = found;
+            }
         if (found)
             ++ans;
     }
@@ -98,7 +116,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << std::endl;//'\n';
     }
 }
 
