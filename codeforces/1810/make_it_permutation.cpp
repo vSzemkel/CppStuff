@@ -16,13 +16,11 @@ static int64_t solve_inner(std::span<int> data, int last_good) {
     const auto next = std::span<int>{data.data() + 1, data.size() - 1};
     if (data.front() == last_good)
         return R + solve_inner(next, last_good);
-    if (data.front() == last_good + 1)
-        return solve_inner(next, last_good + 1);
 
     return std::min(data.size() * R, size_t(data.front() - last_good - 1) * I + solve_inner(next, data.front()));
 }
 
-static void solve() {
+static void solve_recursive() {
     std::cin >> N >> R >> I;
     std::vector<int> data(N);
     for (auto& d : data)
@@ -37,6 +35,33 @@ static void solve() {
     }
 
     std::cout << cost + solve_inner(data, start);
+}
+
+static void solve() {
+    std::cin >> N >> R >> I;
+    std::vector<int> data(N);
+    for (auto& d : data)
+        std::cin >> d;
+
+    std::sort(data.begin(), data.end());
+
+    int target{1};
+    bool non_empty{};
+    int64_t prefix_cost{}, ans = N * R + I;
+    for (int i = 0; i < N; ++i) {
+        if (non_empty)
+            ans = std::min(ans, prefix_cost + (N - i) * R);
+        const auto cur = data[i];
+        if (cur < target)
+            prefix_cost += R;
+        else {
+            prefix_cost += (cur - target) * I;
+            target = cur + 1;
+            non_empty = true;
+        }
+    }
+
+    std::cout << std::min(ans, prefix_cost);
 }
 
 int main(int, char**)
