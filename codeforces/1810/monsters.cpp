@@ -7,7 +7,7 @@
 // Monsters
 // https://codeforces.com/contest/1810/problem/E
 
-static void solve() {
+static void solve_slow() {
     int V, E;
     std::cin >> V >> E;
     std::queue<int> q;
@@ -26,28 +26,30 @@ static void solve() {
     for (int start = 0; start < V; ++start)
         if (dangers[start] == 0) {
             std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> reachable_alive; // {denger, index}
-            std::vector<bool> defeated(V), inqueue(V);
+            std::vector<bool> defeated(V), was_enqued(V);
             int dead{0};
             q.push(start);
-            inqueue[start] = true;
+            was_enqued[start] = true;
             while (!q.empty()) {
                 const int cur = q.front();
                 q.pop();
                 defeated[cur] = true;
                 ++dead;
                 for (const int next : graph[cur])
-                    if (!defeated[next] && !inqueue[next]) {
+                    if (!defeated[next] && !was_enqued[next]) {
                         if (dangers[next] <= dead) {
                             q.push(next);
-                            inqueue[next] = true;
+                            was_enqued[next] = true;
                         } else
                             reachable_alive.emplace(dangers[next], next);
                     }
 
                 while (!reachable_alive.empty() && reachable_alive.top().first <= dead) {
                     const int can = reachable_alive.top().second;
-                    if (!inqueue[can])
+                    if (!was_enqued[can]) {
                         q.push(can);
+                        was_enqued[can] = true;
+                    }
                     reachable_alive.pop();
                 }
             }
@@ -70,7 +72,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        solve(); std::cout << '\n';
+        solve_slow(); std::cout << '\n';
     }
 }
 
