@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <queue>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -23,8 +24,9 @@ static void solve_slow() {
         graph[t].push_back(f);
     }
 
+    std::unordered_set<int> checked_starts;
     for (int start = 0; start < V; ++start)
-        if (dangers[start] == 0) {
+        if (dangers[start] == 0 && !checked_starts.contains(start)) {
             std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> reachable_alive; // {denger, index}
             std::vector<bool> defeated(V), was_enqued(V);
             int dead{0};
@@ -35,6 +37,8 @@ static void solve_slow() {
                 q.pop();
                 defeated[cur] = true;
                 ++dead;
+                if (dangers[cur] == 0)
+                    checked_starts.insert(cur);
                 for (const int next : graph[cur])
                     if (!defeated[next] && !was_enqued[next]) {
                         if (dangers[next] <= dead) {
@@ -79,7 +83,7 @@ int main(int, char**)
 /*
 
 Compile:
-cls && clang++.exe -Wall -Wextra -g -O0 -std=c++17 monsters.cpp -o monsters.exe
+cls && clang++.exe -Wall -Wextra -g -O0 -std=c++20 monsters.cpp -o monsters.exe
 g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address monsters.cpp -o monsters
 
 Run:
