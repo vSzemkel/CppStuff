@@ -28,19 +28,18 @@ static void solve_slow() {
     for (int start = 0; start < V; ++start)
         if (dangers[start] == 0 && !checked_starts.contains(start)) {
             std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> reachable_alive; // {denger, index}
-            std::vector<bool> defeated(V), was_enqued(V);
+            std::vector<bool> was_enqued(V);
             int dead{0};
             q.push(start);
             was_enqued[start] = true;
             while (!q.empty()) {
                 const int cur = q.front();
                 q.pop();
-                defeated[cur] = true;
                 ++dead;
                 if (dangers[cur] == 0)
                     checked_starts.insert(cur);
                 for (const int next : graph[cur])
-                    if (!defeated[next] && !was_enqued[next]) {
+                    if (!was_enqued[next]) {
                         if (dangers[next] <= dead) {
                             q.push(next);
                             was_enqued[next] = true;
