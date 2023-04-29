@@ -8,7 +8,7 @@
 // Monsters
 // https://codeforces.com/contest/1810/problem/E
 
-static void solve_slow() {
+static void solve() {
     int V, E;
     std::cin >> V >> E;
     std::queue<int> q;
@@ -24,10 +24,10 @@ static void solve_slow() {
         graph[t].push_back(f);
     }
 
-    std::unordered_set<int> checked_starts;
+    std::unordered_set<int> checked;
     for (int start = 0; start < V; ++start)
-        if (dangers[start] == 0 && !checked_starts.contains(start)) {
-            std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> reachable_alive; // {denger, index}
+        if (dangers[start] == 0 && !checked.contains(start)) {
+            std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>> reachable_alive; // {denger, monster index}
             std::vector<bool> was_enqued(V);
             int dead{0};
             q.push(start);
@@ -36,8 +36,7 @@ static void solve_slow() {
                 const int cur = q.front();
                 q.pop();
                 ++dead;
-                if (dangers[cur] == 0)
-                    checked_starts.insert(cur);
+                checked.insert(cur); // starting over from here doesn't make sense
                 for (const int next : graph[cur])
                     if (!was_enqued[next]) {
                         if (dangers[next] <= dead) {
@@ -75,7 +74,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        solve_slow(); std::cout << '\n';
+        solve(); std::cout << '\n';
     }
 }
 
@@ -128,5 +127,10 @@ Input:
 
 Output:
 
+YES
+YES
+NO
+YES
+NO
 
 */
