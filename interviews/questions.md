@@ -58,6 +58,10 @@
 - what is special in using it
 - how it organizes its memory
 
+### What is the anonymous namespace in C++ and how we can use it?
+
+### What types of casts can you name and describe
+
 ### Given a graph with weighted edges and two vertices, can we always compute the shortest path between them
 
 ### Describe the difference between stack and heap allocated memory

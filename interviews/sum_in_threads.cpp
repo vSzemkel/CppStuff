@@ -64,6 +64,32 @@ static int64_t solve_future() {
     return ans;
 }
 
+static int64_t solve_packaged_task() {
+    const auto worker = [&](const int* val, const size_t size) {
+        int64_t res{0};
+        for (int z = size; z; --z)
+            res += *val++;
+        return res;
+    };
+
+    const auto cpu_cnt = int(std::thread::hardware_concurrency());
+    const int normal_chunk_size = size / cpu_cnt;
+    std::vector<std::future<int64_t>> fut(cpu_cnt - 1);
+    for (int i = 0; i < cpu_cnt - 1; ++i) {
+        std::packaged_task<int64_t(const int*, size_t)> task{worker};
+        fut[i] = task.get_future();
+        std::jthread do_work(std::move(task), input.data() + i * normal_chunk_size, normal_chunk_size);
+    }
+
+    const int last_chunk_size = size - (cpu_cnt - 1) * normal_chunk_size;
+    int64_t ans = worker(input.data() + size - last_chunk_size, last_chunk_size);
+
+    for (auto& f : fut)
+        ans += f.get();
+
+    return ans;
+}
+
 int main(int, char**)
 {
     std::iota(input.begin(), input.end(), 1);
@@ -74,12 +100,14 @@ int main(int, char**)
     assert(smart_result == interview_result);
     const auto future_result = solve_future();
     assert(smart_result == future_result);
+    const auto packaged_task_result = solve_packaged_task();
+    assert(smart_result == packaged_task_result);
 }
 
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++17 sum_in_threads.cpp -o sum_in_threads.exe
-g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address sum_in_threads.cpp -o sum_in_threads
+clang++.exe -Wall -Wextra -g -O0 -std=c++20 sum_in_threads.cpp -o sum_in_threads.exe
+g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address sum_in_threads.cpp -o sum_in_threads
 
 */
