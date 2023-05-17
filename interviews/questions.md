@@ -66,6 +66,8 @@
 
 ### Describe the difference between stack and heap allocated memory
 
+### How many pointers a std::shared_ptr can operate on? (aliasing constructor)
+
 ### Can all int values (4 bytes) be exactly represented as floats (4 bytes)?
 
 significant is 23+1 bits only: (1 << 24) == 16777216
