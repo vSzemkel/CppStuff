@@ -24,17 +24,18 @@ const auto median_sorted = [](const std::vector<int>& data) -> double {
 };
 
 const auto median_unsorted = [](std::vector<int>& data) -> double {
+    assert(!data.empty());
     const auto sz = data.size();
     const auto half = sz / 2;
-    if (sz & 1) {
-        std::nth_element(data.begin(), data.begin() + half, data.end());
+
+    std::nth_element(data.begin(), data.begin() + half, data.end());
+    if (sz & 1)
         return data[half];
-    } else {
-        std::nth_element(data.begin(), data.begin() + half - 1, data.end());
-        const auto a = data[half - 1];
-        std::nth_element(data.begin(), data.begin() + half, data.end());
-        return a + double(data[half] - a) / 2;
-    }
+
+    const auto b = data[half];
+    std::nth_element(data.begin(), data.begin() + half - 1, data.end());
+    const auto a = data[half - 1];
+    return a + double(b - a) / 2;
 };
 
 constinit const int N = 10000;
