@@ -59,8 +59,8 @@ int main(int, char**)
 /*
 
 Compile:
-cls && clang++.exe -Wall -Wextra -g -O0 -std=c++17 $TASKNAME$.cpp -o $TASKNAME$.exe
-g++ -Wall -Wextra -g3 -Og -std=c++17 -fsanitize=address $TASKNAME$.cpp -o $TASKNAME$
+cls && clang++.exe -Wall -Wextra -g -O0 -std=c++20 $TASKNAME$.cpp -o $TASKNAME$.exe
+g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address $TASKNAME$.cpp -o $TASKNAME$
 
 Run:
 py.exe interactive_runner.py py.exe $TASKNAME$_testing_tool.py 1 -- $TASKNAME$.exe
