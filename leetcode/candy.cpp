@@ -1,63 +1,116 @@
 
-#include <algorithm>
-#include <array>
-#include <bitset>
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
 #include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 // Candy
 // https://leetcode.com/problems/candy/description
 
-static void solve_slow() {
+constexpr int INF = 1e09;
+
+static void solve() {
+    int N;
+    std::cin >> N;
+    if (N == 1) {
+        std::cout << 1;
+        return;
+    }
+
+    std::vector<int> ratings(N);
+    for (auto& r : ratings)
+        std::cin >> r;
+
+    int64_t candys{N};
+    for (int i = 1; i < N; ) {
+        if (ratings[i - 1] == ratings[i]) {
+            ++i;
+            continue;
+        }
+
+        int peek{0};
+        while (i < N && ratings[i - 1] < ratings[i]) {
+            ++peek;
+            candys += peek;
+            ++i;
+        }
+
+        int valley{0};
+        while (i < N && ratings[i - 1] > ratings[i]) {
+            ++valley;
+            candys += valley;
+            ++i;
+        }
+
+        // added peak twice, once as peak, once as valley, correct
+        candys -= std::min(peek, valley);
+    }
+
+    std::cout << candys;
+}
+
+static void solve_fast () {
+    int N;
+    std::cin >> N;
+    if (N == 1) {
+        std::cout << 1;
+        return;
+    }
+
+    std::vector<int> ratings(N);
+    for (auto& r : ratings)
+        std::cin >> r;
+
+    std::vector<int> candys(N, INF);
+
+    // find valleys
+    if (ratings[0] <= ratings[1])
+        candys[0] = 1;
+    for (int i = 1; i < N - 1; ++i)
+        if (ratings[i] <= ratings[i - 1] && ratings[i] <= ratings[i + 1])
+            candys[i] = 1;
+    if (ratings[N - 1] <= ratings[N - 2])
+        candys[N - 1] = 1;
+    // propagate
+    for (int i = 1; i < N; ++i)
+        if (ratings[i - 1] < ratings[i]) {
+            if (candys[i] == INF)
+                candys[i] = candys[i - 1] + 1;
+            else
+                candys[i] = std::max(candys[i], candys[i - 1] + 1);
+        }
+    for (int i = N - 2; ~i; --i)
+        if (ratings[i] > ratings[i + 1]) {
+            if (candys[i] == INF)
+                candys[i] = candys[i + 1] + 1;
+            else
+                candys[i] = std::max(candys[i], candys[i + 1] + 1);
+        }
+
+    std::cout << std::accumulate(candys.begin(), candys.end(), 0LL);
+}
+
+static void solve_memo() {
     int N;
     std::cin >> N;
     std::vector<int> ratings(N);
     for (auto& r : ratings)
         std::cin >> r;
 
-    int64_t ans{N};
     std::vector<int> candys(N, 1);
     for (int i = 1; i < N; ++i)
         if (ratings[i - 1] < ratings[i]) {
             const auto delta = candys[i - 1] + 1 - candys[i];
-            if (delta > 0) {
+            if (delta > 0)
                 candys[i] += delta;
-                ans += delta;
-            }
         }
     for (int i = N - 2; ~i; --i)
         if (ratings[i] > ratings[i + 1]) {
             const auto delta = candys[i + 1] + 1 - candys[i];
-            if (delta > 0) {
+            if (delta > 0)
                 candys[i] += delta;
-                ans += delta;
-            }
         }
 
-    std::cout << ans;
+    std::cout << std::accumulate(candys.begin(), candys.end(), 0LL);
 }
 
 int main(int, char**)
@@ -69,7 +122,7 @@ int main(int, char**)
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": "; solve_slow(); std::cout << '\n';
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 
