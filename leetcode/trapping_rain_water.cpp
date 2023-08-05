@@ -9,7 +9,35 @@
 
 constexpr int INF = 1e09;
 
-static int64_t solve() { // O(N) S(N)
+static int64_t solve() { // O(N) S(1)
+    int N;
+    std::cin >> N;
+    std::vector<int> bars(N);
+    for (auto& h : bars)
+        std::cin >> h;
+
+    if (N < 3)
+        return 0;
+
+    int64_t ans{};
+    int maxl{}, maxr{}, left{}, right{N - 1};
+    while (left <= right)
+        if (maxl < maxr) {
+            if (bars[left] < maxl)
+                ans += maxl - bars[left];
+            maxl = std::max(maxl, bars[left]);
+            ++left;
+        } else {
+            if (bars[right] < maxr)
+                ans += maxr - bars[right];
+            maxr = std::max(maxr, bars[right]);
+            --right;
+        }
+
+    return ans;
+}
+
+static int64_t solve_greedy() { // O(N) S(N)
     int N;
     std::cin >> N;
     std::vector<int> bars(N);
