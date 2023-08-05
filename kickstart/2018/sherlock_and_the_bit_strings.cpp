@@ -11,7 +11,7 @@ static void solve_set1() {
     int64_t N, K, P;
     std::cin >> N >> K >> P;
 
-    --P;
+    P = std::min(P, int64_t{1e18}) - 1;
     std::string ans(N, '0');
     std::vector<bool> masked(N);
     for (int z = K; z; --z) {

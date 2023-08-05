@@ -1,31 +1,6 @@
 
 #include <algorithm>
-#include <array>
-#include <bitset>
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 // Median of Two Sorted Arrays
@@ -100,8 +75,13 @@ median_of_two_sorted.exe < median_of_two_sorted.in
 
 Input:
 
+1
+5 7
+1 2 3 4 5
+6 7 8 9 10 11 12
 
 Output:
 
+Case #1: 6.5
 
 */
