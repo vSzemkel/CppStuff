@@ -37,40 +37,50 @@ constexpr char SPACE = '.';
 // TODO: output the last line
 // TODO: correct spacing
 static void solve() {
-    size_t N, W;
+    int N, W;
     std::cin >> N >> W;
-    size_t current_line_size{};
+    int current_line_size{};
     std::string current_word;
     std::vector<std::string> current_line, lines;
-    for (size_t i = 0; i < N; ++i) {
+    for (int i = 0; i < N; ++i) {
         std::cin >> current_word;
-        const auto current_word_size = current_word.size();
-        if (current_line_size + current_word_size > W) {
-            const auto spacing_count = current_line.size() - 1;
-            const auto padding = W - current_line_size + 1;
-            const auto reminder = padding % spacing_count;
-            const std::string everyone(padding / spacing_count, SPACE);
+        const auto current_word_size = int(current_word.size());
+        const auto spacing_count = int(current_line.size()) - 1;
+        if (current_line_size + spacing_count + 1 + current_word_size > W) {
+            const auto spaces = W - current_line_size;
+            const auto padding = spaces / spacing_count;
+            const auto reminder = spaces % spacing_count;
+            const std::string everyone(padding, SPACE);
 
             std::stringstream ss;
-            for (size_t i = 0; i <= spacing_count; ++i) {
+            for (int i = 0; i < spacing_count; ++i) {
                 ss << current_line[i] << everyone;
-                if (i < spacing_count)
-                    ss << SPACE;
                 if (i < reminder)
                     ss << SPACE;
             }
-            ss << '\n';
+            if (spacing_count > 0)
+                ss << current_line.back();
             lines.push_back(ss.str());
             current_line.clear();
             current_line_size = 0;
         }
 
         current_line.push_back(current_word);
-        current_line_size += current_word_size + 1;
+        current_line_size += current_word_size;
     }
+
+    if (!current_line.empty()) {
+        std::stringstream ss;
+        for (auto& s : current_line)
+            ss << s << SPACE;
+        const int padding = W - current_line_size - int(current_line.size());
+        if (padding > 0)
+            ss << std::string(padding, SPACE);
+        lines.push_back(ss.str());
+    }
+
     for (auto& s : lines)
         std::cout << '\n' << s ;
-
     //return lines;
 }
 
