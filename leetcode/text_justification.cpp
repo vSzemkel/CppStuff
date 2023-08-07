@@ -1,31 +1,8 @@
 
-#include <algorithm>
-#include <array>
-#include <bitset>
 #include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
+#include <sstream>
 #include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 // Text Justification
@@ -33,33 +10,35 @@
 
 constexpr char SPACE = '.';
 
-
-// TODO: output the last line
-// TODO: correct spacing
 static void solve() {
     int N, W;
     std::cin >> N >> W;
+
+    std::stringstream ss;
     int current_line_size{};
     std::string current_word;
     std::vector<std::string> current_line, lines;
+
     for (int i = 0; i < N; ++i) {
         std::cin >> current_word;
         const auto current_word_size = int(current_word.size());
+        assert(current_word_size <= W);
         const auto spacing_count = int(current_line.size()) - 1;
-        if (current_line_size + spacing_count + 1 + current_word_size > W) {
+        if (current_line_size + spacing_count + 1 + current_word_size > W && !current_line.empty()) {
+            ss.str({});
             const auto spaces = W - current_line_size;
-            const auto padding = spaces / spacing_count;
-            const auto reminder = spaces % spacing_count;
-            const std::string everyone(padding, SPACE);
+            if (spacing_count > 0) {
+                const auto padding = spaces / spacing_count;
+                const auto reminder = spaces % spacing_count;
+                const std::string everyone(padding, SPACE);
 
-            std::stringstream ss;
-            for (int i = 0; i < spacing_count; ++i) {
-                ss << current_line[i] << everyone;
-                if (i < reminder)
-                    ss << SPACE;
+                for (int i = 0; i < spacing_count; ++i) {
+                    ss << current_line[i] << everyone;
+                    if (i < reminder)
+                        ss << SPACE;
+                }
             }
-            if (spacing_count > 0)
-                ss << current_line.back();
+            ss << current_line.back();
             lines.push_back(ss.str());
             current_line.clear();
             current_line_size = 0;
@@ -70,18 +49,19 @@ static void solve() {
     }
 
     if (!current_line.empty()) {
-        std::stringstream ss;
+        ss.str({});
         for (auto& s : current_line)
             ss << s << SPACE;
         const int padding = W - current_line_size - int(current_line.size());
         if (padding > 0)
             ss << std::string(padding, SPACE);
         lines.push_back(ss.str());
+        if (padding < 0)
+            lines.back().resize(W);
     }
 
     for (auto& s : lines)
         std::cout << '\n' << s ;
-    //return lines;
 }
 
 int main(int, char**)
@@ -108,8 +88,15 @@ text_justification.exe < text_justification.in
 
 Input:
 
+1
+7 20
+333 55555 55555 22222222222222222222 999999999 0000000000 1
 
 Output:
 
+333....55555...55555
+22222222222222222222
+999999999.0000000000
+1...................
 
 */
