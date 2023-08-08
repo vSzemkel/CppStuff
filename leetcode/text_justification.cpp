@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 // Text Justification
@@ -15,22 +16,21 @@ static void solve() {
     std::cin >> N >> W;
 
     std::stringstream ss;
-    int current_line_size{};
-    std::string current_word;
+    std::string current_word, blank(W, SPACE);
+    int current_line_size{}, spacing_count{-1};
     std::vector<std::string> current_line, lines;
 
     for (int i = 0; i < N; ++i) {
         std::cin >> current_word;
         const auto current_word_size = int(current_word.size());
         assert(current_word_size <= W);
-        const auto spacing_count = int(current_line.size()) - 1;
+        
         if (current_line_size + spacing_count + 1 + current_word_size > W && !current_line.empty()) {
-            ss.str({});
             const auto spaces = W - current_line_size;
             if (spacing_count > 0) {
                 const auto padding = spaces / spacing_count;
                 const auto reminder = spaces % spacing_count;
-                const std::string everyone(padding, SPACE);
+                const auto everyone = std::string_view(blank.data(), padding);
 
                 for (int i = 0; i < spacing_count; ++i) {
                     ss << current_line[i] << everyone;
@@ -38,23 +38,28 @@ static void solve() {
                         ss << SPACE;
                 }
             }
+
+            if (current_line.size() == 1)
+                current_line.back().append(std::string_view(blank.data(), W - current_line_size));
             ss << current_line.back();
             lines.push_back(ss.str());
+            ss.str({});
             current_line.clear();
+            spacing_count = -1;
             current_line_size = 0;
         }
 
+        ++spacing_count;
         current_line.push_back(current_word);
         current_line_size += current_word_size;
     }
 
     if (!current_line.empty()) {
-        ss.str({});
         for (auto& s : current_line)
             ss << s << SPACE;
         const int padding = W - current_line_size - int(current_line.size());
         if (padding > 0)
-            ss << std::string(padding, SPACE);
+            ss << std::string_view(blank.data(), padding);
         lines.push_back(ss.str());
         if (padding < 0)
             lines.back().resize(W);
