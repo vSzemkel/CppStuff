@@ -57,7 +57,7 @@ static void solve() {
     if (!current_line.empty()) {
         for (auto& s : current_line)
             ss << s << SPACE;
-        const int padding = W - current_line_size - int(current_line.size());
+        const int padding = W - current_line_size - spacing_count - 1;
         if (padding > 0)
             ss << std::string_view(blank.data(), padding);
         lines.push_back(ss.str());
