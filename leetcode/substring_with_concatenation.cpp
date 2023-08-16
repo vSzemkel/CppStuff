@@ -1,7 +1,9 @@
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // Substring with Concatenation of All Words
@@ -14,10 +16,15 @@ static std::vector<int> solve(const std::string& text, const std::vector<std::st
     if (L < N * D)
         return {};
 
+    std::unordered_map<std::string, int> expected;
+    std::unordered_map<int, std::string> dictionary;
+    for (const auto& w : words)
+        ++expected[w];
     std::vector<int> scan(L, -1); // scan[i] == j iff text[i] is start of words[j] or -1 if not for any word
     int word_index{-1};
     for (const auto& w : words) {
         ++word_index;
+        dictionary[word_index] = w;
         int search_from{};
         auto found = text.find(w, search_from);
         while (found != std::string::npos) {
@@ -29,25 +36,25 @@ static std::vector<int> solve(const std::string& text, const std::vector<std::st
 
     std::vector<int> ret;
     for (int i = 0; i < D; ++i) {
-        std::vector<bool> window(N);
+        std::unordered_map<std::string, int> window;
         for (int j = 0; j < N; ++j) {
             const auto pos = i + D * j;
             if (pos < L && scan[pos] != -1)
-                window[scan[pos]] = true;
+                ++window[dictionary[scan[pos]]];
         }
 
         int first{i}, last{i + (N - 1) * D};
         while (true) {
-            if (std::all_of(window.begin(), window.end(), [](auto b){ return b; }))
+            if (window == expected)
                 ret.push_back(first);
             if (last + D >= L)
                 break;
             if (scan[first] != -1)
-                window[scan[first]] = false;
+                --window[dictionary[scan[first]]];
             first += D;
             last += D;
             if (scan[last] != -1)
-                window[scan[last]] = true;
+                ++window[dictionary[scan[last]]];
         }
     }
 
@@ -68,7 +75,6 @@ static void io_handler() {
     const auto ans = solve(S, words);
     for (const auto& p : ans)
         std::cout << p << ' ';
-    std::cout << '\n';
 }
 
 int main(int, char**)
@@ -95,12 +101,15 @@ substring_with_concatenation.exe < substring_with_concatenation.in
 
 Input:
 
-1
-2 abcdabcabcabcdabhgabcdnh
-cd ab
+2
+3 barfoofoobarthefoobarman
+bar foo the
+4 wordgoodgoodgoodbestword
+word good best good
 
 Output:
 
-Case #1: 0 2 10 12 18 
+Case #1: 6 9 12 
+Case #2: 8
 
 */
