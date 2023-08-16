@@ -1,40 +1,20 @@
 
 #include <algorithm>
-#include <array>
-#include <bitset>
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
 #include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 // Substring with Concatenation of All Words
 // https://leetcode.com/problems/substring-with-concatenation-of-all-words/?envType=study-plan-v2&envId=top-interview-150
 
 static std::vector<int> solve(const std::string& text, const std::vector<std::string>& words) {
-    const int N = int(words.size());
-    const int D = int(words.front().size());
-    std::vector<int> scan(N, -1); // scan[i] == j iff text[i] is start of words[j] or -1 if not for any word
+    const auto L = int(text.size());
+    const auto N = int(words.size());
+    const auto D = int(words.front().size());
+    if (L < N * D)
+        return {};
+
+    std::vector<int> scan(L, -1); // scan[i] == j iff text[i] is start of words[j] or -1 if not for any word
     int word_index{-1};
     for (const auto& w : words) {
         ++word_index;
@@ -48,9 +28,27 @@ static std::vector<int> solve(const std::string& text, const std::vector<std::st
     }
 
     std::vector<int> ret;
-    const auto pattern_size = N * D;
     for (int i = 0; i < D; ++i) {
         std::vector<bool> window(N);
+        for (int j = 0; j < N; ++j) {
+            const auto pos = i + D * j;
+            if (pos < L && scan[pos] != -1)
+                window[scan[pos]] = true;
+        }
+
+        int first{i}, last{i + (N - 1) * D};
+        while (true) {
+            if (std::all_of(window.begin(), window.end(), [](auto b){ return b; }))
+                ret.push_back(first);
+            if (last + D >= L)
+                break;
+            if (scan[first] != -1)
+                window[scan[first]] = false;
+            first += D;
+            last += D;
+            if (scan[last] != -1)
+                window[scan[last]] = true;
+        }
     }
 
     return ret;
@@ -97,8 +95,12 @@ substring_with_concatenation.exe < substring_with_concatenation.in
 
 Input:
 
+1
+2 abcdabcabcabcdabhgabcdnh
+cd ab
 
 Output:
 
+Case #1: 0 2 10 12 18 
 
 */
