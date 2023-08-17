@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -17,8 +18,7 @@ static std::vector<int> solve(const std::string& text, const std::vector<std::st
         return {};
 
     std::unordered_map<int, int> expected, window; // {index -> count}
-    std::unordered_map<std::string, int> dictionary; // {string -> index}
-    std::vector<int> scan(L, -1); // scan[i] == j iff text[i] is start of word of index j or -1 if not for any word
+    std::unordered_map<std::string_view, int> dictionary; // {string -> index}
     int word_index;
     for (const auto& w : words) {
         if (dictionary.contains(w))
@@ -28,22 +28,25 @@ static std::vector<int> solve(const std::string& text, const std::vector<std::st
             dictionary[w] = word_index;
         }
         ++expected[word_index];
-        int search_from{};
-        auto found = text.find(w, search_from);
-        while (found != std::string::npos) {
-            scan[found] = word_index;
-            search_from = found + 1;
-            found = text.find(w, search_from);
-        }
     }
+
+    const auto scan = [&](const int pos){
+        if (pos + D <= L) {
+            std::string_view s(text.data() + pos, D);
+            if (dictionary.contains(s))
+                return dictionary[s];
+        }
+
+        return -1;
+    };
 
     std::vector<int> ret;
     for (int i = 0; i < D; ++i) {
         window.clear();
         for (int j = 0; j < N; ++j) {
             const auto pos = i + D * j;
-            if (pos < L && scan[pos] != -1)
-                ++window[scan[pos]];
+            if (const auto p = scan(pos); p != -1)
+                ++window[p];
         }
 
         int first{i}, last{i + (N - 1) * D};
@@ -52,12 +55,12 @@ static std::vector<int> solve(const std::string& text, const std::vector<std::st
                 ret.push_back(first);
             if (last + D >= L)
                 break;
-            if (scan[first] != -1)
-                --window[scan[first]];
+            if (const auto p = scan(first); p != -1)
+                --window[p];
             first += D;
             last += D;
-            if (scan[last] != -1)
-                ++window[scan[last]];
+            if (const auto p = scan(last); p != -1)
+                ++window[p];
         }
     }
 
