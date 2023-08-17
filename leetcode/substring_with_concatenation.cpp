@@ -16,15 +16,18 @@ static std::vector<int> solve(const std::string& text, const std::vector<std::st
     if (L < N * D)
         return {};
 
-    std::unordered_map<std::string, int> expected;
-    std::unordered_map<int, std::string> dictionary;
-    for (const auto& w : words)
-        ++expected[w];
-    std::vector<int> scan(L, -1); // scan[i] == j iff text[i] is start of words[j] or -1 if not for any word
-    int word_index{-1};
+    std::unordered_map<int, int> expected, window; // {index -> count}
+    std::unordered_map<std::string, int> dictionary; // {string -> index}
+    std::vector<int> scan(L, -1); // scan[i] == j iff text[i] is start of word of index j or -1 if not for any word
+    int word_index;
     for (const auto& w : words) {
-        ++word_index;
-        dictionary[word_index] = w;
+        if (dictionary.contains(w))
+            word_index = dictionary[w];
+        else {
+            word_index = int(dictionary.size());
+            dictionary[w] = word_index;
+        }
+        ++expected[word_index];
         int search_from{};
         auto found = text.find(w, search_from);
         while (found != std::string::npos) {
@@ -36,11 +39,11 @@ static std::vector<int> solve(const std::string& text, const std::vector<std::st
 
     std::vector<int> ret;
     for (int i = 0; i < D; ++i) {
-        std::unordered_map<std::string, int> window;
+        window.clear();
         for (int j = 0; j < N; ++j) {
             const auto pos = i + D * j;
             if (pos < L && scan[pos] != -1)
-                ++window[dictionary[scan[pos]]];
+                ++window[scan[pos]];
         }
 
         int first{i}, last{i + (N - 1) * D};
@@ -50,11 +53,11 @@ static std::vector<int> solve(const std::string& text, const std::vector<std::st
             if (last + D >= L)
                 break;
             if (scan[first] != -1)
-                --window[dictionary[scan[first]]];
+                --window[scan[first]];
             first += D;
             last += D;
             if (scan[last] != -1)
-                ++window[dictionary[scan[last]]];
+                ++window[scan[last]];
         }
     }
 
