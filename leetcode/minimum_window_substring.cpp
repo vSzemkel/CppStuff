@@ -9,7 +9,44 @@
 // Minimum Window Substring
 // https://leetcode.com/problems/minimum-window-substring
 
-static std::string_view solve_TLE(std::string_view S, std::string_view T, std::unordered_map<char, int>& smap, std::unordered_map<char, int>& tmap) {
+static std::string_view solve_TLE(std::string_view S, std::string_view T) {
+    std::unordered_map<char, int> smap, tmap, cmap;
+    for (const auto& c : S) ++smap[c];
+    for (const auto& c : T) ++tmap[c];
+    const auto check = [&tmap](std::unordered_map<char, int>& m) {
+        return std::all_of(tmap.begin(), tmap.end(), [&m](const auto& kv){ return m[kv.first] >= kv.second; });
+    };
+
+    if (!check(smap))
+        return {};
+
+    const auto szs = int(S.size());
+    const auto szt = int(T.size());
+    int best = szs;
+    std::string_view ans{S};
+    for (int i = 0; i < szs; ++i) {
+        cmap.clear();
+        for (int j = i; j < szs; ++j) {
+            ++cmap[S[j]];
+            if (check(cmap)) {
+                const int cur = j - i + 1;
+                if (cur < best) {
+                    best = cur;
+                    ans = std::string_view(S.data() + i, best);
+                }
+                break;
+            }
+        }
+
+        --smap[S[i]];
+        if (!check(smap))
+            break;
+    }
+
+    return ans;
+}
+
+static std::string_view solve_naive(std::string_view S, std::string_view T, std::unordered_map<char, int>& smap, std::unordered_map<char, int>& tmap) {
     if (std::any_of(tmap.begin(), tmap.end(), [&](const auto& kv){ return kv.second > smap[kv.first]; }))
         return {};
 
@@ -26,10 +63,10 @@ static std::string_view solve_TLE(std::string_view S, std::string_view T, std::u
 
     const auto len = S.size() - 1;
     --smap[l];
-    const auto lans = solve_TLE(S.substr(1, len), T, smap, tmap);
+    const auto lans = solve_naive(S.substr(1, len), T, smap, tmap);
     ++smap[l];
     --smap[r];
-    const auto rans = solve_TLE(S.substr(0, len), T, smap, tmap);
+    const auto rans = solve_naive(S.substr(0, len), T, smap, tmap);
     ++smap[r];
     if (lans.empty())
         return rans;
@@ -44,10 +81,13 @@ static void io_handler() {
     std::string S, T;
     std::cin >> S >> T;
     assert(!T.empty());
-    std::unordered_map<char, int> smap, tmap;
-    for (const auto& c : S) ++smap[c];
-    for (const auto& c : T) ++tmap[c];
-    std::cout << solve_TLE(S, T, smap, tmap);
+
+    // std::unordered_map<char, int> smap, tmap;
+    // for (const auto& c : S) ++smap[c];
+    // for (const auto& c : T) ++tmap[c];
+    // std::cout << solve_naive(S, T, smap, tmap);
+
+    std::cout << solve_TLE(S, T);
 }
 
 int main(int, char**)
