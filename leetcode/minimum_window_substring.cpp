@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <iostream>
 #include <string>
@@ -10,40 +11,49 @@
 // https://leetcode.com/problems/minimum-window-substring
 
 static std::string_view solve_TLE(std::string_view S, std::string_view T) {
-    std::unordered_map<char, int> smap, tmap, cmap;
-    for (const auto& c : S) ++smap[c];
+    std::array<int, 123> tmap{}, cmap{};
     for (const auto& c : T) ++tmap[c];
-    const auto check = [&tmap](std::unordered_map<char, int>& m) {
-        return std::all_of(tmap.begin(), tmap.end(), [&m](const auto& kv){ return m[kv.first] >= kv.second; });
+    const auto check = [&tmap](const std::array<int, 123>& m) {
+        auto t = tmap.data() + 65;
+        auto g = m.data() + 65;
+        for (int z = 58; z; --z)
+            if (*g++ < *t++)
+                return false;
+        return true;
     };
 
-    if (!check(smap))
-        return {};
-
     const auto szs = int(S.size());
-    const auto szt = int(T.size());
-    int best = szs;
-    std::string_view ans{S};
+    int last = -1, start = -1, best = szs + 1;
     for (int i = 0; i < szs; ++i) {
-        cmap.clear();
-        for (int j = i; j < szs; ++j) {
+        while (i < szs && tmap[S[i]] == 0)
+            ++i;
+
+        if (check(cmap)) {
+            const int cur = last - i + 1;
+            if (cur < best) {
+                best = cur;
+                start = i;
+            }
+        }
+
+        const auto range = std::min(szs, i + best);
+        for (int j = last + 1; j < range; ++j) {
+            last = j;
             ++cmap[S[j]];
             if (check(cmap)) {
                 const int cur = j - i + 1;
                 if (cur < best) {
                     best = cur;
-                    ans = std::string_view(S.data() + i, best);
+                    start = i;
                 }
                 break;
             }
         }
 
-        --smap[S[i]];
-        if (!check(smap))
-            break;
+        --cmap[S[i]];
     }
 
-    return ans;
+    return ~start ? std::string_view(S.data() + start, best) : std::string_view{};
 }
 
 static std::string_view solve_naive(std::string_view S, std::string_view T, std::unordered_map<char, int>& smap, std::unordered_map<char, int>& tmap) {
