@@ -10,22 +10,25 @@
 // Minimum Window Substring
 // https://leetcode.com/problems/minimum-window-substring
 
-static std::string_view solve_TLE(std::string_view S, std::string_view T) {
+static std::string_view solve(std::string_view S, std::string_view T) {
     std::array<int, 123> tmap{}, cmap{};
-    for (const auto& c : T) ++tmap[c];
     const auto check = [&tmap](const std::array<int, 123>& m) {
-        auto t = tmap.data() + 65;
-        auto g = m.data() + 65;
-        for (int z = 58; z; --z)
+        const int start = 'A';
+        const int count = 'z' - 'A' + 1;
+        auto t = tmap.data() + start;
+        auto g = m.data() + start;
+        for (int z = count; z; --z)
             if (*g++ < *t++)
                 return false;
         return true;
     };
 
-    const auto szs = int(S.size());
-    int last = -1, start = -1, best = szs + 1;
-    for (int i = 0; i < szs; ++i) {
-        while (i < szs && tmap[S[i]] == 0)
+    const auto szs = int(S.size()), latest_start = szs - int(T.size());
+    int last = -1, start = -1, best = 1e09;
+    for (const auto& c : T)
+        ++tmap[c];
+    for (int i = 0; i <= latest_start; ++i) {
+        while (i <= latest_start && tmap[S[i]] == 0)
             ++i;
 
         if (check(cmap)) {
@@ -36,16 +39,12 @@ static std::string_view solve_TLE(std::string_view S, std::string_view T) {
             }
         }
 
-        const auto range = std::min(szs, i + best);
-        for (int j = last + 1; j < range; ++j) {
-            last = j;
-            ++cmap[S[j]];
+        const auto range = std::min(szs, i + best - 1);
+        while (last < range) {
+            ++cmap[S[++last]];
             if (check(cmap)) {
-                const int cur = j - i + 1;
-                if (cur < best) {
-                    best = cur;
-                    start = i;
-                }
+                best = last - i + 1;
+                start = i;
                 break;
             }
         }
@@ -97,7 +96,8 @@ static void io_handler() {
     // for (const auto& c : T) ++tmap[c];
     // std::cout << solve_naive(S, T, smap, tmap);
 
-    std::cout << solve_TLE(S, T);
+    const auto ans = solve(S, T);
+    std::cout << ans << ' ' << ans.size();
 }
 
 int main(int, char**)
