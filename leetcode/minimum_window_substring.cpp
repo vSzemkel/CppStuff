@@ -12,6 +12,46 @@
 
 static std::string_view solve(std::string_view S, std::string_view T) {
     std::array<int, 123> tmap{}, cmap{};
+    const auto szs = int(S.size()), latest_start = szs - int(T.size());
+    int last = -1, start = -1, best = 1e09, need = int(T.size());
+    for (const auto& c : T)
+        ++tmap[c];
+    for (int i = 0; i <= latest_start; ++i) {
+        while (i <= latest_start && tmap[S[i]] == 0)
+            ++i;
+
+        if (need == 0) {
+            const int cur = last - i + 1;
+            if (cur < best) {
+                best = cur;
+                start = i;
+            }
+        }
+
+        const auto range = std::min(szs, i + best) - 1;
+        while (last < range) {
+            const auto l = S[++last];
+            ++cmap[l];
+            if (0 < tmap[l] && cmap[l] <= tmap[l])
+                --need;
+            if (need == 0) {
+                best = last - i + 1;
+                start = i;
+                break;
+            }
+        }
+
+        const auto f = S[i];
+        if (0 < tmap[f] && cmap[f] <= tmap[f])
+            ++need;
+        --cmap[f];
+    }
+
+    return ~start ? std::string_view(S.data() + start, best) : std::string_view{};
+}
+
+static std::string_view solve2(std::string_view S, std::string_view T) {
+    std::array<int, 123> tmap{}, cmap{};
     const auto check = [&tmap](const std::array<int, 123>& m) {
         const int start = 'A';
         const int count = 'z' - 'A' + 1;
