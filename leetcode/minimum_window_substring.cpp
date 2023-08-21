@@ -10,7 +10,35 @@
 // Minimum Window Substring
 // https://leetcode.com/problems/minimum-window-substring
 
+/**
+ * @brief This is sliding window kind of problem
+ * Move end of the window as far as the window becomes valid
+ * Move beginning of the window as long as it is still valid
+ */
 static std::string_view solve(std::string_view S, std::string_view T) {
+    std::array<int, 123> need{};
+    const auto szs = int(S.size());
+    int begin{}, end{}, start{-1}, best = 1e09, balance = int(T.size());
+    for (const auto& c : T)
+        ++need[c];
+    while (end < szs) {
+        if (need[S[end++]]-- > 0)
+            --balance;
+        while (balance == 0) {
+            const auto cur = end - begin;
+            if (cur < best) {
+                best = cur;
+                start = begin;
+            }
+            if (need[S[begin++]]++ == 0)
+                ++balance;
+        }
+    }
+
+    return ~start ? std::string_view(S.data() + start, best) : std::string_view{};
+}
+
+static std::string_view solve1(std::string_view S, std::string_view T) {
     std::array<int, 123> tmap{}, cmap{};
     const auto szs = int(S.size()), latest_start = szs - int(T.size());
     int last = -1, start = -1, best = 1e09, need = int(T.size());
