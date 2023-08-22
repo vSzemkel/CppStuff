@@ -24,15 +24,14 @@ static std::string_view solve(std::string_view S, std::string_view T) {
     while (end < szs) {
         if (need[S[end++]]-- > 0)
             --balance;
-        while (balance == 0) {
-            const auto cur = end - begin;
-            if (cur < best) {
-                best = cur;
-                start = begin;
-            }
-            if (need[S[begin++]]++ == 0)
+        for (; balance == 0; ++begin)
+            if (need[S[begin]]++ == 0) {
+                if  (const auto cur = end - begin; cur < best) {
+                    best = cur;
+                    start = begin;
+                }
                 ++balance;
-        }
+            }
     }
 
     return ~start ? std::string_view(S.data() + start, best) : std::string_view{};
