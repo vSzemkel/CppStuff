@@ -1,31 +1,9 @@
 
-#include <algorithm>
-#include <array>
-#include <bitset>
+
 #include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
-#include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <string>
-#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 // Frog Jump
@@ -37,20 +15,29 @@ static bool solve(const std::vector<int>& stones) {
 
     const auto N = int(stones.size());
     std::unordered_map<int, int> stones_revindex; // {distance -> stone index}
-    for (int i = 0; i < N; ++i)
-        stones_revindex[stones[i]] = i;
+    stones_revindex.reserve(N);
+    for (int ind = -1; const auto& s : stones)
+        stones_revindex[s] = ++ind;
     std::vector<std::unordered_set<int>> jumps(N); // jumps[k] contains lengths of the last jump taking the frog to kth stone
 
     jumps[1].insert(1);
-    for (int i = 1; i < N; i++)
+    const int final = stones.back();
+    for (int i = 1; i < N - 1; ++i) {
+        const auto& from_destination = stones[i];
         for (const int j : jumps[i])
-            for (int probe = -1; probe <= 1; ++probe) {
-                const auto destination = stones[i] + j + probe;
-                if (i < destination && stones_revindex.contains(destination)) 
-                    jumps[stones_revindex[destination]].insert(j + probe);
+            for (const int probe : {-1, 0, 1}) {
+                const auto delta = j + probe;
+                const auto destination = from_destination + delta;
+                const auto found = stones_revindex.find(destination);
+                if (found != stones_revindex.end()) {
+                    if (destination == final)
+                        return true;
+                    jumps[found->second].insert(delta);
+                }
             }
+    }
 
-    return !jumps[N - 1].empty();
+    return N == 2;
 }
 
 static void io_handler() {
