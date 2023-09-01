@@ -1,7 +1,7 @@
 
-
 #include <cassert>
 #include <iostream>
+#include <functional>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -10,6 +10,43 @@
 // https://leetcode.com/problems/frog-jump/
 
 static bool solve(const std::vector<int>& stones) {
+    const auto N = int(stones.size());
+    std::unordered_map<int, int> stones_revindex; // {distance -> stone index}
+    std::function<bool(int, int, bool&)> solve_inner = [&](int current_stone, int last_jump, bool& dead_end) {
+        if (current_stone == N - 1)
+            return true;
+        const auto current_distance = stones[current_stone];
+        if (current_distance + last_jump + 2 < stones[current_stone + 1]) { // +2 is the tricky part in this solution
+            dead_end = true;
+            return false;
+        }
+
+        for (const int probe : {1, 0, -1}) {
+            const auto delta = last_jump + probe;
+            if (delta > 0) {
+                const auto destination = current_distance + delta;
+                const auto found = stones_revindex.find(destination);
+                if (found != stones_revindex.end()) {
+                    if (solve_inner(found->second, delta, dead_end))
+                        return true;
+                    if (dead_end)
+                        return false;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    stones_revindex.reserve(N);
+    for (int ind = -1; const auto& s : stones)
+        stones_revindex[s] = ++ind;
+
+    bool dead_end{};
+    return solve_inner(0, 0, dead_end);
+}
+
+static bool solve2(const std::vector<int>& stones) {
     if (stones[1] != 1)
         return false;
 
