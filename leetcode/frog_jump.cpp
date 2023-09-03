@@ -9,7 +9,11 @@
 // Frog Jump
 // https://leetcode.com/problems/frog-jump/
 
-static bool solve(const std::vector<int>& stones) {
+/**
+ * @brief Constant of 2 below is good enough for test suite on Leetcode
+ * It is wrong in general. The only value that can be proved is n * (n + 1) / 2
+ */
+static bool solve_incorrect(const std::vector<int>& stones) {
     const auto N = int(stones.size());
     std::unordered_map<int, int> stones_revindex; // {distance -> stone index}
     std::function<bool(int, int, bool&)> solve_inner = [&](int current_stone, int last_jump, bool& dead_end) {
@@ -46,7 +50,7 @@ static bool solve(const std::vector<int>& stones) {
     return solve_inner(0, 0, dead_end);
 }
 
-static bool solve2(const std::vector<int>& stones) {
+static bool solve(const std::vector<int>& stones) {
     if (stones[1] != 1)
         return false;
 
