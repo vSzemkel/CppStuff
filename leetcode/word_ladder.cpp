@@ -5,6 +5,7 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // Word Ladder
@@ -26,10 +27,12 @@ int ladderLength(const std::string& beginWord, const std::string& endWord, std::
     } else
         startNode = int(std::distance(wordList.begin(), foundBegin));
 
+    std::vector<int> neighbors(20);
     const auto N = int(wordList.size());
     const auto M = int(wordList.back().size());
-    std::vector<std::vector<int>> graph(N, std::vector<int>{});
-    if (N < ALFABETH_SIZE) { // strategy pattern
+    using strategy_t = std::function<std::vector<int>(int)>;
+    std::unordered_map<std::string, int> index; // { word -> nodeIndex }
+    const strategy_t few_words_strategy = [&](int nodeIndex) {
         const auto is_similar = [M](const std::string& a, const std::string& b) -> bool {
             assert(a.size() == b.size());
             int differences{};
@@ -43,32 +46,36 @@ int ladderLength(const std::string& beginWord, const std::string& endWord, std::
             return differences == 1;
         };
 
-        for (int f = 0; f < N; ++f)
-            for (int t = f + 1; t < N; ++t)
-                if (is_similar(wordList[f], wordList[t])) {
-                    graph[f].push_back(t);
-                    graph[t].push_back(f);
+        neighbors.clear();
+        for (int t = 0; t < N; ++t)
+            if (is_similar(wordList[nodeIndex], wordList[t]))
+                neighbors.push_back(t);
+
+        return neighbors;
+    };
+    const strategy_t many_words_strategy = [&](int nodeIndex) {
+        neighbors.clear();
+        auto& word = wordList[nodeIndex];
+        for (int i = 0; i < M; ++i) {
+            const auto letter = word[i];
+            for (char c = 'a'; c <= 'z'; ++c)
+                if (c != letter) {
+                    word[i] = c;
+                    const auto found = index.find(word);
+                    if (found != index.end())
+                        neighbors.push_back(found->second);
+                    word[i] = letter;
                 }
-    } else {
-        std::unordered_map<std::string, int> index; // { word -> nodeIndex }
+        }
+
+        return neighbors;
+    };
+
+    auto strategy = few_words_strategy;
+    if (N > ALFABETH_SIZE) { // strategy pattern
+        strategy = many_words_strategy;
         for (int f = 0; f < N; ++f)
             index[wordList[f]] = f;
-        for (int f = 0; f < N; ++f) {
-            auto& word = wordList[f];
-            for (int i = 0; i < M; ++i) {
-                const auto letter = word[i];
-                for (char c = 'a'; c <= 'z'; ++c)
-                    if (c != letter) {
-                        word[i] = c;
-                        const auto found = index.find(word);
-                        if (found != index.end()) {
-                            graph[f].push_back(found->second);
-                            graph[found->second].push_back(f);
-                        }
-                        word[i] = letter;
-                    }
-            }
-        }
     }
 
     std::vector<bool> seen(N);
@@ -79,7 +86,7 @@ int ladderLength(const std::string& beginWord, const std::string& endWord, std::
         const auto& [node, length] = que.front();
         if (node == endNode)
             return length + 1;
-        for (const auto next : graph[node]) // here we could neigbours
+        for (const auto next : strategy(node)) // here we could neigbours
             if (!seen[next]) {
                 seen[next] = true;
                 que.emplace_back(next, length + 1);
