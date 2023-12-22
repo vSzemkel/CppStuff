@@ -58,6 +58,9 @@ int main(int, char**)
 
 /*
 
+Format:
+clang-format -i $TASKNAME$.cpp
+
 Compile:
 cls && clang++.exe -Wall -Wextra -g -O0 -std=c++20 $TASKNAME$.cpp -o $TASKNAME$.exe
 g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address $TASKNAME$.cpp -o $TASKNAME$
