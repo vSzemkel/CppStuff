@@ -50,13 +50,15 @@ class trie_t {
         cur->_label = key;
     }
 
-    void remove_up(std::string_view key) {
+    void remove_up() {
         _terminal = false;
         if (!_desc.empty())
             return;
-        if (_parent && !_parent->_terminal) {
-            _parent->_desc.erase(key.back());
-            _parent->remove_up(key.substr(0, key.size() - 1));
+        auto c = _label.end();
+        for (auto p = _parent; p; p = p->_parent) {
+            p->_desc.erase(*--c);
+            if (p->_terminal)
+                return;
         }
     }
 
@@ -96,7 +98,7 @@ std::vector<std::string> findWords(std::vector<std::vector<char>>& board, std::v
             nodes.insert(const_cast<trie_t*>(&t));
     };
 
-    std::unordered_set<std::string> ans;
+    std::vector<std::string> ans;
     for (int r = 0; r < R; ++r)
         for (int c = 0; c < C; ++c) {
             const char cur = board[r][c];
@@ -105,16 +107,15 @@ std::vector<std::string> findWords(std::vector<std::vector<char>>& board, std::v
                 if (ntrie.valid()) {
                     check(r, c, dir, ntrie);
                     for (auto& node : nodes) {
-                        auto label = node->label();
-                        node->remove_up(label); // TRICKY
-                        ans.insert(std::move(label));
+                        ans.push_back(node->label());
+                        node->remove_up(); // TRICKY
                     }
                     nodes.clear();
                 }
             }
         }
 
-    return {ans.begin(), ans.end()};
+    return ans;
 }
 
 static void io_handler() {
