@@ -29,26 +29,32 @@ class trie_t {
         return _exists;
     }
 
+    std::string label() const {
+        return _label;
+    }
+
     bool terminal() const {
         return _terminal;
     }
 
     void put(std::string_view key) {
-        _exists = true;
-        if (key.empty())
-            _terminal = true;
-        else {
-            auto& child = _desc[key.front()];
-            child._parent = this;
-            child.put(key.substr(1));
+        trie_t *child, *cur = this;
+        for (const char c : key) {
+            child = &cur->_desc[c];
+            child->_exists = true;
+            child->_parent = cur;
+            cur = child;
         }
+
+        cur->_terminal = true;
+        cur->_label = key;
     }
 
     void remove_up(std::string_view key) {
         _terminal = false;
         if (!_desc.empty())
             return;
-        if (_parent) {
+        if (_parent && !_parent->_terminal) {
             _parent->_desc.erase(key.back());
             _parent->remove_up(key.substr(0, key.size() - 1));
         }
@@ -58,6 +64,7 @@ class trie_t {
 
   private:
     trie_t* _parent{};
+    std::string _label{};
     std::unordered_map<char, trie_t> _desc;
     bool _exists{}, _terminal{};
 };
@@ -69,25 +76,25 @@ std::vector<std::string> findWords(std::vector<std::vector<char>>& board, std::v
     for (const auto& w : words)
         trie.put(w);
 
-    std::unordered_map<std::string, trie_t*> nodes;
+    std::unordered_set<trie_t*> nodes;
 
-    using check_t = std::function<void(int, int, int, std::string, const trie_t&)>;
-    const check_t check = [&](int r, int c, int d, std::string s, const trie_t& t) {
+    using check_t = std::function<void(int, int, int, const trie_t&)>;
+    const check_t check = [&](int r, int c, int d, const trie_t& t) {
         const auto org = std::exchange(board[r][c], '*'); 
         for (int z = 3, nd = (d + 3) % 4; z; --z, nd = (nd + 1) % 4) {
             const int nr = r + dr[nd];
             const int nc = c + dc[nd];
             if (0 <= nr && nr < R && 0 <= nc && nc < C) {
                 const auto cur = board[nr][nc];
-                const auto ntrie = t.node(cur);
+                const auto& ntrie = t.node(cur);
                 if (ntrie.valid())
-                    check(nr, nc, d, s + cur, ntrie);
+                    check(nr, nc, d, ntrie);
             }
         }
         board[r][c] = org;
 
         if (t.terminal())
-            nodes.emplace(std::move(s), const_cast<trie_t*>(&t));
+            nodes.insert(const_cast<trie_t*>(&t));
     };
 
     std::unordered_set<std::string> ans;
@@ -95,12 +102,13 @@ std::vector<std::string> findWords(std::vector<std::vector<char>>& board, std::v
         for (int c = 0; c < C; ++c) {
             const char cur = board[r][c];
             for (int dir = 0; dir < 4; ++dir) {
-                const auto ntrie = trie.node(cur);
+                const auto& ntrie = trie.node(cur);
                 if (ntrie.valid()) {
-                    check(r, c, dir, std::string(1, cur), ntrie);
-                    for (auto&& [word, node] : nodes) {
-                        // node->remove_up(word); TRICKY
-                        ans.insert(std::move(word));
+                    check(r, c, dir, ntrie);
+                    for (auto& node : nodes) {
+                        auto label = node->label();
+                        node->remove_up(label); // TRICKY
+                        ans.insert(std::move(label));
                     }
                     nodes.clear();
                 }
