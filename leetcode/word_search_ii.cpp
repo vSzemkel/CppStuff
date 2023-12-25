@@ -38,12 +38,12 @@ class trie_t {
     }
 
     void put(std::string_view key) {
-        trie_t *child, *cur = this;
+        trie_t *cur = this;
         for (const char c : key) {
-            child = &cur->_desc[c];
-            child->_exists = true;
-            child->_parent = cur;
-            cur = child;
+            auto& child = cur->_desc[c];
+            child._exists = true;
+            child._parent = cur;
+            cur = &child;
         }
 
         cur->_terminal = true;
@@ -77,7 +77,6 @@ std::vector<std::string> findWords(std::vector<std::vector<char>>& board, std::v
         trie.put(w);
 
     std::unordered_set<trie_t*> nodes;
-
     using check_t = std::function<void(int, int, int, const trie_t&)>;
     const check_t check = [&](int r, int c, int d, const trie_t& t) {
         const auto org = std::exchange(board[r][c], '*'); 
@@ -88,7 +87,7 @@ std::vector<std::string> findWords(std::vector<std::vector<char>>& board, std::v
                 const auto cur = board[nr][nc];
                 const auto& ntrie = t.node(cur);
                 if (ntrie.valid())
-                    check(nr, nc, d, ntrie);
+                    check(nr, nc, nd, ntrie);
             }
         }
         board[r][c] = org;
