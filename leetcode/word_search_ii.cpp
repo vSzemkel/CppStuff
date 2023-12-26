@@ -12,8 +12,8 @@
 // https://leetcode.com/problems/word-search-ii/description
 
 int R, C, W;
-const int dr[4] = {1, 0, -1, 0};
-const int dc[4] = {0, 1, 0, -1};
+const int dr[8] = {1, 0, -1, 0, 1, 0, -1, 0};
+const int dc[8] = {0, 1, 0, -1, 0, 1, 0, -1};
 
 class trie_t {
   public:
@@ -57,7 +57,7 @@ class trie_t {
         auto c = _label.end();
         for (auto p = _parent; p; p = p->_parent) {
             p->_desc.erase(*--c);
-            if (p->_terminal)
+            if (p->_terminal || !p->_desc.empty())
                 return;
         }
     }
@@ -82,7 +82,7 @@ std::vector<std::string> findWords(std::vector<std::vector<char>>& board, std::v
     using check_t = std::function<void(int, int, int, const trie_t&)>;
     const check_t check = [&](int r, int c, int d, const trie_t& t) {
         const auto org = std::exchange(board[r][c], '*'); 
-        for (int z = 3, nd = (d + 3) % 4; z; --z, nd = (nd + 1) % 4) {
+        for (int z = 3, nd = (d + 3) % 4; z; --z, ++nd) {
             const int nr = r + dr[nd];
             const int nc = c + dc[nd];
             if (0 <= nr && nr < R && 0 <= nc && nc < C) {
@@ -108,7 +108,7 @@ std::vector<std::string> findWords(std::vector<std::vector<char>>& board, std::v
                     check(r, c, dir, ntrie);
                     for (auto& node : nodes) {
                         ans.push_back(node->label());
-                        node->remove_up(); // TRICKY
+                        node->remove_up(); // TRICKY PART
                     }
                     nodes.clear();
                 }
@@ -153,21 +153,54 @@ word_search_ii.exe < word_search_ii.in
 
 Input:
 
-1
-4 4
+3
+2 4
 oaan
 etae
-ihkr
-iflv
-4
-oath
-pea
-eat
-rain
+2
+oa
+oaa
+3 3
+abc
+aed
+afg
+6
+abcdefg
+gfedcbaaa
+eaabcdgfa
+befa
+dgc
+ade
+12 12
+bcdefghijklm
+aaaaaaaaaaaa
+aaaaaaaaaaaa
+aaaaaaaaaaaa
+aaaaaaaaaaaa
+aaaaaaaaaaaa
+aaaaaaaaaaaa
+aaaaaaaaaaaa
+aaaaaaaaaaaa
+aaaaaaaaaaaa
+aaaaaaaaaaaa
+aaaaaaaaaaaa
+3
+aaaaaaaaaaac
+aaaaaaaaaaak
+aaaaaaaaaaat
 
 Output:
 
-oath
-eat
+Case #1: 
+oaa
+oa
+Case #2:
+abcdefg
+befa
+eaabcdgfa
+gfedcbaaa
+Case #3:
+aaaaaaaaaaak
+aaaaaaaaaaac
 
 */
