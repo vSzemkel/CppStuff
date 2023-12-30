@@ -6,6 +6,7 @@
 
 // Trie data structure
 // https://en.wikipedia.org/wiki/Trie
+// see: /leetcode/word_search_ii.cpp
 
 template <typename V = int>
 class trie_t {
