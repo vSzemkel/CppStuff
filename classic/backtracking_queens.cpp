@@ -8,20 +8,27 @@
 
 constexpr const int MAX = 30;
 
-std::array<int, MAX> solution; // row => col mapping
-std::array<int, MAX> index;    // col => row mapping
-std::array<bool, 2 * MAX - 1> ne_diag, se_diag; // taken diagonals bitmap 
+std::array<int, MAX> solution;                  // row => col mapping
+std::array<int, MAX> index;                     // col => row mapping
+std::array<bool, 2 * MAX - 1> ne_diag, se_diag; // taken diagonals bitmap
+
+static void print(const std::array<int, MAX>& solution, int size)
+{
+    --size;
+    std::cout << '[';
+    for (int i = 0; i < size; ++i)
+        std::cout << solution[i] << ", ";
+    std::cout << solution[size] << ']';
+}
 
 /**
  * @brief Intuitive approach to backing data structures.
  * Generates row -> col solution
  */
-static bool solve(const int row, const int target) {
+static bool solve(const int row, const int target)
+{
     if (row == target) {
-        std::cout << '[';
-        for (int i = 0; i < target - 1; ++i)
-            std::cout << solution[i] << ", ";
-        std::cout << solution[target - 1] << ']';
+        print(solution, target);
         return true;
     }
 
@@ -36,7 +43,8 @@ static bool solve(const int row, const int target) {
                 colision = true;
                 break;
             }
-            --r; --c;
+            --r;
+            --c;
         }
         if (colision)
             continue;
@@ -47,7 +55,8 @@ static bool solve(const int row, const int target) {
                 colision = true;
                 break;
             }
-            --r; ++c;
+            --r;
+            ++c;
         }
         if (colision)
             continue;
@@ -69,15 +78,13 @@ static bool solve(const int row, const int target) {
  * @brief Alternative approach to backing data structures.
  * Faster solution, generates col -> row mapping
  */
-static bool solve2(const int row, const int target) {
+static bool solve2(const int row, const int target)
+{
     if (row == target) {
         const auto tmp = solution;
         for (int col = 0; col < target; ++col)
             solution[tmp[col]] = col;
-        std::cout << '[';
-        for (int i = 0; i < target - 1; ++i)
-            std::cout << solution[i] << ", ";
-        std::cout << solution[target - 1] << ']';
+        print(solution, target);
         return true;
     }
 
@@ -88,7 +95,7 @@ static bool solve2(const int row, const int target) {
             continue;
 
         solution[col] = row;
-        ne_diag [ne] = se_diag[se] = true;
+        ne_diag[ne] = se_diag[se] = true;
         if (solve2(row + 1, target))
             return true;
         solution[col] = -1;
@@ -105,14 +112,18 @@ int main(int, char**)
     for (int n = 1; n <= MAX; ++n) {
         index.fill(-1);
         solution.fill(-1);
-        std::cout << n << ": "; solve(0, n); std::cout << '\n';
+        std::cout << n << ": ";
+        solve(0, n);
+        std::cout << '\n';
     }
 
     for (int n = 1; n <= MAX; ++n) {
         solution.fill(-1);
         ne_diag.fill(false);
         se_diag.fill(false);
-        std::cout << n << ": "; solve2(0, n); std::cout << '\n';
+        std::cout << n << ": ";
+        solve2(0, n);
+        std::cout << '\n';
     }
 }
 
