@@ -5,6 +5,19 @@
 // Word Search II
 // https://leetcode.com/problems/n-queens-ii
 
+// Fastest than this solution is to enumerate 2n-1 diagonals with r+c and n-1+r-c
+// int solve(vector<bool>& col, vector<bool>& diag, vector<bool>& anti_diag, int row) {
+//     int n = size(col), count = 0;
+//     if (row == n) return 1;
+//     for (int column = 0; column < n; ++column)
+//         if (!col[column] && !diag[row + column] && !anti_diag[row - column + n - 1]) {
+//             col[column] = diag[row + column] = anti_diag[row - column + n - 1] = true;
+//             count += solve(col, diag, anti_diag, row + 1); 
+//             col[column] = diag[row + column] = anti_diag[row - column + n - 1] = false; 
+//         }
+//     return count;
+// }
+
 
 constexpr const int MAX = 29;
 
