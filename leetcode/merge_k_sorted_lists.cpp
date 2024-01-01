@@ -1,7 +1,6 @@
 
 #include <iostream>
 #include <queue>
-#include <utility>
 #include <vector>
 
 // Merge k Sorted Lists
@@ -18,29 +17,29 @@ struct ListNode
 
 ListNode* mergeKLists(std::vector<ListNode*>& lists)
 {
-    std::priority_queue<std::pair<int, ListNode*>, std::vector<std::pair<int, ListNode*>>, std::greater<std::pair<int, ListNode*>>> pq;
-    for (const auto list : lists)
-        if (list)
-            pq.emplace(list->val, list);
-
-    if (pq.empty())
+    const auto nend = std::remove(lists.begin(), lists.end(), nullptr);
+    if (lists.begin() == nend)
         return nullptr;
 
+    std::priority_queue pq{
+        [](ListNode* lhs, ListNode* rhs){ return lhs->val > rhs->val; },
+        std::vector<ListNode*>{lists.begin(), nend}
+    };
+
+    // could use ListNode ans; auto end = &ans; while(..); return ans->next;
     ListNode *ans, *end;
-    ans = end = pq.top().second;
-    if (end->next)
-        pq.emplace(end->next->val, end->next);
+    ans = end = pq.top();
     pq.pop();
+    if (end->next)
+        pq.emplace(end->next);
 
     while (!pq.empty()) {
-        auto list = pq.top().second;
-        end->next = list;
+        end->next = pq.top();
         end = end->next;
         pq.pop();
 
-        list = list->next;
-        if (list)
-            pq.emplace(list->val, list);
+        if (end->next)
+            pq.push(end->next);
     };
 
     return ans;
