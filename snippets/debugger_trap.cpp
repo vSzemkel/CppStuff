@@ -9,8 +9,7 @@ static void attach_trap() {
     using namespace std::chrono_literals; 
     auto last = std::chrono::system_clock::now(), now{last + 1s};
     while (now < last + 1500ms) {
-        last = now;
         std::this_thread::sleep_for(1s); // set breakpoint here
-        now = std::chrono::system_clock::now();
+        last = std::exchange(now, std::chrono::system_clock::now());
     }
 }

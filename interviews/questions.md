@@ -16,6 +16,7 @@
 - general pointer addition
 - dereferencing nullptr
 - use after free
+- bit shifting of more then a bit width
 
 ### What stands after the abbreviation
 
@@ -44,6 +45,11 @@
 
 - after initialization it abstracts network connection with file-like handler
 
+### What is hash map
+
+- what is its name in STL implementation
+- main benefits and operation complexities
+
 ### Describe Lower Bound algorithm
 
 - is there any difference between using it with std::vector ans std::set?
@@ -61,6 +67,8 @@
 ### What is the anonymous namespace in C++ and how we can use it?
 
 ### What types of casts can you name and describe
+
+### How to check if given integral is a power of 2
 
 ### Given a graph with weighted edges and two vertices, can we always compute the shortest path between them
 
