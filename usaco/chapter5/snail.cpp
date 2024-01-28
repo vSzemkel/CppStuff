@@ -6,31 +6,8 @@ PROBLEM STATEMENT: https://train.usaco.org/usacoprob2?a=3UtkCxcOie8&S=snail
 */
 
 #include <algorithm>
-#include <array>
-#include <bitset>
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
 #include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 std::ifstream task_in("snail.in");
@@ -39,39 +16,46 @@ std::ofstream task_out("snail.out");
 static const char FREE = '.';
 static const char BARIER = '#';
 static const char VISITED = 'o';
-static const std::pair<int, int> DELTA[] = {
-    {0, -1}, {1, 0}, {0, 1}, {-1, 0} // NESW, d + 2 is opposite to d
-};
-int S, ans{-1}, score{1};
+static const int DELTAX[] = {0, 1, 0, -1}; // NESW, d + 2 is opposite to d
+static const int DELTAY[] = {-1, 0, 1, 0};
+
+int S, ans{0}, score{1};
 std::vector<std::string> board;
 
-static void advance(int row, int col, int dir)
+/*
+ * This task has second version in which hit is always true.
+ * Version below is harder because of two kinds of possible stops
+*/
+static void advance(const int row, const int col, const int dir)
 {
-    bool progress{};
-    const auto [dx, dy] = DELTA[dir];
+    const int init_score = score;
+    const int dx = DELTAX[dir], dy = DELTAY[dir];
     int r = row + dy, c = col + dx;
     while (0 <= r && r < S && 0 <= c && c < S && board[r][c] == FREE) {
         board[r][c] = VISITED;
         ++score;
-        progress = true;
         r += dy, c += dx;
     }
 
-    if (progress) {
-        r -= dy, c -= dx;
-        advance(r, c, (dir + 1) % 4);
-        advance(r, c, (dir + 3) % 4);
+    if (init_score < score) {
+        const bool hit = r < 0 || S <= r || c < 0 || S <= c || board[r][c] == BARIER;
+        if (hit) {
+            r -= dy, c -= dx;
+            advance(r, c, (dir + 1) % 4);
+            advance(r, c, (dir + 3) % 4);
+        } else 
+            ans = std::max(ans, score); // not hit exit
 
         // backtrack
         r = row + dy;
         c = col + dx;
-        while (0 <= r && r < S && 0 <= c && c < S && board[r][c] == VISITED) {
+        while (init_score < score) {
             board[r][c] = FREE;
             --score;
             r += dy, c += dx;
         }
     } else
-        ans = std::max(ans, score);
+        ans = std::max(ans, score); // hit exit
 }
 
 int main(int, char**)
@@ -86,8 +70,12 @@ int main(int, char**)
         board[--r][c - 'A'] = BARIER; 
     }
 
-    advance(0, 0, 1);
-    advance(0, 0, 2);
+    if (board[0][0] == FREE) {
+        board[0][0] = VISITED;
+        advance(0, 0, 1);
+        advance(0, 0, 2);
+    }
+
     task_out << ans << '\n';
 }
 
@@ -99,8 +87,14 @@ g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address snail.cpp -o snail
 
 Input:
 
+8 4
+E2
+A6
+G1
+F5
 
 Output:
 
+33
 
 */
