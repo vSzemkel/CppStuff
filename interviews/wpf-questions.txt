@@ -1,0 +1,205 @@
+#### Easy questions:
+
+## Explain the MVVM (Model-View-ViewModel) pattern
+
+## What are dependency properties in WPF? 
+## How are they different from regular .NET properties?
+
+## Discuss the difference between INotifyPropertyChanged and DependencyProperty. 
+## In what scenarios would you choose one over the other?
+
+## Discuss the differences between User Control and Custom Control in WPF. 
+## In what scenarios would you use each?
+
+## Describe how you would use Attached Properties in WPF.
+## Can you give an example from your experience where you found them particularly useful?
+
+## How would you bind button click event to the ViewModel?
+
+
+
+
+#### Intermediate questions:
+
+## Describe DependencyProperty, TemplateSelector, ControlTemplate
+
+## ContentControl vs ContentPresenter:
+ContentControl is base class for controls having a Content property
+ContentPresenter is used inside ContentTemplate to display the content
+
+## DependencyProperty vs INotifyPropertyChanged:
+DependencyObjects are not marked as serializable
+The DependencyObject class overrides and seals the Equals() and GetHashCode() methods
+A DependencyObject has thread affinity – it can only be accessed on the thread on which it was created
+DependencyObjects takes dependency on wpf libraries
+DependencyObject has better performance (allegedly)
+
+## Create a View that will display Items in the attached ViewModel implementing IMyViewModel. 
+## It should display colored text for the MyTextItem instances, and slider for the MyNumericIntem instances.
+## Provided code:
+
+public abstract class MyItemBase : INotifyPropertyChanged
+{
+    ...
+}
+
+public class MyTextItem : MyItemBase
+{
+    public string Text { get {...} set {...} }
+    public Color TextColor { get {...} }
+}
+
+public class MyNumericItem : MyItemBase
+{
+    public int Value { get {...} set {...} }
+    public int MinValue { get {...} set {...} }
+    public int MaxValue { get {...} set {...} }
+}
+
+public interface IMyViewModel
+{
+    IReadOnlyList<MyItemBase> Items { get; }
+}
+
+
+
+## Implement the simple application that supports automatic changing of the language on the fly.
+## Example solution:
+
+public class LocalizationManager : INotifyPropertyChanged
+{
+    private static LocalizationManager _instance;
+    public static LocalizationManager Instance => _instance ?? (_instance = new LocalizationManager());
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    private void NotifyPropertyChanged(string propertyName = "")
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    public void ChangeCulture(CultureInfo newCulture)
+    {
+        Thread.CurrentThread.CurrentCulture = newCulture;
+        Thread.CurrentThread.CurrentUICulture = newCulture;
+        NotifyPropertyChanged("Item[]"); // Notify about indexers change
+    }
+
+    public string this[string key]
+    {
+        get { return ResourceManager.GetString(key, Thread.CurrentThread.CurrentUICulture); }
+    }
+}
+
+<Window ...
+        xmlns:local="clr-namespace:YourNamespace">
+    <Window.Resources>
+        <local:LocalizationManager x:Key="LocalizationManager"/>
+    </Window.Resources>
+
+    <TextBlock Text="{Binding [SomeText], Source={StaticResource LocalizationManager}}" />
+</Window>
+
+
+
+
+
+
+## Implement a ConverterChain class that can be used to combine converters in the XAML to create a new converter. 
+## Example usage:
+<Window.Resources>
+    <local:ConverterChain x:Key="ReferenceToVisibilityConverter">
+        <local:ReferenceToBooleanConverter />  // Converts null to false, and the rest to true
+        <local:BooleanToVisibilityConverter /> // Converts true to Visibility.Visible, and false to Visiblity.Collapsed
+    </local:ConverterChain>
+</Window.Resources>
+
+
+
+
+
+## Implement simple color picker control with 3 R,G,B sliders, editable hex value of a color and a color preview 
+
+
+## Implement a style for a Button that has those properties:
+## 1. It changes color on hover
+## 2. Its size changes on click with the animation
+## 3. Text and its color change when it's disabled
+## Example solution:
+
+<Window.Resources>
+    <Style x:Key="InteractiveButtonStyle" TargetType="Button">
+        <!-- Default appearance -->
+        <Setter Property="Background" Value="LightGray"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="Padding" Value="10"/>
+        <Setter Property="Margin" Value="5"/>
+        <Setter Property="RenderTransformOrigin" Value="0.5, 0.5"/>
+
+        <Style.Triggers>
+            <!-- Hover effect -->
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="SkyBlue"/>
+            </Trigger>
+
+            <!-- Pressed effect -->
+            <EventTrigger RoutedEvent="Button.Click">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX" To="1.1" Duration="0:0:0.1"/>
+                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY" To="1.1" Duration="0:0:0.1"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+
+            <!-- Disabled effect -->
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Background" Value="Gainsboro"/>
+                <Setter Property="Foreground" Value="Gray"/>
+                <Setter Property="Content" Value="Disabled"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+</Window.Resources>
+
+
+
+
+#### Challenging questions:
+
+## Create a PropertyViewer control that could be used in XAML like this:
+<PropertyViewer PropertySource=”{Binding SelectedObject}” />
+## That will display an editable list of public properties found in the type of currently bound object.
+
+public class SomeClass
+{
+    public bool BoolProp {get;set;}
+    public int IntProp {get;set;}
+    public string StringProp {get;set;}
+    public double DoubleProp {get;set;}
+
+    private int someField;
+}
+
+|---------------------------------|
+| BoolProp                    [x] |
+| IntProp            [   0][+][-] | // Numeric up-down control
+| StringProp         [Some Text ] | // Text box
+| DoubleProp     0.5 [=====|    ] | // Slider with value displayed
+|---------------------------------|
+
+## How would you modify it to support custom attributes?
+public class SomeClass
+{
+    [CustomName("My Prop")]
+    public bool BoolProp {get;set;}
+    [Hidden]
+    public int IntProp {get;set;}
+    [ReadOnly]
+    public string StringProp {get;set;}
+    [Limits(-1, 1)]
+    public double DoubleProp {get;set;}
+
+    private int someField;
+}
