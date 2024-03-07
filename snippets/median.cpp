@@ -33,12 +33,11 @@ const auto median_unsorted = [](std::vector<int>& data) -> double {
         return data[half];
 
     const auto b = data[half];
-    std::nth_element(data.begin(), data.begin() + half - 1, data.end());
-    const auto a = data[half - 1];
+    const auto a = *std::max_element(data.begin(), data.begin() + half);
     return a + double(b - a) / 2;
 };
 
-constinit const int N = 10000;
+constinit const int N = 100000;
 
 int main(int, char**) {
     std::vector<int> data(N);
@@ -46,10 +45,17 @@ int main(int, char**) {
     for (auto& d : data)
         d = dist(g_gen);
 
-    const auto from_nth = median_unsorted(data);
+    // even case
+    auto from_nth = median_unsorted(data);
     std::sort(data.begin(), data.end());
-    const auto from_sorted = median_sorted(data);
+    auto from_sorted = median_sorted(data);
+    assert(from_nth == from_sorted);
 
+    // odd case
+    data.push_back(dist(g_gen));
+    from_nth = median_unsorted(data);
+    std::sort(data.begin(), data.end());
+    from_sorted = median_sorted(data);
     assert(from_nth == from_sorted);
 }
 
