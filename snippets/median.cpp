@@ -1,6 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include <limits>
+#include <numeric>
 #include <random>
 #include <vector>
 
@@ -17,10 +18,8 @@ const auto median_sorted = [](const std::vector<int>& data) -> double {
     const auto half = sz / 2;
     if (sz & 1)
         return data[half];
-    else {
-        const auto a = data[half - 1];
-        return a + double(data[half] - a) / 2;
-    }
+    else 
+        return std::midpoint<double>(data[half - 1], data[half]);
 };
 
 const auto median_unsorted = [](std::vector<int>& data) -> double {
@@ -32,9 +31,7 @@ const auto median_unsorted = [](std::vector<int>& data) -> double {
     if (sz & 1)
         return data[half];
 
-    const auto b = data[half];
-    const auto a = *std::max_element(data.begin(), data.begin() + half);
-    return a + double(b - a) / 2;
+    return std::midpoint<double>(*std::max_element(data.begin(), data.begin() + half), data[half]);
 };
 
 constinit const int N = 100000;
