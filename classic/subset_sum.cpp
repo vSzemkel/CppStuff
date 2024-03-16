@@ -34,8 +34,7 @@ static auto all_sums() {
 static auto all_ksums(const int k) {
     std::unordered_set<int> ret;
     std::vector<int> indices(N, 1);
-    for (int i = 0; i < k; ++i)
-        indices[i] = 0;
+    std::fill_n(indices.begin(), k, 0);
 
     do {
         ret.insert(std::transform_reduce(items.begin(), items.end(), indices.begin(), 0, std::plus<>{}, [](const int item, const int indice){
