@@ -12,40 +12,49 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=V55vnzYsvfC&S=milk4
 std::ifstream task_in("milk4.in");
 std::ofstream task_out("milk4.out");
 
-int Q;
-std::vector<int> pails;
-
-bool check_compination(const std::vector<int>& candidates)
+/**
+ * Checks if target can be represented as first count candidates linear combiation with + only
+*/
+bool check_combination(const std::vector<int>& candidates, int count, int target)
 {
+    const auto& value = candidates[--count];
+    if (count == 0)
+        return target % value == 0;
+
+    for (int ntarget = target - value; ntarget > 0; ntarget -= value)
+        if (check_combination(candidates, count, ntarget))
+            return true;
+
     return false;
 }
 
 int main(int, char**)
 {
-    int N;
+    int Q, N;
     task_in >> Q >> N;
-    pails.resize(N);
-    for (auto&p : pails)
+    std::vector<int> pails(N);
+    for (auto& p : pails)
         task_in >> p;
-    std::sort(pails.begin(), pails.end(), std::greater<>{});
+    std::sort(pails.begin(), pails.end());
 
-    std::vector<int> selection(N), candidates;
+    std::vector<int> selection(N, 1), candidates(N);
     for (int count = 1; count <= N; ++count) {
-        std::fill_n(selection.begin(), N - count, 0);
-        std::fill_n(selection.begin() + N - count, count, 1);
+        selection[count - 1] = 0; // std::fill_n(selection.begin(), count, 0);std::fill_n(selection.begin() + count, N - count, 1);
         do {
-            candidates.clear();
-            for (int i = N - 1; ~i; --i)
-                if (selection[i])
-                    candidates.push_back(pails[i]);
-            if (check_compination(candidates)) {
-                task_out << count << ' ';
+            auto cur = candidates.begin();
+            for (int i = 0; i < N; ++i)
+                if (!selection[i])
+                    *cur++ = pails[i];
+            if (check_combination(candidates, count, Q)) {
+                task_out << count;
+                candidates.resize(count);
                 for (const auto& p : candidates)
-                    task_out << p << ' ';
+                    task_out << ' ' << p;
+                task_out << '\n';
+                return 0;
             }
         } while (std::next_permutation(selection.begin(), selection.end()));
     }
-    task_out << '\n';
 }
 
 /*
