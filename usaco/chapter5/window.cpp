@@ -2,7 +2,7 @@
 ID: marcin.8
 LANG: C++
 TASK: window
-PROBLEM STATEMENT: 
+PROBLEM STATEMENT: https://usaco.training/usacoprob2?S=window&a=CgICFCunnYO
 */
 
 #include <algorithm>
@@ -31,7 +31,7 @@ std::vector<window_t> screen;
 
 void print(const std::vector<window_t>::iterator mid)
 {
-    //if (mid->cache < 0) {
+    if (mid->cache < 0) {
         int covered{}, total = mid->area();
         for (int i = mid->x; i < mid->X; ++i)
             for (int j = mid->y; j < mid->Y; ++j)
@@ -41,7 +41,7 @@ void print(const std::vector<window_t>::iterator mid)
                     ++covered;
 
         mid->cache = 100.0 * (total - covered) / total;
-    //}
+    }
 
     task_out << std::fixed << std::setprecision(3) << mid->cache << '\n';
 }
@@ -62,18 +62,20 @@ int main(int, char**)
         case 'w':
             //assert(4 == sscanf(line.data() + 4, "%d,%d,%d,%d)", &x, &y, &X, &Y));
             assert(4 == sscanf_s(line.data() + 4, "%d,%d,%d,%d)", &x, &y, &X, &Y));
-            screen.push_back(window_t{id, std::min(x, X), std::min(y, Y), std::max(x, X), std::max(y, Y), -1.});
-            std::for_each(screen.begin(), screen.end(), [](auto& w){ w.cache = -1.; });
+            screen.push_back(window_t{id, std::min(x, X), std::min(y, Y), std::max(x, X), std::max(y, Y), 100.});
+            std::for_each(screen.begin(), screen.end() - 1, [](auto& w){ w.cache = -1.; });
             break;
         case 't':
+            std::for_each(mid + 1, screen.end(), [](auto& w){ w.cache = -1.; });
             std::rotate(mid, mid + 1, screen.end());
-            std::for_each(mid, screen.end(), [](auto& w){ w.cache = -1.; });
+            screen.back().cache = 100.;
             break;
         case 'b':
+            std::for_each(screen.begin(), mid + 1, [](auto& w){ w.cache = -1.; });
             std::rotate(screen.begin(), mid, mid + 1);
-            std::for_each(screen.begin(), mid, [](auto& w){ w.cache = -1.; });
             break;
         case 'd':
+            std::for_each(screen.begin(), mid, [](auto& w){ w.cache = -1.; });
             screen.erase(mid);
             break;
         case 's': {
