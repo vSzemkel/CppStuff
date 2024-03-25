@@ -98,7 +98,9 @@ int main(int, char**)
                 std::rotate(mid, mid + 1, screen.end());
                 break;
             case 'b':
-                std::for_each(screen.begin(), mid + 1, validate_cache);
+                if (mid->cache >= 0)
+                    std::none_of(screen.begin(), mid, [&](auto& w) { bool ret = mid->intersects(w); if (ret) mid->cache = -1.; return ret; });
+                std::for_each(screen.begin(), mid, validate_cache);
                 std::rotate(screen.begin(), mid, mid + 1);
                 break;
             case 'd':
