@@ -19,12 +19,29 @@ std::ofstream task_out("window.out");
 
 struct window_t 
 {
-    char id;
-    int x, y, X, Y;
-    float cache;
+    bool intersects(const window_t& other) const {
+        bool ok;
+        if (x <= other.x) {
+            ok = other.x < X;
+        } else
+            ok = x < other.X;
+
+        if (!ok)
+            return false;
+
+        if (y <= other.y) {
+            return other.y < Y;
+        } else
+            return y < other.Y;
+    }
+
     int area() const {
         return (X - x) * (Y - y);
     }
+
+    char id;
+    int x, y, X, Y;
+    float cache;
 };
 
 std::vector<window_t> screen;
@@ -46,42 +63,48 @@ void print(const std::vector<window_t>::iterator mid)
     task_out << std::fixed << std::setprecision(3) << mid->cache << '\n';
 }
 
+void create(const char* input, char id)
+{
+        int x, y, X, Y;
+        //assert(4 == sscanf(input, "%d,%d,%d,%d)", &x, &y, &X, &Y));
+        assert(4 == sscanf_s(input, "%d,%d,%d,%d)", &x, &y, &X, &Y));
+        screen.push_back(window_t{id, std::min(x, X), std::min(y, Y), std::max(x, X), std::max(y, Y), 100.});
+}
+
 int main(int, char**)
 {
     std::string line;
     while (std::getline(task_in, line)) {
         char action, id;
-        int x, y, X, Y;
         //assert(2 == sscanf(line.data(), "%c(%c", &action, &id));
         assert(2 == sscanf_s(line.data(), "%c(%c", &action, 1, &id, 1));
-        const auto mid = std::find_if(screen.begin(), screen.end(), [id](const auto& w){ return w.id == id; });
+        auto mid = std::find_if(screen.begin(), screen.end(), [id](const auto& w){ return w.id == id; });
         assert(action == 'w' || mid != screen.end());
+        const auto validate_cache = [&](auto& w){ if (mid->intersects(w)) w.cache = -1.; };
 
         switch (action)
         {
         case 'w':
-            //assert(4 == sscanf(line.data() + 4, "%d,%d,%d,%d)", &x, &y, &X, &Y));
-            assert(4 == sscanf_s(line.data() + 4, "%d,%d,%d,%d)", &x, &y, &X, &Y));
-            screen.push_back(window_t{id, std::min(x, X), std::min(y, Y), std::max(x, X), std::max(y, Y), 100.});
-            std::for_each(screen.begin(), screen.end() - 1, [](auto& w){ w.cache = -1.; });
+            create(line.data() + 4, id);
+            mid = screen.end() - 1;
+            std::for_each(screen.begin(), mid, validate_cache);
             break;
         case 't':
-            std::for_each(mid + 1, screen.end(), [](auto& w){ w.cache = -1.; });
+            std::for_each(mid + 1, screen.end(), validate_cache);
             std::rotate(mid, mid + 1, screen.end());
             screen.back().cache = 100.;
             break;
         case 'b':
-            std::for_each(screen.begin(), mid + 1, [](auto& w){ w.cache = -1.; });
+            std::for_each(screen.begin(), mid + 1, validate_cache);
             std::rotate(screen.begin(), mid, mid + 1);
             break;
         case 'd':
-            std::for_each(screen.begin(), mid, [](auto& w){ w.cache = -1.; });
+            std::for_each(screen.begin(), mid, validate_cache);
             screen.erase(mid);
             break;
-        case 's': {
+        case 's':
             print(mid);
             break;
-        }
         default:
             assert(true);
         }

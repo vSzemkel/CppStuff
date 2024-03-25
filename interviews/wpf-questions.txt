@@ -1,3 +1,10 @@
+As always, please ask him questions:
+•	Are you working in WPF project right now?
+•	Can you write WPF code at real time coding interview?
+
+Please inform candidate to come being able to share a screen with configured, ready to use WPF environment.
+
+
 #### Easy questions:
 
 ## Explain the MVVM (Model-View-ViewModel) pattern
