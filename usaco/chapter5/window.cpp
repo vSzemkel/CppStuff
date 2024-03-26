@@ -45,20 +45,39 @@ struct window_t
     float cache;
 };
 
+int visible;
 std::vector<window_t> screen;
+
+void float_visible_up(std::vector<window_t>::iterator cur, const int x, int y, const int X, int Y)
+{
+    while (cur != screen.end() && (cur->X <= x || X <= cur->x || Y <= cur->y || cur->Y <= y))
+        ++cur;
+
+    if (cur == screen.end()) {
+        visible += (X - x) * (Y - y);
+        return;
+    }
+
+    if (y < cur->y) {
+        float_visible_up(cur + 1, x, y, X, std::min(Y, cur->y));
+        y = cur->y;
+    }
+    if (cur->Y < Y) {
+        float_visible_up(cur + 1, x, std::max(y, cur->Y), X, Y);
+        Y = cur->Y;
+    }
+    if (x < cur->x)
+        float_visible_up(cur + 1, x, y, std::min(X, cur->x), Y);
+    if (cur->X < X)
+        float_visible_up(cur + 1, std::max(x, cur->X), y, X, Y);
+}
 
 void print(const std::vector<window_t>::iterator mid)
 {
     if (mid->cache < 0) {
-        int covered{}, total = mid->area();
-        for (int i = mid->x; i < mid->X; ++i)
-            for (int j = mid->y; j < mid->Y; ++j)
-                if (std::any_of(mid + 1, screen.end(), [i, j](const auto& f) {
-                        return f.x <= i && i < f.X && f.y <= j && j < f.Y;
-                    }))
-                    ++covered;
-
-        mid->cache = 100.0 * (total - covered) / total;
+        visible = 0;
+        float_visible_up(mid + 1, mid->x, mid->y, mid->X, mid->Y);
+        mid->cache = 100.0 * visible / mid->area();
     }
 
     task_out << std::fixed << std::setprecision(3) << mid->cache << '\n';
@@ -67,7 +86,6 @@ void print(const std::vector<window_t>::iterator mid)
 void create(const char* input, char id)
 {
     int x, y, X, Y;
-    //assert(4 == sscanf(input, "%d,%d,%d,%d)", &x, &y, &X, &Y));
     assert(4 == sscanf_s(input, "%d,%d,%d,%d)", &x, &y, &X, &Y));
     screen.push_back(window_t{id, std::min(x, X), std::min(y, Y), std::max(x, X), std::max(y, Y), {}});
 }
@@ -80,7 +98,6 @@ int main(int, char**)
 
     while (std::getline(task_in, line)) {
         char action, id;
-        //assert(2 == sscanf(line.data(), "%c(%c", &action, &id));
         assert(2 == sscanf_s(line.data(), "%c(%c", &action, 1, &id, 1));
         if (action != 'w') {
             mid = std::find_if(screen.begin(), screen.end(), [id](const auto& w) { return w.id == id; });
@@ -98,8 +115,8 @@ int main(int, char**)
                 std::rotate(mid, mid + 1, screen.end());
                 break;
             case 'b':
-                if (mid->cache >= 0)
-                    std::none_of(screen.begin(), mid, [&](auto& w) { bool ret = mid->intersects(w); if (ret) mid->cache = -1.; return ret; });
+                if (mid->cache >= 0 && std::any_of(screen.begin(), mid, [&](auto& w) { return w.intersects(*mid); }))
+                    mid->cache = -1.;
                 std::for_each(screen.begin(), mid, validate_cache);
                 std::rotate(screen.begin(), mid, mid + 1);
                 break;
