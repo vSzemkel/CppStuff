@@ -78,7 +78,7 @@ int main(int, char**)
 {
     int N;
     task_in >> N;
-    uf_t uf{5};
+    uf_t uf{N};
     std::vector<bool> has_predecor(N), has_succesor(N);
     for (int s = 0; s < N; ++s)
         while (true) {
@@ -94,11 +94,11 @@ int main(int, char**)
     std::unordered_map<int, int> group_starters; // {group, starters count}
     for (int s = 0; s < N; ++s)
         if (!has_predecor[s])
-            ++group_starters[uf.find(s - 1)];
+            ++group_starters[uf.find(s)];
     std::unordered_map<int, int> group_terminals; // {group, terminals count}
     for (int s = 0; s < N; ++s)
         if (!has_succesor[s])
-            ++group_terminals[uf.find(s - 1)];
+            ++group_terminals[uf.find(s)];
 
     const int parts_count = uf.count();
     // Subtask A: for every graph part provide software to its starters
@@ -108,9 +108,10 @@ int main(int, char**)
     task_out << starters << '\n';
 
     // Subtask B: minimal number of new connections to cover all from arbitrary school
-    int connections = parts_count - 1;
+    int connections = 2 * (parts_count - 1);
     for (const auto [g, t] : group_terminals)
-        connections += t * std::max(1, group_starters[g]);
+        if (uf.size(g) > 1)
+            connections += t * std::max(1, group_starters[g]);
     task_out << connections << '\n';
 }
 
