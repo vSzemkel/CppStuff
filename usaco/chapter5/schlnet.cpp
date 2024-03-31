@@ -108,10 +108,12 @@ int main(int, char**)
     task_out << starters << '\n';
 
     // Subtask B: minimal number of new connections to cover all from arbitrary school
-    int connections = 2 * (parts_count - 1);
+    int connections{};
+    if (parts_count > 1) 
+        connections = parts_count;
     for (const auto [g, t] : group_terminals)
         if (uf.size(g) > 1)
-            connections += t * std::max(1, group_starters[g]);
+        connections += t + std::max(0, group_starters[g] - 1);
     task_out << connections << '\n';
 }
 
@@ -123,16 +125,41 @@ g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address schlnet.cpp -o schlne
 
 Input:
 
-5
-2 4 3 0
-4 5 0
+30
+18 0
+7 21 0
+1 4 15 28 0
+9 0
+10 15 16 0
+22 26 0
+1 5 10 12 0
+3 17 29 0
+2 5 17 0
+19 23 0
+20 0
+1 7 15 19 0
+0
+23 0
 0
 0
-1 0
+5 18 0
+0
+7 18 0
+17 0
+24 0
+13 21 0
+26 0
+0
+2 23 30 0
+2 9 11 13 14 27 0
+2 0
+14 0
+0
+28 0
 
 Output:
 
-1
-2
+3
+6
 
 */
