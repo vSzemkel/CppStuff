@@ -112,8 +112,11 @@ int main(int, char**)
     if (parts_count > 1) 
         connections = parts_count;
     for (const auto [g, t] : group_terminals)
-        if (uf.size(g) > 1)
-        connections += t + std::max(0, group_starters[g] - 1);
+        if (uf.size(g) > 1) {
+            connections += t;
+            if (t < group_starters[g])
+                connections += std::max(0, group_starters[g] - 1);
+        }
     task_out << connections << '\n';
 }
 
