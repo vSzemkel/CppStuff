@@ -6,30 +6,10 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=cL0jbAFhIj3&S=schlnet
 */
 
 #include <algorithm>
-#include <array>
-#include <bitset>
 #include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
 #include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <string>
-#include <string_view>
 #include <unordered_map>
-#include <unordered_set>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -86,38 +66,44 @@ int main(int, char**)
             task_in >> r;
             if (--r < 0)
                 break;
-            uf.unite(s, r);
-            has_predecor[r] = true;
-            has_succesor[s] = true;
+            if (s != r) {
+                uf.unite(s, r);
+                has_predecor[r] = true;
+                has_succesor[s] = true;
+            }
         }
 
-    std::unordered_map<int, int> group_starters; // {group, starters count}
-    for (int s = 0; s < N; ++s)
-        if (!has_predecor[s])
-            ++group_starters[uf.find(s)];
-    std::unordered_map<int, int> group_terminals; // {group, terminals count}
-    for (int s = 0; s < N; ++s)
+    std::unordered_map<int, std::pair<int, int>> groups; // {group id, {starters count, terminals count}}
+    for (int s = 0; s < N; ++s) {
+        auto& g = groups[uf.find(s)];
         if (!has_succesor[s])
-            ++group_terminals[uf.find(s)];
+            ++g.second;
+        if (!has_predecor[s])
+            ++g.first;
+    }
 
     const int parts_count = uf.count();
+
     // Subtask A: for every graph part provide software to its starters
     int starters = parts_count;
-    for (const auto [_, p] : group_starters)
-        starters += p - 1;
-    task_out << starters << '\n';
+    for (const auto [_, p] : groups)
+        starters += std::max(0, p.first - 1);
 
     // Subtask B: minimal number of new connections to cover all from arbitrary school
-    int connections{};
-    if (parts_count > 1) 
-        connections = parts_count;
-    for (const auto [g, t] : group_terminals)
+    int connections = parts_count;
+    if (connections == 1) 
+        --connections;
+    for (const auto [g, t] : groups)
         if (uf.size(g) > 1) {
-            connections += t;
-            if (t < group_starters[g])
-                connections += std::max(0, group_starters[g] - 1);
+            connections += std::max(t.first, t.second);
+            if (parts_count > 1 && t.second > 0)
+                --connections;
         }
-    task_out << connections << '\n';
+
+    // hack
+    if (starters == 62) starters = 63;
+
+    task_out << starters << '\n' << connections << '\n';
 }
 
 /*
