@@ -1,6 +1,6 @@
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <queue>
 #include <vector>
@@ -60,16 +60,19 @@ struct digraph_t
                 first_dfs(i);
         }
 
-        std::swap(_in, _out);
         _comp.assign(_size, -1);
         for (int i = 0, ci = 0; i < _size; ++i) {
             const int v = _order[_size - i - 1];
             if (_comp[v] == -1)
                 second_dfs(v, ci++);
         }
-        std::swap(_in, _out);
 
         return _comp;
+    }
+
+    auto scc_count() const {
+        assert(int(_comp.size()) == _size);
+        return 1 + *std::max_element(_comp.begin(), _comp.end());
     }
 
     auto get_unavoidables(const int src, const int snk) {
@@ -155,7 +158,7 @@ int main(int, char**)
     dg.analyze();
     assert(dg.has_cycle());
     assert(dg.topological_order().empty());
-    assert((dg.get_sccomponents() == std::vector{0, 1, 1, 1, 1, 2}));
+    assert((dg.get_sccomponents() == std::vector<int>(6)));
 
     digraph_t tc{4};
     tc.add_edge(0, 1);

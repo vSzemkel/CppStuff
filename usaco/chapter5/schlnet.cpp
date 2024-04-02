@@ -16,6 +16,66 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=cL0jbAFhIj3&S=schlnet
 std::ifstream task_in("schlnet.in");
 std::ofstream task_out("schlnet.out");
 
+struct digraph_t
+{
+    digraph_t(const int size = 0) : _size(size), _order(size), _in(size), _out(size) {
+    }
+
+    void add_edge(const int from, const int to) {
+        assert(0 <= from && from < _size);
+        assert(0 <= to && to < _size);
+        _out[from].push_back(to);
+        _in[to].push_back(from);
+    }
+
+    auto get_sccomponents() {
+        _order.clear();
+        _used.assign(_size, false);
+        for (int i = 0; i < _size; ++i) {
+            if (!_used[i])
+                first_dfs(i);
+        }
+
+        _comp.assign(_size, -1);
+        for (int i = 0, ci = 0; i < _size; ++i) {
+            const int v = _order[_size - i - 1];
+            if (_comp[v] == -1)
+                second_dfs(v, ci++);
+        }
+
+        return _comp;
+    }
+
+    auto scc_count() const {
+        assert(int(_comp.size()) == _size);
+        return 1 + *std::max_element(_comp.begin(), _comp.end());
+    }
+
+  private:
+    int _size;
+    std::vector<bool> _used;
+    std::vector<int> _comp, _order;
+    std::vector<std::vector<int>> _in, _out;
+
+    void first_dfs(const int v) {
+        _used[v] = true;
+        for (int u : _out[v]) {
+            if (!_used[u])
+                first_dfs(u);
+        }
+
+        _order.push_back(v);
+    }
+
+    void second_dfs(const int v, const int ci) {
+        _comp[v] = ci;
+        for (int u : _out[v]) {
+            if (_comp[u] == -1)
+                second_dfs(u, ci);
+        }
+    }
+};
+
 struct uf_t {
     uf_t(const int size) : _count(size), _group(size), _rank(size), _size(size, 1) {
         std::iota(_group.begin(), _group.end(), 0);
@@ -59,6 +119,7 @@ int main(int, char**)
     int N;
     task_in >> N;
     uf_t uf{N};
+    digraph_t dg{N};
     std::vector<bool> has_predecor(N), has_succesor(N);
     for (int s = 0; s < N; ++s)
         while (true) {
@@ -68,6 +129,7 @@ int main(int, char**)
                 break;
             if (s != r) {
                 uf.unite(s, r);
+                dg.add_edge(s, r);
                 has_predecor[r] = true;
                 has_succesor[s] = true;
             }
@@ -85,23 +147,19 @@ int main(int, char**)
     const int parts_count = uf.count();
 
     // Subtask A: for every graph part provide software to its starters
-    int starters = parts_count;
-    for (const auto [_, p] : groups)
-        starters += std::max(0, p.first - 1);
+    dg.get_sccomponents();
+    const int starters = dg.scc_count();
 
     // Subtask B: minimal number of new connections to cover all from arbitrary school
     int connections = parts_count;
     if (connections == 1) 
         --connections;
-    for (const auto [g, t] : groups)
+    for (const auto& [g, t] : groups)
         if (uf.size(g) > 1) {
             connections += std::max(t.first, t.second);
             if (parts_count > 1 && t.second > 0)
                 --connections;
         }
-
-    // hack
-    if (starters == 62) starters = 63;
 
     task_out << starters << '\n' << connections << '\n';
 }
