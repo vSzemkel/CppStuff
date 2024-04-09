@@ -15,42 +15,43 @@ std::ofstream task_out("bigbrn.out");
 int main(int, char**)
 {
     int N, T, r, c;
-    std::string comet, group;
     task_in >> N >> T;
-    int bbc{N}, bbC{}, bbr{N}, bbR{};
-    std::vector<std::vector<bool>> trees(N, std::vector<bool>(N));
-    for (int z = T; z; --z) {
-        task_in >> r >> c;
-        trees[--r][--c] = true;
-        bbr = std::min(bbr, r);
-        bbR = std::max(bbR, r);
-        bbc = std::min(bbc, c);
-        bbC = std::max(bbC, c);
+    int ans{};
+    if (T < N * N) {
+        std::vector<bool> trees(N * N);
+        std::vector<short> E(N * N, 1);
+        auto S = E;
+
+        for (; T; --T) {
+            task_in >> r >> c;
+            const auto pos = (r - 1) * N + c - 1;
+            trees[pos] = true;
+            E[pos] = S[pos] = 0;
+        }
+
+        // initialize walls
+        for (r = N - 1; ~r; --r)
+            for (c = N - 1; ~c; --c)
+                if (const auto pos = r * N + c; !trees[pos]) {
+                    if (c < N - 1)
+                        E[pos] = E[pos + 1] + 1;
+                    if (r < N - 1) 
+                        S[pos] = S[pos + N] + 1;
+                }
+
+        ++ans;
+        for (r = 0; r < N - ans; ++r)
+            for (c = 0; c < N - ans; ++c) {
+                const auto pos = r * N + c;
+                auto target = std::min(E[pos], S[pos]);
+                if (ans < target) {
+                    for (int s = r + 1; s < r + target && ans < target; ++s)
+                        target = std::min(target, E[s * N + c]);
+                    if (ans < target)
+                        ans = target;
+                }
+            }
     }
-
-    bool found{};
-    std::vector<std::vector<bool>> barns(N, std::vector<bool>(N, true));
-    for (int r = 0; r < N; ++r)
-        for (int c = 0; c < N; ++c) {
-            barns[r][c] = !trees[r][c];
-            if (barns[r][c])
-                found = true;
-        }
-
-    int ans = std::max({bbc, bbr, N - 1 - bbC, N - 1 - bbR});
-    if (found && T > 1)
-        for (ans = 1; ans < N; ++ans) {
-            found = false;
-            for (int r = 0; r < N - ans; ++r)
-                for (int c = 0; c < N - ans; ++c)
-                    if (barns[r][c] && barns[r + 1][c + 1] && !trees[r + ans][c] && !trees[r][c + ans])
-                        found = true;
-                    else
-                        barns[r][c] = false;
-
-            if (!found)
-                break;
-        }
 
     task_out << ans << '\n';
 }
@@ -61,15 +62,35 @@ Compile:
 clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 bigbrn.cpp -o bigbrn.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address bigbrn.cpp -o bigbrn
 
+Run:
+bigbrn.exe && type bigbrn.out
+
 Input:
 
-8 3
-2 2
-2 6
-6 3
+1000 20 
+209 226 
+316 816 
+159 596 
+878 877 
+503 626 
+792 283 
+97 91 
+997 287 
+27 842 
+693 672 
+838 620 
+166 514 
+835 546 
+875 83 
+434 713 
+469 642 
+938 136 
+458 96 
+732 687 
+325 586
 
 Output:
 
-5
+489
 
 */

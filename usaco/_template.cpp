@@ -49,6 +49,9 @@ Compile:
 clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 template.cpp -o template.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address template.cpp -o template
 
+Run:
+template.exe && type template.out
+
 Input:
 
 
