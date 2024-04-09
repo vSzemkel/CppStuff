@@ -7,12 +7,13 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=FWfFlfCOnfs&S=bigbrn
 
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <vector>
 
 std::ifstream task_in("bigbrn.in");
 std::ofstream task_out("bigbrn.out");
 
-int main(int, char**)
+void solution1()
 {
     int N, T, r, c;
     task_in >> N >> T;
@@ -56,6 +57,49 @@ int main(int, char**)
     task_out << ans << '\n';
 }
 
+/**
+ * This is recommended solution from USACO, it is slower then solution1
+*/
+void solution2()
+{
+    short N, T, r, c;
+    task_in >> N >> T;
+    short ans{};
+    if (T < N * N) {
+        std::vector<bool> trees(N * N);
+        std::vector<short> dp(N * N, -1);
+
+        for (; T; --T) {
+            task_in >> r >> c;
+            trees[(r - 1) * N + c - 1] = true;
+        }
+
+        const std::function<short(int, int)> max_barn = [&](const int r, const int c) -> short {
+            const auto pos = r * N + c;
+            if (r < 0 || c < 0 || N <= r || N <= c || trees[pos])
+                return 0;
+
+            if (dp[pos] >= 0)
+                return dp[pos];
+
+            return dp[pos] = 1 + std::min({max_barn(r + 1, c), max_barn(r, c + 1), max_barn(r + 1, c + 1)});
+        };
+
+        ++ans;
+        for (r = N - 1; ~r; --r)
+            for (c = N - 1; ~c; --c)
+                if (ans < max_barn(r, c))
+                    ans = dp[r * N + c];
+    }
+
+    task_out << ans << '\n';
+}
+
+int main(int, char**)
+{
+    solution1();
+    // solution2();
+}
 /*
 
 Compile:
