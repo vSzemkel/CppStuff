@@ -6,54 +6,20 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=TIPYHbbD5Id&S=tour
 */
 
 #include <fstream>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
 std::ifstream task_in("tour.in");
 std::ofstream task_out("tour.out");
 
-struct city_t {
-    std::vector<int> east;
-    std::vector<int> west;
-};
-
-int start;
-size_t ans{1};
-std::vector<int> track;
-std::vector<bool> seen;
-std::vector<city_t> flights;
-std::unordered_map<std::string, int> names;
-
-void dfs(int where, bool to_east = true)
-{
-    if (to_east)
-        for (const int w : flights[where].east) {
-            seen[w] = true;
-            track.push_back(w);
-            dfs(w);
-        }
-
-    for (const int e : flights[where].west) {
-        if (e == start && ans < track.size()) {
-            ans = track.size();
-            // here copy track to solution path if needed
-        } else if (!seen[e]) {
-            seen[e] = true;
-            track.push_back(e);
-            dfs(e, false);
-        }
-    }
-
-    track.pop_back();
-    seen[where] = false;
-}
-
 int main(int, char**)
 {
     int C, F;
     task_in >> C >> F;
-    flights.resize(C);
-    seen.resize(C);
+
+    std::unordered_map<std::string, int> names;
+    std::vector<std::vector<bool>> flights(C, std::vector<bool>(C));
     for (int c = 0; c < C; ++c) {
         std::string n;
         task_in >> n;
@@ -65,19 +31,23 @@ int main(int, char**)
         // assert(names.contains(n) && names.contains(n2));
         const int i = names[n];
         const int i2 = names[n2];
-        if (i < i2) {
-            flights[i].east.push_back(i2);
-            flights[i2].west.push_back(i);
-        } else {
-            flights[i].west.push_back(i2);
-            flights[i2].east.push_back(i);
-        }
+        flights[i][i2] = true;
+        flights[i2][i] = true;
     }
 
-    start = 0;
-    track.push_back(start);
-    seen[start] = true;
-    dfs(start);
+    const int INF = 1e09;
+    std::vector<std::vector<int>> cost(C, std::vector<int>(C, -INF));
+    cost[C - 1][C - 1] = 1;
+    for (int i = C - 2; ~i; --i)
+        for (int j = C - 1; i <= j; --j)
+            if (i != j || i == 0)
+                for (int k = i + 1; k < C; ++k)
+                    if (flights[i][k] && cost[i][j] < 1 + cost[k][j])
+                        cost[i][j] = cost[j][i] = 1 + cost[k][j];
+
+    auto ans = cost[0][0] - 1;
+    if (ans < 0)
+        ans = 1;
 
     task_out << ans << '\n';
 }
@@ -93,8 +63,31 @@ tour.exe && type tour.out
 
 Input:
 
+8 13
+A
+B
+C
+D
+E
+F
+G
+H
+A B
+A C
+C B
+D C
+D B
+D E
+D F
+E F
+E G
+D H
+H F
+H G
+A G
 
 Output:
 
+8
 
 */
