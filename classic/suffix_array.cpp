@@ -105,22 +105,22 @@ static T last_true(T lo, T hi, U f) {
 int main(int, char**)
 {
     const std::string s = "ababbaaaabbaababaaaababbabbbbbaaababbaaabbbab";
+    const std::string_view sv{s};
     auto order = naive_suffix_array(s);
     suffix_array_t sa;
     const auto order2 = sa.suffix_array(s);
     assert(order == order2);
-    int i{0};
-    for (const int o : order)
+    for (int i{0}; const int o : order)
         std::cout << s.substr(o) << ' ' << i++ << ' ' << o << '\n';
 
     // Find all occurences of a pattern
     const std::string pat = "babb";
     std::cout << "\nPattern " << pat << " found in text\n" << s << '\n';
-    const auto check_first = [&](const int pos){ return s.substr(order[pos]) >= pat; };
+    const auto check_first = [&](const int pos){ return sv.substr(order[pos]) >= pat; };
     const auto check_last = [&](const int pos) {
-        const auto can = s.substr(order[pos]);
+        const auto can = sv.substr(order[pos]);
         const auto len = int(std::min(pat.size(), can.size()));
-        return s.substr(order[pos], len) <= pat.substr(0, len);
+        return sv.substr(order[pos], len) <= pat.substr(0, len);
     };
     const int first = first_true(0, int(s.size()), check_first);
     const int last = last_true(0, int(s.size()), check_last);

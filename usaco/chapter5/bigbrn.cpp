@@ -79,7 +79,7 @@ void solution2()
             if (r < 0 || c < 0 || N <= r || N <= c || trees[pos])
                 return 0;
 
-            if (dp[pos] >= 0)
+            if (~dp[pos])
                 return dp[pos];
 
             return dp[pos] = 1 + std::min({max_barn(r + 1, c), max_barn(r, c + 1), max_barn(r + 1, c + 1)});
