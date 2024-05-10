@@ -27,10 +27,102 @@ std::vector<line_t> data;
 
 std::vector<std::vector<std::pair<int, int>>> ans; // [line][text_position] = {letter, size}
 std::vector<std::vector<int>> memo; // [line][text_position] = bit mismatches
+int N;
 
 int dp(const int line, const int text_position)
 {
-    return line+text_position-19;
+    if (N <= line) return 0;
+    if (~memo[line][text_position]) return memo[line][text_position];
+    int cur_ans{INF}, width{-1}, letter{-1};
+
+    int case_width = 19;
+    if (line + case_width <= N) {
+        const int continuation = dp(line + case_width, text_position + 1);
+        if (continuation < INF) {
+            int best_diff{INF}, best_letter{-1};
+            for (int letter = 0; letter < CHARS; ++letter)
+                for (int skip = 0; skip < 20; ++skip) {
+                    int letter_diff{};
+                    for (int row = 0; row < 20; ++row)
+                        if (row == skip)
+                            continue;
+                        else {
+                            const auto text_line = data[line + row - (row < skip ? 0 : 1)];
+                            const auto font_line = font[letter * SIZE + row];
+                            letter_diff += (text_line ^ font_line).count();
+                        }
+                    if (letter_diff < best_diff) {
+                        best_diff = letter_diff;
+                        best_letter = letter;
+                    }
+                }
+
+            if (best_diff + continuation < cur_ans) {
+                cur_ans = best_diff + continuation;
+                letter = best_letter;
+                width = case_width;
+            }
+        }
+    }
+
+    case_width = 20;
+    if (line + case_width <= N) {
+        const int continuation = dp(line + case_width, text_position + 1);
+        if (continuation < INF) {
+            int best_diff{INF}, best_letter{-1};
+            for (int letter = 0; letter < CHARS; ++letter) {
+                int letter_diff{};
+                for (int row = 0; row < 20; ++row) {
+                    const auto text_line = data[line + row];
+                    const auto font_line = font[letter * SIZE + row];
+                    letter_diff += (text_line ^ font_line).count();
+                }
+                if (letter_diff < best_diff) {
+                    best_diff = letter_diff;
+                    best_letter = letter;
+                }
+            }
+
+            if (best_diff + continuation < cur_ans) {
+                cur_ans = best_diff + continuation;
+                letter = best_letter;
+                width = case_width;
+            }
+        }
+    }
+
+    case_width = 21; 
+    if (line + case_width <= N) {
+        const int continuation = dp(line + case_width, text_position + 1);
+        if (continuation < INF) {
+            int best_diff{INF}, best_letter{-1};
+            for (int letter = 0; letter < CHARS; ++letter)
+                for (int dub = 0; dub < 20; ++dub) {
+                    int letter_diff{};
+                    for (int row = 0; row < 20; ++row) {
+                        const auto text_line = data[line + row + (dub < row ? 0 : 1)];
+                        const auto font_line = font[letter * SIZE + row];
+                        letter_diff += (text_line ^ font_line).count();
+                    }
+                    if (letter_diff < best_diff) {
+                        best_diff = letter_diff;
+                        best_letter = letter;
+                    }
+                }
+
+            if (best_diff + continuation < cur_ans) {
+                cur_ans = best_diff + continuation;
+                letter = best_letter;
+                width = case_width;
+            }
+        }
+    }
+
+    if (width == -1)
+        return memo[line][text_position] = INF;
+
+    ans[line][text_position] = {letter, width};
+    return memo[line][text_position] = cur_ans;
 }
 
 int main(int, char**)
@@ -44,7 +136,6 @@ int main(int, char**)
     }
 
     // Read data
-    int N;
     task_in >> N >> std::ws;
     data.resize(N);
     for (auto& bl : data) {
@@ -52,7 +143,7 @@ int main(int, char**)
         bl = line_t{line};
     }
 
-    const int max_length = N + 18 / 19;
+    const int max_length = (N + 18) / 19;
     ans.assign(N, std::vector<std::pair<int, int>>(max_length, {-1, -1})); // -1 is not seen yet
     memo.assign(N, std::vector<int>(max_length, -1)); // -1 is not seen yet
 
