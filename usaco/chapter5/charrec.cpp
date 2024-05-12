@@ -40,7 +40,7 @@ int dp(const int line, const int text_position)
         const int continuation = dp(line + case_width, text_position + 1);
         if (continuation < INF) {
             int best_diff{INF}, best_letter{-1};
-            for (int letter = 0; letter < CHARS; ++letter)
+            for (int glyph = 0; glyph < CHARS; ++glyph)
                 for (int skip = 0; skip < 20; ++skip) {
                     int letter_diff{};
                     for (int row = 0; row < 20; ++row)
@@ -48,12 +48,13 @@ int dp(const int line, const int text_position)
                             continue;
                         else {
                             const auto text_line = data[line + row - (row < skip ? 0 : 1)];
-                            const auto font_line = font[letter * SIZE + row];
+                            const auto font_line = font[glyph * SIZE + row];
                             letter_diff += (text_line ^ font_line).count();
+                            if (best_diff <= letter_diff) break;
                         }
                     if (letter_diff < best_diff) {
                         best_diff = letter_diff;
-                        best_letter = letter;
+                        best_letter = glyph;
                     }
                 }
 
@@ -70,16 +71,17 @@ int dp(const int line, const int text_position)
         const int continuation = dp(line + case_width, text_position + 1);
         if (continuation < INF) {
             int best_diff{INF}, best_letter{-1};
-            for (int letter = 0; letter < CHARS; ++letter) {
+            for (int glyph = 0; glyph < CHARS; ++glyph) {
                 int letter_diff{};
                 for (int row = 0; row < 20; ++row) {
                     const auto text_line = data[line + row];
-                    const auto font_line = font[letter * SIZE + row];
+                    const auto font_line = font[glyph * SIZE + row];
                     letter_diff += (text_line ^ font_line).count();
+                    if (best_diff <= letter_diff) break;
                 }
                 if (letter_diff < best_diff) {
                     best_diff = letter_diff;
-                    best_letter = letter;
+                    best_letter = glyph;
                 }
             }
 
@@ -96,17 +98,18 @@ int dp(const int line, const int text_position)
         const int continuation = dp(line + case_width, text_position + 1);
         if (continuation < INF) {
             int best_diff{INF}, best_letter{-1};
-            for (int letter = 0; letter < CHARS; ++letter)
+            for (int glyph = 0; glyph < CHARS; ++glyph)
                 for (int dub = 0; dub < 20; ++dub) {
                     int letter_diff{};
                     for (int row = 0; row < 20; ++row) {
-                        const auto text_line = data[line + row + (dub < row ? 0 : 1)];
-                        const auto font_line = font[letter * SIZE + row];
+                        const auto text_line = data[line + row + (row < dub ? 0 : 1)];
+                        const auto font_line = font[glyph * SIZE + row];
                         letter_diff += (text_line ^ font_line).count();
+                        if (best_diff <= letter_diff) break;
                     }
                     if (letter_diff < best_diff) {
                         best_diff = letter_diff;
-                        best_letter = letter;
+                        best_letter = glyph;
                     }
                 }
 
@@ -154,6 +157,7 @@ int main(int, char**)
     while (row < N) {
         const auto& answer = ans[row][text_position];
         found += LETTERS[answer.first];
+        // task_out << "Found " << found.back() << " at row " << row << ", width " << answer.second << " with score " << memo[row][text_position] << '\n';
         row += answer.second;
         ++text_position;
     }
