@@ -124,7 +124,20 @@ struct fraction_t {
         return os << f.num << '/' << f.denum;
     }
 
+    friend struct std::hash<fraction_t<T>>;
+
     T num, denum{1};
+};
+
+template <class T>
+struct std::hash<fraction_t<T>> {
+    std::size_t operator()(const fraction_t<T>& f) const noexcept {
+        auto rf = f;
+        rf.reduce();
+        std::size_t h1 = std::hash<T>{}(rf.num);
+        std::size_t h2 = std::hash<T>{}(rf.denum);
+        return h1 ^ (h2 << 1);
+    }
 };
 
 using frac_t = fraction_t<>;
@@ -154,6 +167,11 @@ int main(int, char**)
     frac_t f4{31, 13};
     const auto [decim, period] = f4.to_decimal_string();
     assert(decim == "2." && period == "384615");
+
+    std::unordered_map<frac_t, int> um;
+    ++um[f2];
+    ++um[{16, 42}];
+    assert(um[f2] == 2);
 }
 
 /* Compile:
