@@ -3,12 +3,16 @@
 #include <cassert>
 #include <iostream>
 #include <numeric>
+#include <queue>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+// Find maximal number of points on a line
+// https://leetcode.com/problems/max-points-on-a-line
+
+
 // Fraction implemented on integral type T
-// see: \leetcode\max_points_on_a_line.cpp
 
 template <class T = int64_t>
 struct fraction_t {
@@ -143,38 +147,90 @@ struct std::hash<fraction_t<T>> {
 
 using frac_t = fraction_t<>;
 
-int main(int, char**)
+/**
+ * @brief Every two points forms a section. Every section is on some line
+ * Every line either is crossing y axis and not x axis or is crossing x axis
+ * It is sufficient to find maximal number of crossing a single axis
+ * 
+ * For every N colinear points there are N * (N - 1) crossings of some axis (or both)
+ */
+static int maxPoints(std::vector<std::vector<int>>& points)
 {
-    const auto integr = frac_t{1} + frac_t{2};
-    assert(double(integr) == 3.0);
+    std::unordered_map<int, int> y_crossings;
+    std::unordered_map<frac_t, std::unordered_map<frac_t, int>> normal_crossings;
 
-    frac_t f{1, 2};
-    f += {1, 4};
-    f += {2, 8};
-    assert((f == frac_t{1, 1}));
+    const auto N = int(points.size());
+    if (N <= 2)
+        return N;
 
-    f -= {3, 7};
-    assert((f == frac_t{4, 7}));
+    std::sort(points.begin(), points.end());
+    for (int i = 0; i < N - 1; ++i)
+        for (int j = i + 1; j < N; ++j)
+            if (points[i][1] == points[j][1])
+                ++y_crossings[points[j][1]];
+            else {
+                // x = x1 - ((y1 * (x2 - x1)) / (y2 - y1))
+                const auto dx = points[j][0] - points[i][0];
+                const auto dy = points[j][1] - points[i][1];
+                const frac_t x = frac_t{points[i][0], 1} - frac_t{points[i][1] * dx, dy};
+                ++normal_crossings[frac_t{dy, dx}][x];
+            }
 
-    frac_t f2{2, 3};
-    f2 *= {4, 7};
-    assert((f2 == frac_t{8, 21}));
-    assert((f2 < frac_t{9, 21}));
+    int ans{};
+    for (const auto& [_, c] : y_crossings)
+        ans = std::max(ans, c);
+    for (const auto& [_, l1] : normal_crossings)
+        for (const auto& [_, c] : l1)
+        ans = std::max(ans, c);
 
-    frac_t f3{8, 14};
-    f3 /= {4, 7};
-    assert((f3 == frac_t{1, 1}));
+    int count{2};
+    while (count * (count - 1) / 2 < ans)
+        ++count;
 
-    frac_t f4{31, 13};
-    const auto [decim, period] = f4.to_decimal_string();
-    assert(decim == "2." && period == "384615");
-
-    std::unordered_map<frac_t, int> um;
-    ++um[f2];
-    ++um[{16, 42}];
-    assert(um[f2] == 2);
+    return count;
 }
 
-/* Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++17 fraction.cpp -o fraction.exe
+static void io_handler()
+{
+    int N;
+    std::cin >> N;
+    std::vector<std::vector<int>> points(N, std::vector<int>(2));
+    for (auto& p : points)
+        std::cin >> p[0] >> p[1];
+
+    std::cout << maxPoints(points);
+}
+
+int main(int, char**)
+{
+    int no_of_cases;
+    std::cin >> no_of_cases;
+    for (int g = 1; g <= no_of_cases; ++g) {
+        std::cout << "Case #" << g << ": ";
+        io_handler();
+        std::cout << '\n';
+    }
+}
+
+/*
+
+Compile:
+cls && clang++.exe -Wall -Wextra -g -O0 -std=c++20 max_points_on_a_line.cpp -o max_points_on_a_line.exe
+g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address max_points_on_a_line.cpp -o n_queens-ii
+
+Input
+
+1
+6
+4 5
+5 6
+6 7
+7 8
+3 7
+6 7
+
+Output
+
+Case #1: 4
+
 */
