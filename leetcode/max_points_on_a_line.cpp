@@ -181,7 +181,7 @@ static int maxPoints(std::vector<std::vector<int>>& points)
         ans = std::max(ans, c);
     for (const auto& [_, l1] : normal_crossings)
         for (const auto& [_, c] : l1)
-        ans = std::max(ans, c);
+            ans = std::max(ans, c);
 
     int count{2};
     while (count * (count - 1) / 2 < ans)
