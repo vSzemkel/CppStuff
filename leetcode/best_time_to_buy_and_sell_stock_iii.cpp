@@ -6,26 +6,36 @@
 // Best Time to Buy and Sell Stock with at most two transactions
 // https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iii
 
-int bestTransaction(int* prices, int sz) {
-    if (sz-- < 2)
-        return 0;
-
-    int ans{}, min{*prices++};
-    for (auto p = prices; sz; --sz, ++p) {
-        ans = std::max(ans, *p - min);
-        min = std::min(min, *p);
-    }
-
-    return ans;
+/*
+int n = prices.size();
+if(n==0)return 0;
+int s1 = -prices[0], s2 = INT_MIN, s3 = INT_MIN, s4 = INT_MIN;
+for(int i = 1;i<n;i++){
+    s1 = max(s1,-prices[i]);
+    s2 = max(s2,s1+prices[i]);
+    s3 = max(s3,s2-prices[i]);
+    s4 = max(s4,s3+prices[i]);
 }
+return max(0,s4);
+*/
 
 int maxProfit(std::vector<int>& prices) {
     const auto sz = int(prices.size());
-    int ans{};
-    for (int first_size = 1; first_size <= sz; ++first_size) {
-        const auto first_profit = bestTransaction(prices.data(), first_size);
-        const auto second_profit = bestTransaction(prices.data() + first_size, sz - first_size);
-        ans  = std::max(ans, first_profit + second_profit);
+    if (sz < 2)
+        return 0;
+
+    std::vector<int> best_left(sz + 1); // best[i] is best of i left most elements
+    int ans{}, min{prices.front()};
+    for (int i = 1; i < sz; ++i) {
+        best_left[i + 1] = std::max(best_left[i], prices[i] - min);
+        min = std::min(min, prices[i]);
+    }
+
+    ans = best_left[sz];
+    int max = prices.back();
+    for (int i = sz - 2; i > 1; --i) {
+        ans = std::max(ans, max - prices[i] + best_left[i]);
+        max = std::max(max, prices[i]);
     }
 
     return ans;
