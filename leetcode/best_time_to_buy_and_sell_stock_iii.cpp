@@ -33,7 +33,7 @@ int maxProfit(std::vector<int>& prices) {
 
     ans = best_left[sz];
     int max = prices.back();
-    for (int i = sz - 2; i > 1; --i) {
+    for (int i = sz - 2; i > 1; --i) { // left of size >= 2 to be effective
         ans = std::max(ans, max - prices[i] + best_left[i]);
         max = std::max(max, prices[i]);
     }
@@ -67,7 +67,7 @@ int main(int, char**)
 
 Compile:
 cls && clang++.exe -Wall -Wextra -g -O0 -std=c++20 best_time_to_buy_and_sell_stock_iii.cpp -o best_time_to_buy_and_sell_stock_iii.exe
-g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address best_time_to_buy_and_sell_stock_iii.cpp -o n_queens-ii
+g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address best_time_to_buy_and_sell_stock_iii.cpp -o best_time_to_buy_and_sell_stock_iii
 
 Input
 
