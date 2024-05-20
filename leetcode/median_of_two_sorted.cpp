@@ -6,24 +6,16 @@
 // Median of Two Sorted Arrays
 // https://leetcode.com/problems/median-of-two-sorted-arrays
 
-static float solve() { // O(log(M + N))
-    int M, N;
-    std::cin >> M >> N;
-    std::vector<int> left(M), right(N);
-    for (auto& i : left) std::cin >> i;
-    for (auto& i : right) std::cin >> i;
-
-    int lsz = int(left.size());
-    int rsz = int(right.size());
-    const int sz = lsz + rsz;
-    if (lsz > rsz) {
-        std::swap(left, right);
-        std::swap(lsz, rsz);
-    }
-
+double findMedianSortedArrays(const std::vector<int>& left, const std::vector<int>& right) { // O(log(M + N))
+    const int lsz = int(left.size());
+    const int rsz = int(right.size());
+    if (lsz > rsz)
+        return findMedianSortedArrays(right, left);
     if (lsz == 0)
         return rsz % 2 ? right[rsz / 2] : (right[rsz / 2] + right[rsz / 2 - 1]) / 2.0;
 
+
+    const int sz = lsz + rsz;
     const int partition = (sz + 1) / 2;
     int lbeg{0}, rbeg{lsz};
     while (lbeg <= rbeg) {
@@ -51,16 +43,25 @@ static float solve() { // O(log(M + N))
     return 0.0;
 }
 
+static void io_handler()
+{
+    int M, N;
+    std::cin >> M >> N;
+    std::vector<int> left(M), right(N);
+    for (auto& i : left) std::cin >> i;
+    for (auto& i : right) std::cin >> i;
+
+    std::cout << findMedianSortedArrays(left, right);
+}
+
 int main(int, char**)
 {
-    std::ios_base::sync_with_stdio(false);
-    std::cin.tie(nullptr);
-    std::cout.tie(nullptr);
-
     int no_of_cases;
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
-        std::cout << "Case #" << g << ": " << solve() << '\n';
+        std::cout << "Case #" << g << ": ";
+        io_handler();
+        std::cout << '\n';
     }
 }
 
