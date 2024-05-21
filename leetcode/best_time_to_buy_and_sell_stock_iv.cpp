@@ -11,7 +11,7 @@
 
 /**
  * We will analyze sequence of prices from the end.
- * Every day we can or can not buy a stock
+ * Every day we can or can not buy a stock - depending of previous actions
  * The decision is evaluated in context of possible future continuation
 */
 int maxProfit(int k, std::vector<int>& prices) {
