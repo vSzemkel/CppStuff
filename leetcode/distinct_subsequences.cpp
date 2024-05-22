@@ -7,22 +7,30 @@
 // Distinct Subsequences
 // https://leetcode.com/problems/distinct-subsequences/
 
-int ans{}, patternLenth, textLength;
+int patternLenth, textLength;
 std::string text, pattern;
+std::unordered_map<int, int> trace; // hash -> paths count
 std::unordered_map<char, std::set<int>> memo;
 
-void numDistinctInternal(const int textIndex, const int patternIndex)
+int numDistinctInternal(const int textIndex, const int patternIndex)
 {
-    if (patternIndex == patternLenth) {
-        ++ans;
-        return;
-    }
-    if (textIndex == textLength)
-        return;
+    if (textLength - textIndex < patternLenth - patternIndex)
+        return 0;
 
+    const int hash = (textIndex << 10) + patternIndex;
+    if (patternIndex == patternLenth)
+        return trace[hash] = 1;
+
+    const auto it = trace.find(hash);
+    if (it != trace.end())
+        return it->second;
+
+    int ret{};
     const auto& occurences = memo[pattern[patternIndex]];
     for (auto it = occurences.lower_bound(textIndex); it != occurences.end(); ++it)
-        numDistinctInternal(*it + 1, patternIndex + 1);
+        ret += numDistinctInternal(*it + 1, patternIndex + 1);
+
+    return trace[hash] = ret;
 }
 
 int numDistinct(std::string s, std::string t)
@@ -35,8 +43,7 @@ int numDistinct(std::string s, std::string t)
 
     textLength = int(text.size());
     patternLenth = int(pattern.size());
-    numDistinctInternal(0, 0);
-    return ans;
+    return numDistinctInternal(0, 0);
 }
 
 static void io_handler()
@@ -44,8 +51,8 @@ static void io_handler()
     std::string text, pattern;
     std::cin >> text >> pattern;
 
-    ans = 0;
     memo.clear();
+    trace.clear();
     std::cout << numDistinct(text, pattern);
 }
 
@@ -71,11 +78,15 @@ distinct_subsequences < distinct_subsequences.in
 
 Input
 
-1
+3
+rabbbit rabbit
 babgbag bag
+adbdadeecadeadeccaeaabdabdbcdabddddabcaaadbabaaedeeddeaeebcdeabcaaaeeaeeabcddcebddebeebedaecccbdcbcedbdaeaedcdebeecdaaedaacadbdccabddaddacdddc bcddceeeebecbc
 
 Output
 
-Case #1: 5
+Case #1: 3
+Case #2: 5
+Case #3: 700531452
 
 */
