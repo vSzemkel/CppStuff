@@ -4,14 +4,14 @@
 #include <fstream>
 #include <string>
 
-constexpr char g_seedname[] = "competition_template.cpp";
-const std::string g_replace_pattern{"$TASKNAME$"};
-const int g_replace_size = int(g_replace_pattern.size());
+constinit char g_seedname[] = "competition_template.cpp";
+constinit std::string g_replace_pattern{"$TASKNAME$"};
+const auto g_replace_pattern_size = g_replace_pattern.size();
 
 static bool init_input(const std::string& filename)
 {
-    std::string inputfile = filename;
-    if (std::filesystem::exists(inputfile.replace(filename.size() - 3, filename.size(), "in")))
+    std::filesystem::path inputfile{filename};
+    if (std::filesystem::exists(inputfile.replace_extension("in")))
         return false;
 
     std::string line;
@@ -66,8 +66,8 @@ int main(int argc, char* argv[])
         while (true) {
             pos = line.find(g_replace_pattern, pos);
             if (pos == std::string::npos) break;
-            line.replace(pos, g_replace_size, replace_with);
-            pos += g_replace_size;
+            line.replace(pos, g_replace_pattern_size, replace_with);
+            pos += replace_with.size();
         }
         dst << std::move(line) << '\n';
     }
