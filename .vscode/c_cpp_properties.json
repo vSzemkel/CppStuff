@@ -39,15 +39,15 @@
             "intelliSenseMode": "clang-x64"
         },
         {
-            "name": "Win32",
+            "name": "Windows",
             "includePath": [
-                "c:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.27.29110"
+                "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.40.33807/"
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": "",
                 "path": [
-                    "c:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.27.29110",
+                    "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools//MSVC/14.40.33807/",
                     "${workspaceRoot}"
                 ]
             },
