@@ -1,13 +1,16 @@
 
+#include <algorithm>
 #include <format>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <regex>
 #include <set>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 // Warnings Counter - identifies unique warnings from build log file
+// Reports in order from less frequent ones
 
 struct position_t
 {
@@ -28,7 +31,7 @@ struct std::hash<position_t>
     }
 };
 
-std::map<std::string, std::set<position_t>> warnings; // {warning -> {unique occurences}}
+std::unordered_map<std::string, std::set<position_t>> warnings; // {warning -> {unique occurences}}
 
 static const std::regex build_server_pattern{R"(##\[warning\](.+)\.([^\.]+)\((\d+),\d+\): Warning (C[^:]+):)"};
 static const std::regex local_pattern{R"((.+)\.([^\.]+)\((\d+)\): warning (C[^:]+):)"};
@@ -50,12 +53,20 @@ static void parse_log_line(const std::string& logLine)
 
 static void report()
 {
+    // sort warnings from less frequent
+    std::vector<std::pair<size_t, std::string>> priorities;
+    priorities.reserve(warnings.size());
+    std::transform(warnings.begin(), warnings.end(), std::back_inserter(priorities), [](const auto& w){
+        return std::pair{w.second.size(), w.first};
+    });
+    std::ranges::sort(priorities);
+
     int total{};
-    for (const auto& [tag, occurences] : warnings) {
-        std::cout << std::format("{} ({}):\n", tag, occurences.size());
-        for (const auto& o : occurences)
+    for (const auto& [occurences, tag] : priorities) {
+        std::cout << std::format("{} ({}):\n", tag, occurences);
+        for (const auto& o : warnings[tag])
             std::cout << std::format("\t{} ({})\n", o.path, o.line);
-        total += occurences.size();
+        total += occurences;
     }
 
     std::cout << std::format("\nTotal warnings: {}\n", total);
