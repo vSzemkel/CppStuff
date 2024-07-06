@@ -20,6 +20,8 @@ struct graph_t
     graph_t(const int size = 0) : _size(size), _adj(size) { reset(); }
     graph_t(const std::vector<T>& labels) : _size(labels.size()), _label(labels), _adj(_size) { reset(); }
 
+    auto size() const { return _size; }
+
     int add_node_label(T label) {
         assert(_index.count(label) == 0);
         const int ret = _size++;
@@ -62,7 +64,7 @@ struct graph_t
     }
 
     void modify_edge(const int from, const int to, const int cost) {
-        assert(0 <= from < _size && 0 <= to < _size);
+        assert(0 <= from && from < _size && 0 <= to && to < _size);
         auto& fn = _adj[from];
         const auto it = std::find_if(fn.begin(), fn.end(), [to](const auto& e){ return e[0] == to; });
         assert(it != fn.end());
@@ -336,11 +338,11 @@ struct graph_t
     }
 
     auto floyd_warshall_1d() { // compute all distances
-        _fw_uptr = std::make_unique<int[]>(_size * _size);
+        const auto size2 = _size * _size;
+        _fw_uptr = std::make_unique<int[]>(size2);
         auto fw = _fw_uptr.get();
+        std::fill_n(fw, size2, INF);
         for (int i = 0; i < _size; ++i) {
-            for (int j = 0; j < _size; ++j)
-                fw[i  * _size + j] = INF;
             fw[i  * _size + i] = 0;
             for (const auto& e : _adj[i])
                 fw[i  * _size + e[0]] = e[1];
@@ -351,7 +353,7 @@ struct graph_t
                 for (int j = 0, jr = 0; j < _size; ++j, jr += _size)
                     fw[ir + j] = std::min(fw[ir + j], fw[ir + k] + fw[kr + j]);
 
-        return fw;
+        return std::move(_fw_uptr);
     }
 
     auto floyd_warshall(const bool check_for_neg_cycles = false) { // compute all distances
@@ -492,7 +494,7 @@ struct graph_t
         _seen[v] = true;
         _order[v] = _low[v] = _time++;
         int children{0};
-        for (const auto& [to, cost] : _adj[n]) {
+        for (const auto& [to, cost] : _adj[v]) {
             if (to == p) continue;
             if (_seen[to]) {
                 _low[v] = std::min(_low[v], _order[to]);
@@ -587,7 +589,7 @@ void init_bridges() {
     ig.reset();
 }
 
-int main(int argc, char* argv[])
+int main(int, char**)
 {
     init_maze();
     g.bfs_label('A', 'D');
@@ -627,10 +629,15 @@ int main(int argc, char* argv[])
         assert(mst_cost == 16 && mst_path != path); // E-J instead of K-M
     }
 
+    const auto sz = g.size();
     const auto dist = g.floyd_warshall();
-    assert(!dist.empty());
+    const auto dist_1d = g.floyd_warshall_1d();
+    const auto d1d = dist_1d.get();
     assert(dist['A' - 'A']['J' - 'A'] == 6);
     assert(dist['I' - 'A']['E' - 'A'] == 9);
+    for (int i = 0; i < sz; ++i)
+        for (int j = 0; j < sz; ++j)
+            assert(dist[i][j] == d1d[i * sz + j]);
 
     g.add_node_label('N');
     g.add_node_label('O');
@@ -653,7 +660,9 @@ int main(int argc, char* argv[])
     std::cout << "\nPASSED\n";
 }
 
-/*    clang++.exe -Wall -g -std=c++17 graph.cpp -o graph.exe
+/*
+clang++.exe -Wall -g -O0 -std=c++20 graph.cpp -o graph.exe
+g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address graph.cpp -o graph
 
 Output:
 
