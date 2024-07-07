@@ -23,7 +23,7 @@ struct graph_t
     auto size() const { return _size; }
 
     int add_node_label(T label) {
-        assert(_index.count(label) == 0);
+        assert(_index.contains(label) == 0);
         const int ret = _size++;
         _index[label] = ret;
         _label.push_back(std::move(label));
@@ -32,7 +32,7 @@ struct graph_t
     }
 
     void detach_node_label(const T& node) {
-        assert(_index.count(node));
+        assert(_index.contains(node));
         detach_node(_index[node]);
     }
 
@@ -48,7 +48,10 @@ struct graph_t
     }
 
     void add_edge_label(const T& from, const T& to, const int cost = 0) {
-        assert(_index.count(from) && _index.count(to));
+        if (!_index.contains(from))
+            add_node_label(from);
+        if (!_index.contains(to))
+            add_node_label(to);
         add_edge(_index[from], _index[to], cost);
     }
 
@@ -59,7 +62,7 @@ struct graph_t
     }
 
     void modify_edge_label(const T& from, const T& to, const int cost) {
-        assert(_index.count(from) && _index.count(to));
+        assert(_index.contains(from) && _index.contains(to));
         modify_edge(_index[from], _index[to], cost);
     }
 
@@ -69,6 +72,28 @@ struct graph_t
         const auto it = std::find_if(fn.begin(), fn.end(), [to](const auto& e){ return e[0] == to; });
         assert(it != fn.end());
         (*it)[1] = cost;
+    }
+
+    void delete_edge_label(const T& from, const T& to) {
+        assert(_index.contains(from) && _index.contains(to));
+        delete_edge(_index[from], _index[to]);
+    }
+
+    void delete_edge(const int from, const int to) {
+        assert(0 <= from && from < _size && 0 <= to && to < _size);
+        std::erase_if(_adj[from], [to](const auto& e){ return e[0] == to; });
+        std::erase_if(_adj[to], [from](const auto& e){ return e[0] == from; });
+    }
+
+    void delete_node_label(const T& node) {
+        assert(_index.contains(node));
+        delete_node(_index[node]);
+    }
+
+    void delete_node(const int node) {
+        assert(0 <= node && node < _size);
+        for (auto& e : _adj[node])
+            delete_edge(node, e[0]);
     }
 
     void reset() {
@@ -89,6 +114,11 @@ struct graph_t
         _index.clear();
         _label.clear();
         reset();
+    }
+
+    void sort_edges() {
+        for (auto& neighbors : _adj)
+            std::sort(neighbors.begin(), neighbors.end());
     }
 
     auto get_path_to_label(const T& label) const {
@@ -113,7 +143,7 @@ struct graph_t
     }
 
     int get_cost_to_label(const T& label) {
-        assert(_index.count(label));
+        assert(_index.contains(label));
         return get_cost_to(_index[label]);
     }
 
@@ -123,7 +153,7 @@ struct graph_t
     }
 
     bool found_label(const T& label) {
-        assert(_index.count(label));
+        assert(_index.contains(label));
         return found(_index[label]);
     }
 
@@ -133,7 +163,7 @@ struct graph_t
     }
 
     bool has_edge_label(const T& from, const T& to) const {
-        assert(_index.count(from) && _index.count(to));
+        assert(_index.contains(from) && _index.contains(to));
         return has_edge(_index[from], _index[to]);
     }
 
@@ -145,7 +175,7 @@ struct graph_t
     bool has_negative_cycle() const { return _has_neg_cycle; }
 
     void bfs_label(const T& from, const T& to) { // no edge cost, no requirements
-        assert(_index.count(from) && _index.count(to));
+        assert(_index.contains(from) && _index.contains(to));
         bfs(_index[from], _index[to]);
     }
 
@@ -179,7 +209,7 @@ struct graph_t
     }
 
     void maze_label(const T& from, const T& to) {
-        assert(_index.count(from) && _index.count(to));
+        assert(_index.contains(from) && _index.contains(to));
         maze(_index[from], _index[to]);
     }
 
@@ -218,7 +248,7 @@ struct graph_t
     }
 
     void dijkstra_label(const T& from, const T& to) {
-        assert(_index.count(from) && _index.count(to));
+        assert(_index.contains(from) && _index.contains(to));
         dijkstra(_index[from], _index[to]);
     }
 
@@ -315,7 +345,7 @@ struct graph_t
     }
 
     void bellman_ford_label(const T& from) {
-        assert(_index.count(from));
+        assert(_index.contains(from));
         bellman_ford(_index[from]);
     }
 
@@ -378,6 +408,7 @@ struct graph_t
     }
 
     int connected_components() {
+        reset();
         for (int source = 0; source < _size; ++source)
             if (!_seen[source]) {
                 std::vector<int> ss;
@@ -401,6 +432,16 @@ struct graph_t
         return _ccsz;
     }
 
+    bool are_connected_label(const T& from, const T& to) {
+        assert(_index.contains(from) && _index.contains(to));
+        return are_connected(_index[from], _index[to]);
+    }
+
+    bool are_connected(const int from, const int to) {
+        assert(0 <= from && from < _size && 0 <= to && to < _size);
+        return _cc[from] == _cc[to];
+    }
+
     bool check_euler(const int source = 0) { // all edges exists <=> e[1] > 0
         int odd_nodes{0};
         for (const auto& n : _adj) {
@@ -414,7 +455,7 @@ struct graph_t
     }
 
     auto euler_path_label(const T& from) {
-        assert(_index.count(from));
+        assert(_index.contains(from));
         return euler_path(_index[from]);
     }
 
@@ -642,7 +683,6 @@ int main(int, char**)
     g.add_node_label('N');
     g.add_node_label('O');
     g.add_edge_label('N', 'O', 42);
-    g.reset();
     assert(g.connected_components() == 2);
 
     init_euler();
@@ -657,6 +697,19 @@ int main(int, char**)
     const auto bridges = ig.find_bridges();
     for (const auto& b : bridges)
         std::cout << b.first << '-' << b.second << ' ';
+
+    g.clear();
+    g.add_edge_label('A', 'B');
+    g.add_edge_label('B', 'C');
+    g.add_edge_label('C', 'A');
+    g.connected_components();
+    assert(g.are_connected_label('A', 'C'));
+    g.delete_node_label('B');
+    g.connected_components();
+    assert(g.are_connected_label('A', 'C'));
+    g.delete_edge_label('A', 'C');
+    g.connected_components();
+    assert(!g.are_connected_label('A', 'C'));
     std::cout << "\nPASSED\n";
 }
 
