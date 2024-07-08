@@ -20,8 +20,10 @@ struct graph_t
     graph_t(const int size = 0) : _size(size), _adj(size) { reset(); }
     graph_t(const std::vector<T>& labels) : _size(labels.size()), _label(labels), _adj(_size) { reset(); }
 
+    auto size() const { return _size; }
+
     int add_node_label(T label) {
-        assert(_index.count(label) == 0);
+        assert(_index.contains(label) == 0);
         const int ret = _size++;
         _index[label] = ret;
         _label.push_back(std::move(label));
@@ -30,7 +32,7 @@ struct graph_t
     }
 
     void detach_node_label(const T& node) {
-        assert(_index.count(node));
+        assert(_index.contains(node));
         detach_node(_index[node]);
     }
 
@@ -46,7 +48,10 @@ struct graph_t
     }
 
     void add_edge_label(const T& from, const T& to, const int cost = 0) {
-        assert(_index.count(from) && _index.count(to));
+        if (!_index.contains(from))
+            add_node_label(from);
+        if (!_index.contains(to))
+            add_node_label(to);
         add_edge(_index[from], _index[to], cost);
     }
 
@@ -57,16 +62,38 @@ struct graph_t
     }
 
     void modify_edge_label(const T& from, const T& to, const int cost) {
-        assert(_index.count(from) && _index.count(to));
+        assert(_index.contains(from) && _index.contains(to));
         modify_edge(_index[from], _index[to], cost);
     }
 
     void modify_edge(const int from, const int to, const int cost) {
-        assert(0 <= from < _size && 0 <= to < _size);
+        assert(0 <= from && from < _size && 0 <= to && to < _size);
         auto& fn = _adj[from];
         const auto it = std::find_if(fn.begin(), fn.end(), [to](const auto& e){ return e[0] == to; });
         assert(it != fn.end());
         (*it)[1] = cost;
+    }
+
+    void delete_edge_label(const T& from, const T& to) {
+        assert(_index.contains(from) && _index.contains(to));
+        delete_edge(_index[from], _index[to]);
+    }
+
+    void delete_edge(const int from, const int to) {
+        assert(0 <= from && from < _size && 0 <= to && to < _size);
+        std::erase_if(_adj[from], [to](const auto& e){ return e[0] == to; });
+        std::erase_if(_adj[to], [from](const auto& e){ return e[0] == from; });
+    }
+
+    void delete_node_label(const T& node) {
+        assert(_index.contains(node));
+        delete_node(_index[node]);
+    }
+
+    void delete_node(const int node) {
+        assert(0 <= node && node < _size);
+        for (auto& e : _adj[node])
+            delete_edge(node, e[0]);
     }
 
     void reset() {
@@ -87,6 +114,11 @@ struct graph_t
         _index.clear();
         _label.clear();
         reset();
+    }
+
+    void sort_edges() {
+        for (auto& neighbors : _adj)
+            std::sort(neighbors.begin(), neighbors.end());
     }
 
     auto get_path_to_label(const T& label) const {
@@ -111,7 +143,7 @@ struct graph_t
     }
 
     int get_cost_to_label(const T& label) {
-        assert(_index.count(label));
+        assert(_index.contains(label));
         return get_cost_to(_index[label]);
     }
 
@@ -121,7 +153,7 @@ struct graph_t
     }
 
     bool found_label(const T& label) {
-        assert(_index.count(label));
+        assert(_index.contains(label));
         return found(_index[label]);
     }
 
@@ -131,7 +163,7 @@ struct graph_t
     }
 
     bool has_edge_label(const T& from, const T& to) const {
-        assert(_index.count(from) && _index.count(to));
+        assert(_index.contains(from) && _index.contains(to));
         return has_edge(_index[from], _index[to]);
     }
 
@@ -143,7 +175,7 @@ struct graph_t
     bool has_negative_cycle() const { return _has_neg_cycle; }
 
     void bfs_label(const T& from, const T& to) { // no edge cost, no requirements
-        assert(_index.count(from) && _index.count(to));
+        assert(_index.contains(from) && _index.contains(to));
         bfs(_index[from], _index[to]);
     }
 
@@ -177,7 +209,7 @@ struct graph_t
     }
 
     void maze_label(const T& from, const T& to) {
-        assert(_index.count(from) && _index.count(to));
+        assert(_index.contains(from) && _index.contains(to));
         maze(_index[from], _index[to]);
     }
 
@@ -216,7 +248,7 @@ struct graph_t
     }
 
     void dijkstra_label(const T& from, const T& to) {
-        assert(_index.count(from) && _index.count(to));
+        assert(_index.contains(from) && _index.contains(to));
         dijkstra(_index[from], _index[to]);
     }
 
@@ -313,7 +345,7 @@ struct graph_t
     }
 
     void bellman_ford_label(const T& from) {
-        assert(_index.count(from));
+        assert(_index.contains(from));
         bellman_ford(_index[from]);
     }
 
@@ -336,11 +368,11 @@ struct graph_t
     }
 
     auto floyd_warshall_1d() { // compute all distances
-        _fw_uptr = std::make_unique<int[]>(_size * _size);
+        const auto size2 = _size * _size;
+        _fw_uptr = std::make_unique<int[]>(size2);
         auto fw = _fw_uptr.get();
+        std::fill_n(fw, size2, INF);
         for (int i = 0; i < _size; ++i) {
-            for (int j = 0; j < _size; ++j)
-                fw[i  * _size + j] = INF;
             fw[i  * _size + i] = 0;
             for (const auto& e : _adj[i])
                 fw[i  * _size + e[0]] = e[1];
@@ -351,7 +383,7 @@ struct graph_t
                 for (int j = 0, jr = 0; j < _size; ++j, jr += _size)
                     fw[ir + j] = std::min(fw[ir + j], fw[ir + k] + fw[kr + j]);
 
-        return fw;
+        return std::move(_fw_uptr);
     }
 
     auto floyd_warshall(const bool check_for_neg_cycles = false) { // compute all distances
@@ -376,6 +408,7 @@ struct graph_t
     }
 
     int connected_components() {
+        reset();
         for (int source = 0; source < _size; ++source)
             if (!_seen[source]) {
                 std::vector<int> ss;
@@ -399,6 +432,16 @@ struct graph_t
         return _ccsz;
     }
 
+    bool are_connected_label(const T& from, const T& to) {
+        assert(_index.contains(from) && _index.contains(to));
+        return are_connected(_index[from], _index[to]);
+    }
+
+    bool are_connected(const int from, const int to) {
+        assert(0 <= from && from < _size && 0 <= to && to < _size);
+        return _cc[from] == _cc[to];
+    }
+
     bool check_euler(const int source = 0) { // all edges exists <=> e[1] > 0
         int odd_nodes{0};
         for (const auto& n : _adj) {
@@ -412,7 +455,7 @@ struct graph_t
     }
 
     auto euler_path_label(const T& from) {
-        assert(_index.count(from));
+        assert(_index.contains(from));
         return euler_path(_index[from]);
     }
 
@@ -492,7 +535,7 @@ struct graph_t
         _seen[v] = true;
         _order[v] = _low[v] = _time++;
         int children{0};
-        for (const auto& [to, cost] : _adj[n]) {
+        for (const auto& [to, cost] : _adj[v]) {
             if (to == p) continue;
             if (_seen[to]) {
                 _low[v] = std::min(_low[v], _order[to]);
@@ -587,7 +630,7 @@ void init_bridges() {
     ig.reset();
 }
 
-int main(int argc, char* argv[])
+int main(int, char**)
 {
     init_maze();
     g.bfs_label('A', 'D');
@@ -627,15 +670,19 @@ int main(int argc, char* argv[])
         assert(mst_cost == 16 && mst_path != path); // E-J instead of K-M
     }
 
+    const auto sz = g.size();
     const auto dist = g.floyd_warshall();
-    assert(!dist.empty());
+    const auto dist_1d = g.floyd_warshall_1d();
+    const auto d1d = dist_1d.get();
     assert(dist['A' - 'A']['J' - 'A'] == 6);
     assert(dist['I' - 'A']['E' - 'A'] == 9);
+    for (int i = 0; i < sz; ++i)
+        for (int j = 0; j < sz; ++j)
+            assert(dist[i][j] == d1d[i * sz + j]);
 
     g.add_node_label('N');
     g.add_node_label('O');
     g.add_edge_label('N', 'O', 42);
-    g.reset();
     assert(g.connected_components() == 2);
 
     init_euler();
@@ -650,10 +697,25 @@ int main(int argc, char* argv[])
     const auto bridges = ig.find_bridges();
     for (const auto& b : bridges)
         std::cout << b.first << '-' << b.second << ' ';
+
+    g.clear();
+    g.add_edge_label('A', 'B');
+    g.add_edge_label('B', 'C');
+    g.add_edge_label('C', 'A');
+    g.connected_components();
+    assert(g.are_connected_label('A', 'C'));
+    g.delete_node_label('B');
+    g.connected_components();
+    assert(g.are_connected_label('A', 'C'));
+    g.delete_edge_label('A', 'C');
+    g.connected_components();
+    assert(!g.are_connected_label('A', 'C'));
     std::cout << "\nPASSED\n";
 }
 
-/*    clang++.exe -Wall -g -std=c++17 graph.cpp -o graph.exe
+/*
+clang++.exe -Wall -g -O0 -std=c++20 graph.cpp -o graph.exe
+g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address graph.cpp -o graph
 
 Output:
 
