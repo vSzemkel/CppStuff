@@ -22,6 +22,14 @@ struct graph_t
 
     auto size() const { return _size; }
 
+    int index(const T& label) {
+        const auto found = _index.find(label);
+        if (found == _index.end())
+            return -1;
+
+        return found->second;
+    }
+
     int add_node_label(T label) {
         assert(_index.contains(label) == 0);
         const int ret = _size++;
@@ -559,9 +567,6 @@ graph_t<int> ig;
 void init_maze()
 {
     g.clear();
-    for (const char c : "ABCD")
-        if (c) g.add_node_label(c);
-
     g.add_edge_label('A', 'B', 1);
     g.add_edge_label('B', 'C', 0);
     g.add_edge_label('C', 'D', 0);
@@ -572,9 +577,6 @@ void init_maze()
 void init_dijkstra()
 {
     g.clear();
-    for (const char c : "ABCDEFGHIJKLM")
-        if (c) g.add_node_label(c);
-
     g.add_edge_label('A', 'B', 3);
     g.add_edge_label('A', 'C', 1);
     g.add_edge_label('B', 'E', 2);
@@ -599,9 +601,6 @@ void init_dijkstra()
 void init_euler()
 {
     g.clear();
-    for (const char c : "ABCDEFG")
-        if (c) g.add_node_label(c);
-
     g.add_edge_label('A', 'D', 1);
     g.add_edge_label('A', 'E', 1);
     g.add_edge_label('B', 'D', 1);
@@ -674,14 +673,12 @@ int main(int, char**)
     const auto dist = g.floyd_warshall();
     const auto dist_1d = g.floyd_warshall_1d();
     const auto d1d = dist_1d.get();
-    assert(dist['A' - 'A']['J' - 'A'] == 6);
-    assert(dist['I' - 'A']['E' - 'A'] == 9);
+    assert(dist[g.index('A')][g.index('J')] == 6);
+    assert(dist[g.index('I')][g.index('E')] == 9);
     for (int i = 0; i < sz; ++i)
         for (int j = 0; j < sz; ++j)
             assert(dist[i][j] == d1d[i * sz + j]);
 
-    g.add_node_label('N');
-    g.add_node_label('O');
     g.add_edge_label('N', 'O', 42);
     assert(g.connected_components() == 2);
 
