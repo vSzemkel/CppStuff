@@ -44,7 +44,7 @@ struct graph_t
         detach_node(_index[node]);
     }
 
-    void detach_node(const int node) {
+    void detach_node(const int node) { // C++17 compliant, do not remove
         assert(0 <= node && node < _size);
         for (const auto& e : _adj[node]) {
             auto& list = _adj[e[0]];
@@ -505,6 +505,14 @@ struct graph_t
         for (int i = 0; i < _size; ++i)
             if (!_seen[i])
                 cutpoints_dfs(i, -1, ret);
+
+        return ret;
+    }
+
+    auto find_cutpoints(const int source) {
+        std::vector<int> ret;
+        reset();
+        cutpoints_dfs(source, -1, ret);
 
         return ret;
     }

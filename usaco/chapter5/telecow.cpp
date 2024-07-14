@@ -106,28 +106,6 @@ struct graph_t
         (*it)[1] = cost;
     }
 
-    void delete_edge_label(const T& from, const T& to) {
-        assert(_index.contains(from) && _index.contains(to));
-        delete_edge(_index[from], _index[to]);
-    }
-
-    void delete_edge(const int from, const int to) {
-        assert(0 <= from && from < _size && 0 <= to && to < _size);
-        std::erase_if(_adj[from], [to](const auto& e){ return e[0] == to; });
-        std::erase_if(_adj[to], [from](const auto& e){ return e[0] == from; });
-    }
-
-    void delete_node_label(const T& node) {
-        assert(_index.contains(node));
-        delete_node(_index[node]);
-    }
-
-    void delete_node(const int node) {
-        assert(0 <= node && node < _size);
-        for (auto& e : _adj[node])
-            delete_edge(node, e[0]);
-    }
-
     void reset() {
         _ccsz = _time = 0;
         _has_neg_cycle = false;
@@ -533,6 +511,14 @@ struct graph_t
         return ret;
     }
 
+    auto find_cutpoints(const int source) {
+        std::vector<int> ret;
+        reset();
+        cutpoints_dfs(source, -1, ret);
+
+        return ret;
+    }
+
     static constexpr const int INF = (1 << 30) - 1;
 
   private:
@@ -585,6 +571,19 @@ struct graph_t
     }
 };
 
+template <typename C>
+static void print(const C& v, std::ostream& task_out = std::cout)
+{
+    if (v.empty())
+        return;
+    char sep = ' ';
+    const auto sz = int(v.size());
+    for (int i = 0; i < sz; ++i) {
+        if (i == sz - 1) sep = '\n';
+        task_out << (v[i] + 1) << sep;
+    }
+}
+
 int main(int, char**)
 {
     int N, M, c1, c2;
@@ -597,6 +596,22 @@ int main(int, char**)
         g.add_edge(--f, --t);
     }
 
+    std::vector<int> ret;
+    while (true) {
+        g.connected_components();
+        if (!g.are_connected(c1, c2))
+            break;
+        const auto cut = g.find_cutpoints(c1);
+        ret.insert(ret.end(), cut.begin(), cut.end());
+
+        for (const int c : cut)
+            g.detach_node(c);
+    }
+
+    std::sort(ret.begin(), ret.end());
+    const auto ret_size = int(ret.size());
+    task_out << ret_size << '\n';
+    print(ret, task_out);
 }
 
 /*

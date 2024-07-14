@@ -1,10 +1,12 @@
 template <typename C>
-static void print(const C& v)
+static void print(const C& v, std::ostream& task_out = std::cout)
 {
-    if (v.empty()) return;
-    std::cout << v.front();
-    const int size = int(v.size());
-    for (int i = 1; i < size; ++i)
-        std::cout << ' ' << v[i];
-    std::cout << '\n';
+    if (v.empty())
+        return;
+    char sep = ' ';
+    const auto lst = int(v.size()) - 1;
+    for (int i = 0; i <= lst; ++i) {
+        if (i == lst) sep = '\n';
+        task_out << v[i] << sep;
+    }
 }
