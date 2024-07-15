@@ -111,7 +111,6 @@ struct graph_t
         _low.assign(_size, -1);
         _pred.assign(_size, -1);
         _order.assign(_size, -1);
-        _pred.assign(_size, -1);
         _dist.assign(_size, INF);
         _seen.assign(_size, false);
     }

@@ -4,9 +4,9 @@ static void print(const C& v, std::ostream& task_out = std::cout)
     if (v.empty())
         return;
     char sep = ' ';
-    const auto lst = int(v.size()) - 1;
-    for (int i = 0; i <= lst; ++i) {
-        if (i == lst) sep = '\n';
-        task_out << v[i] << sep;
+    auto lst = v.size();
+    for (const auto& e : v) {
+        if (--lst == 0) sep = '\n';
+        task_out << e << sep;
     }
 }

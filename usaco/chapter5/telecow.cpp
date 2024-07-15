@@ -113,7 +113,6 @@ struct graph_t
         _low.assign(_size, -1);
         _pred.assign(_size, -1);
         _order.assign(_size, -1);
-        _pred.assign(_size, -1);
         _dist.assign(_size, INF);
         _seen.assign(_size, false);
     }
@@ -577,10 +576,10 @@ static void print(const C& v, std::ostream& task_out = std::cout)
     if (v.empty())
         return;
     char sep = ' ';
-    const auto sz = int(v.size());
-    for (int i = 0; i < sz; ++i) {
-        if (i == sz - 1) sep = '\n';
-        task_out << (v[i] + 1) << sep;
+    auto lst = v.size();
+    for (const auto& e : v) {
+        if (--lst == 0) sep = '\n';
+        task_out << (e + 1) << sep;
     }
 }
 
@@ -596,21 +595,34 @@ int main(int, char**)
         g.add_edge(--f, --t);
     }
 
-    std::vector<int> ret;
+    std::set<int> ret;
+    std::map<int, std::unordered_set<int>, std::greater<>> replacements;
     while (true) {
-        g.connected_components();
-        if (!g.are_connected(c1, c2))
+        g.reset();
+        const auto pred = g.shortest_paths(c1);
+        if (pred[c2] == -1)
             break;
-        const auto cut = g.find_cutpoints(c1);
-        ret.insert(ret.end(), cut.begin(), cut.end());
 
-        for (const int c : cut)
-            g.detach_node(c);
+        int cut = g.INF;
+        std::unordered_set<int> repl;
+        for (int can = pred[c2]; can != c1; can = pred[can]) {
+            repl.insert(can);
+            if (can < cut)
+                cut = can;
+        }
+
+        ret.insert(cut);
+        repl.erase(cut);
+        replacements[cut] = std::move(repl);
+        g.detach_node(cut);
     }
 
-    std::sort(ret.begin(), ret.end());
-    const auto ret_size = int(ret.size());
-    task_out << ret_size << '\n';
+    for (const auto& [c, r] : replacements)
+        for (const auto& n : r)
+            if (ret.count(n))
+                ret.erase(c);
+
+    task_out << ret.size() << '\n';
     print(ret, task_out);
 }
 
