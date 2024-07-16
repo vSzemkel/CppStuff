@@ -1,16 +1,40 @@
+/*
+ID: marcin.8
+LANG: C++
+TASK: telecow
+PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=G0g2gioZqzP&S=telecow
+*/
 
+#include <algorithm>
 #include <array>
+#include <bitset>
 #include <cassert>
+#include <cmath>
+#include <cstdlib>
+#include <iomanip>
 #include <iostream>
-#include <limits>
+#include <iterator>
+#include <filesystem>
+#include <fstream>
 #include <functional>
+#include <limits>
+#include <map>
 #include <memory>
 #include <numeric>
-#include <map>
+#include <optional>
 #include <queue>
+#include <random>
+#include <set>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <unordered_set>
+#include <tuple>
+#include <utility>
+#include <vector>
 
-// Undirected graph with basic operations
-// Templated for node label datatype
+std::ifstream task_in("telecow.in");
+std::ofstream task_out("telecow.out");
 
 template <typename T = int>
 struct graph_t
@@ -44,7 +68,7 @@ struct graph_t
         detach_node(_index[node]);
     }
 
-    void detach_node(const int node) { // C++17 compliant, do not remove
+    void detach_node(const int node) {
         assert(0 <= node && node < _size);
         for (const auto& e : _adj[node]) {
             auto& list = _adj[e[0]];
@@ -80,28 +104,6 @@ struct graph_t
         const auto it = std::find_if(fn.begin(), fn.end(), [to](const auto& e){ return e[0] == to; });
         assert(it != fn.end());
         (*it)[1] = cost;
-    }
-
-    void delete_edge_label(const T& from, const T& to) {
-        assert(_index.contains(from) && _index.contains(to));
-        delete_edge(_index[from], _index[to]);
-    }
-
-    void delete_edge(const int from, const int to) {
-        assert(0 <= from && from < _size && 0 <= to && to < _size);
-        std::erase_if(_adj[from], [to](const auto& e){ return e[0] == to; });
-        std::erase_if(_adj[to], [from](const auto& e){ return e[0] == from; });
-    }
-
-    void delete_node_label(const T& node) {
-        assert(_index.contains(node));
-        delete_node(_index[node]);
-    }
-
-    void delete_node(const int node) {
-        assert(0 <= node && node < _size);
-        for (auto& e : _adj[node])
-            delete_edge(node, e[0]);
     }
 
     void reset() {
@@ -568,164 +570,78 @@ struct graph_t
     }
 };
 
-graph_t<char> g;
-graph_t<int> ig;
-
-void init_maze()
+template <typename C>
+static void print(const C& v, std::ostream& task_out = std::cout)
 {
-    g.clear();
-    g.add_edge_label('A', 'B', 1);
-    g.add_edge_label('B', 'C', 0);
-    g.add_edge_label('C', 'D', 0);
-    g.add_edge_label('B', 'D', 1);
-    g.reset();
-}
-
-void init_dijkstra()
-{
-    g.clear();
-    g.add_edge_label('A', 'B', 3);
-    g.add_edge_label('A', 'C', 1);
-    g.add_edge_label('B', 'E', 2);
-    g.add_edge_label('B', 'F', 1);
-    g.add_edge_label('C', 'F', 2);
-    g.add_edge_label('C', 'G', 1);
-    g.add_edge_label('D', 'H', 1);
-    g.add_edge_label('C', 'D', 2);
-    g.add_edge_label('D', 'I', 2);
-    g.add_edge_label('G', 'H', 3);
-    g.add_edge_label('H', 'I', 1);
-    g.add_edge_label('E', 'J', 2);
-    g.add_edge_label('F', 'J', 3);
-    g.add_edge_label('G', 'K', 1);
-    g.add_edge_label('H', 'L', 1);
-    g.add_edge_label('K', 'L', 4);
-    g.add_edge_label('J', 'M', 1);
-    g.add_edge_label('K', 'M', 2);
-    g.reset();
-}
-
-void init_euler()
-{
-    g.clear();
-    g.add_edge_label('A', 'D', 1);
-    g.add_edge_label('A', 'E', 1);
-    g.add_edge_label('B', 'D', 1);
-    g.add_edge_label('B', 'E', 1);
-    g.add_edge_label('B', 'F', 1);
-    g.add_edge_label('B', 'G', 1);
-    g.add_edge_label('C', 'D', 1);
-    g.add_edge_label('C', 'G', 1);
-    g.add_edge_label('D', 'F', 1);
-    g.add_edge_label('E', 'F', 1);
-    g.add_edge_label('E', 'G', 1);
-    g.add_edge_label('F', 'G', 1);
-    g.reset();
-}
-
-void init_bridges() {
-    ig.clear();
-    for (int i = 10, z = 3; z; --z, i *= 10) 
-        for (int y = 3; y; --y)
-            ig.add_node_label(i + y - 1);
-
-    ig.add_edge_label(10, 11); ig.add_edge_label(12, 11); ig.add_edge_label(10, 12); 
-    ig.add_edge_label(100, 101); ig.add_edge_label(102, 101); ig.add_edge_label(100, 102); 
-    ig.add_edge_label(1000, 1001); ig.add_edge_label(1002, 1001); ig.add_edge_label(1000, 1002); 
-    ig.add_edge_label(12, 102); ig.add_edge_label(11, 1001); // bridges
-    ig.reset();
+    if (v.empty())
+        return;
+    char sep = ' ';
+    auto lst = v.size();
+    for (const auto& e : v) {
+        if (--lst == 0) sep = '\n';
+        task_out << (e + 1) << sep;
+    }
 }
 
 int main(int, char**)
 {
-    init_maze();
-    g.bfs_label('A', 'D');
-    assert((g.get_path_to_label('D') == std::vector{'A', 'B', 'D'}) && g.get_cost_to_label('D') == 2);
-
-    g.reset();
-    if (g.check_maze())
-        g.maze_label('A', 'D');
-    assert((g.get_path_to_label('D') == std::vector{'A', 'B', 'C', 'D'}) && g.get_cost_to_label('D') == 1);
-
-    g.reset();
-    g.bellman_ford_label('A');
-    assert(!g.has_negative_cycle() && (g.get_path_to_label('D') == std::vector{'A', 'B', 'C', 'D'}) && g.get_cost_to_label('D') == 1);
-    g.reset();
-    g.modify_edge_label('B', 'D', -1);
-    g.bellman_ford_label('A');
-    assert(g.has_negative_cycle());
-
-    init_dijkstra();
-    if (g.check_dijkstra())
-        g.dijkstra_label('A', 'M');
-
-    if (!g.found_label('M'))
-        std::cout << "\nPath not found\n";
-    else {
-        const auto path = g.get_path_to_label('M');
-        const auto length = int(path.size());
-        std::cout << "\nFound shortest path from A to M with the length of " << length << " and cost " << g.get_cost_to_label('M') << '\n';
-        std::cout << path.front();
-        for (int i = 1; i < length; ++i)
-            std::cout << "->" << path[i];
-        std::cout << '\n';
-
-        auto [mstg, mst_cost] = g.mst();
-        mstg.shortest_paths();
-        const auto mst_path = mstg.get_path_to_label('M');
-        assert(mst_cost == 16 && mst_path != path); // E-J instead of K-M
+    int N, M, c1, c2;
+    task_in >> N >> M >> c1 >> c2;
+    --c1; --c2;
+    graph_t<int> g{N};
+    for (int z = M; z; --z) {
+        int f, t;
+        task_in >> f >> t;
+        g.add_edge(--f, --t);
     }
 
-    const auto sz = g.size();
-    const auto dist = g.floyd_warshall();
-    const auto dist_1d = g.floyd_warshall_1d();
-    const auto d1d = dist_1d.get();
-    assert(dist[g.index('A')][g.index('J')] == 6);
-    assert(dist[g.index('I')][g.index('E')] == 9);
-    for (int i = 0; i < sz; ++i)
-        for (int j = 0; j < sz; ++j)
-            assert(dist[i][j] == d1d[i * sz + j]);
+    std::set<int> ret;
+    std::map<int, std::unordered_set<int>, std::greater<>> replacements;
+    while (true) {
+        g.reset();
+        const auto pred = g.shortest_paths(c1);
+        if (pred[c2] == -1)
+            break;
 
-    g.add_edge_label('N', 'O', 42);
-    assert(g.connected_components() == 2);
+        int cut = g.INF;
+        std::unordered_set<int> repl;
+        for (int can = pred[c2]; can != c1; can = pred[can]) {
+            repl.insert(can);
+            if (can < cut)
+                cut = can;
+        }
 
-    init_euler();
-    if (g.check_euler()) {
-        const auto path = g.euler_path_label('A');
-        for (const auto l : path)
-            std::cout << l << ' ';
-        std::cout << '\n';
+        ret.insert(cut);
+        repl.erase(cut);
+        replacements[cut] = std::move(repl);
+        g.detach_node(cut);
     }
 
-    init_bridges();
-    const auto bridges = ig.find_bridges();
-    for (const auto& b : bridges)
-        std::cout << b.first << '-' << b.second << ' ';
+    for (const auto& [c, r] : replacements)
+        for (const auto& n : r)
+            if (ret.count(n))
+                ret.erase(c);
 
-    g.clear();
-    g.add_edge_label('A', 'B');
-    g.add_edge_label('B', 'C');
-    g.add_edge_label('C', 'A');
-    g.connected_components();
-    assert(g.are_connected_label('A', 'C'));
-    g.delete_node_label('B');
-    g.connected_components();
-    assert(g.are_connected_label('A', 'C'));
-    g.delete_edge_label('A', 'C');
-    g.connected_components();
-    assert(!g.are_connected_label('A', 'C'));
-    std::cout << "\nPASSED\n";
+    task_out << ret.size() << '\n';
+    print(ret, task_out);
 }
 
 /*
-clang++.exe -Wall -g -O0 -std=c++20 graph.cpp -o graph.exe
-g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address graph.cpp -o graph
+
+Compile:
+clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 telecow.cpp -o telecow.exe
+g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address telecow.cpp -o telecow
+
+Run:
+telecow.exe && type telecow.out
+
+Input:
+
+3 2 1 2
+1 3
+2 3
 
 Output:
 
-Found shortest path from A to M with the length of 5 and cost 5
-    A->C->G->K->M
-    A E G F D C G B F E B D A
-    11-1001 12-102
 
 */
