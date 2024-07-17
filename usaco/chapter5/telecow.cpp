@@ -595,8 +595,8 @@ int main(int, char**)
         g.add_edge(--f, --t);
     }
 
-    std::set<int> ret;
-    std::map<int, std::unordered_set<int>, std::greater<>> replacements;
+    std::unordered_map<int, int> stats;
+    std::map<int, std::unordered_set<int>> replacements;
     while (true) {
         g.reset();
         const auto pred = g.shortest_paths(c1);
@@ -606,21 +606,47 @@ int main(int, char**)
         int cut = g.INF;
         std::unordered_set<int> repl;
         for (int can = pred[c2]; can != c1; can = pred[can]) {
+            ++stats[can];
             repl.insert(can);
             if (can < cut)
                 cut = can;
         }
 
-        ret.insert(cut);
         repl.erase(cut);
         replacements[cut] = std::move(repl);
         g.detach_node(cut);
     }
 
-    for (const auto& [c, r] : replacements)
-        for (const auto& n : r)
-            if (ret.count(n))
-                ret.erase(c);
+    std::set<int> ret;
+    while (true) {
+        const auto candidate = std::max_element(stats.begin(), stats.end(), [](const auto& s1, const auto& s2){
+            return s1.second < s2.second || (s1.second == s2.second && s1.first > s2.first);
+        });
+
+        if (candidate == stats.end() || candidate->second < 2) {
+            for (const auto& [n, r] : replacements)
+                if (std::all_of(r.begin(), r.end(), [&](const int v){ return !ret.count(v); }))
+                    ret.insert(n);
+            break;
+        }
+
+        const auto selected = candidate->first;
+        ret.insert(selected);
+        stats.erase(selected);
+        if (replacements.count(selected)) {
+            for (const int n : replacements[selected])
+                --stats[n];
+            replacements.erase(selected);
+        } else
+            for (auto cur = replacements.begin(); cur != replacements.end(); )
+                if (cur->second.count(selected)) {
+                    --stats[cur->first];
+                    for (const int n : cur->second)
+                        --stats[n];
+                    cur = replacements.erase(cur);
+                } else
+                    ++cur;
+    }
 
     task_out << ret.size() << '\n';
     print(ret, task_out);
