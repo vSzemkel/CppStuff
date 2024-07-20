@@ -27,10 +27,6 @@ struct vertex_flow_graph_t
         _capacity[from][to] = _capacity[to][from] = capacity;
     }
 
-    T get_vertex_capacity(const int node) {
-        return _capacity[node + _size][node];
-    }
-
     void reset() {
         const auto size = _adj.size();
         _pred.assign(size, -1);
@@ -94,9 +90,9 @@ struct vertex_flow_graph_t
      * Every proper path must include returning edge, so it has unit flow
      */
     T compute_max_flow(const int source, const int target) {
-        T flow{0};
+        T flow{};
         while (bfs(source, target)) {
-            flow += 1;
+            ++flow;
             for (int cur = _pred[target], prev = _pred[cur]; ~prev; cur = prev, prev = _pred[prev]) {
                 _capacity[prev][cur] -= 1;
                 _capacity[cur][prev] += 1;
@@ -112,7 +108,7 @@ struct vertex_flow_graph_t
     auto get_cut_vertices(const int source, const int target, int count) {
         std::vector<int> ret;
         for (int v = 0; v < _size; ++v)
-            if (v != source && v != target && get_vertex_capacity(v) == 0) {
+            if (v != source && v != target && _capacity[v + _size][v] == 0) {
                 _capacity = _backup;
                 _capacity[v + _size][v] = 0;
                 if (compute_max_flow(source, target) + 1 == count) {
