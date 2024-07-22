@@ -1,9 +1,3 @@
-/*
-ID: marcin.8
-LANG: C++
-TASK: telecow
-PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=G0g2gioZqzP&S=telecow
-*/
 
 #include <algorithm>
 #include <cassert>
@@ -12,8 +6,8 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=G0g2gioZqzP&S=telecow
 #include <queue>
 #include <vector>
 
-std::ifstream task_in("telecow.in");
-std::ofstream task_out("telecow.out");
+// Vertex flow problem solvier
+// see: /usaco/chapter5/telecow.cpp
 
 template <typename T = int>
 struct vertex_flow_graph_t
@@ -135,81 +129,3 @@ struct vertex_flow_graph_t
     std::vector<int> _pred;
     std::vector<std::vector<int>> _adj, _backup, _capacity;
 };
-
-template <typename C>
-static void print(const C& v, std::ostream& task_out = std::cout)
-{
-    if (v.empty())
-        return;
-    char sep = ' ';
-    auto lst = v.size();
-    for (const auto& e : v) {
-        if (--lst == 0) sep = '\n';
-        task_out << e << sep;
-    }
-}
-
-int main(int, char**)
-{
-    int N, M, c1, c2;
-    task_in >> N >> M >> c1 >> c2;
-    --c1; --c2;
-    vertex_flow_graph_t<int> g{N};
-    for (int z = M; z; --z) {
-        int f, t;
-        task_in >> f >> t;
-        g.add_edge(--f, --t);
-    }
-
-    g.convert_to_vertex_flow_graph();
-    const int count = g.compute_max_flow(c1, c2);
-    task_out << count << '\n';
-    if (count > 0)
-        print(g.get_cut_vertices(c1, c2, count), task_out);
-}
-
-/*
-
-Compile:
-clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++20 telecow.cpp -o telecow.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++20 -fsanitize=address telecow.cpp -o telecow
-
-Run:
-telecow.exe && type telecow.out
-
-Input:
-
-20 26 1 2
-1 9
-1 17
-1 19
-2 6
-2 9
-2 14
-3 15
-3 16
-3 18
-4 8
-5 6
-5 7
-5 12
-5 17
-6 7
-6 19
-7 13
-7 14
-7 15
-9 12
-9 14
-10 14
-11 12
-12 17
-13 15
-15 17
-
-Output:
-
-3
-6 7 9
-
-*/

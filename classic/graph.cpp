@@ -63,10 +63,10 @@ struct graph_t
         add_edge(_index[from], _index[to], cost);
     }
 
-    void add_edge(const int from, const int to, const int cost = 0) {
-        assert(0 <= from && from < _size && 0 <= to && to < _size);
-        _adj[from].push_back({to, cost});
-        _adj[to].push_back({from, cost});
+    void add_edge(const int source, const int target, const int cost = 0) {
+        assert(0 <= source && source < _size && 0 <= target && target < _size);
+        _adj[source].push_back({target, cost});
+        _adj[target].push_back({source, cost});
     }
 
     void modify_edge_label(const T& from, const T& to, const int cost) {
@@ -74,10 +74,10 @@ struct graph_t
         modify_edge(_index[from], _index[to], cost);
     }
 
-    void modify_edge(const int from, const int to, const int cost) {
-        assert(0 <= from && from < _size && 0 <= to && to < _size);
-        auto& fn = _adj[from];
-        const auto it = std::find_if(fn.begin(), fn.end(), [to](const auto& e){ return e[0] == to; });
+    void modify_edge(const int source, const int target, const int cost) {
+        assert(0 <= source && source < _size && 0 <= target && target < _size);
+        auto& fn = _adj[source];
+        const auto it = std::find_if(fn.begin(), fn.end(), [target](const auto& e){ return e[0] == target; });
         assert(it != fn.end());
         (*it)[1] = cost;
     }
@@ -87,10 +87,10 @@ struct graph_t
         delete_edge(_index[from], _index[to]);
     }
 
-    void delete_edge(const int from, const int to) {
-        assert(0 <= from && from < _size && 0 <= to && to < _size);
-        std::erase_if(_adj[from], [to](const auto& e){ return e[0] == to; });
-        std::erase_if(_adj[to], [from](const auto& e){ return e[0] == from; });
+    void delete_edge(const int source, const int target) {
+        assert(0 <= source && source < _size && 0 <= target && target < _size);
+        std::erase_if(_adj[source], [target](const auto& e){ return e[0] == target; });
+        std::erase_if(_adj[target], [source](const auto& e){ return e[0] == source; });
     }
 
     void delete_node_label(const T& node) {
@@ -174,9 +174,9 @@ struct graph_t
         return has_edge(_index[from], _index[to]);
     }
 
-    bool has_edge(const int from, const int to) const {
-        const auto& c = _adj[from];
-        return std::find_if(c.begin(), c.end(), [to](const auto& e){ return e[0] == to; }) != c.end();
+    bool has_edge(const int source, const int target) const {
+        const auto& c = _adj[source];
+        return std::find_if(c.begin(), c.end(), [target](const auto& e){ return e[0] == target; }) != c.end();
     }
 
     bool has_negative_cycle() const { return _has_neg_cycle; }
@@ -444,9 +444,9 @@ struct graph_t
         return are_connected(_index[from], _index[to]);
     }
 
-    bool are_connected(const int from, const int to) {
-        assert(0 <= from && from < _size && 0 <= to && to < _size);
-        return _cc[from] == _cc[to];
+    bool are_connected(const int source, const int target) {
+        assert(0 <= source && source < _size && 0 <= target && target < _size);
+        return _cc[source] == _cc[target];
     }
 
     bool check_euler(const int source = 0) { // all edges exists <=> e[1] > 0
@@ -516,6 +516,20 @@ struct graph_t
         return ret;
     }
 
+    void paths_count_label(const T& from, const T& to) {
+        assert(_index.contains(from) && _index.contains(to));
+        paths_count(_index[from], _index[to]);
+    }
+
+    auto paths_count(const int source, const int target) {
+        assert(0 <= source && source < _size && 0 <= target && target < _size);
+        _seen.assign(_size, false);
+        _dist.assign(_size, 0);
+        _dist[target] = 1;
+        paths_count_internal(source);
+        return _dist;
+    }
+
     static constexpr const int INF = (1 << 30) - 1;
 
   private:
@@ -565,6 +579,20 @@ struct graph_t
 
         if (p == -1 && children > 1)
             cutpoints.push_back(v);
+    }
+
+    int paths_count_internal(const int f) {
+        auto& count = _dist[f];
+        if (count != 0)
+            return count;
+
+        _seen[f] = true;
+        for (const auto& [to, _] : _adj[f])
+            if (!_seen[to])
+                count += paths_count_internal(to);
+        _seen[f] = false;
+
+        return count;
     }
 };
 
