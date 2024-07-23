@@ -9,27 +9,44 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=RVlGy5XNBIY&S=picture
 #include <array>
 #include <cassert>
 #include <fstream>
+#include <vector>
 
 std::ifstream task_in("picture.in");
 std::ofstream task_out("picture.out");
 
-static constexpr int offset = 10001;
-static constexpr int size = 2 * offset + 1;
-std::array<std::array<bool, size>, size> canvas{};
-std::array<bool, size> row_taken{}, col_taken{};
+static constexpr int MAX = 10000;
+
 int main(int, char**)
 {
-    int N;
+    int N, mx{MAX}, Mx{-MAX}, my{MAX}, My{-MAX};
+    std::vector<std::array<int, 4>> pictures;
     for (task_in >> N; N; --N) {
         int lx, ly, ux, uy;
         task_in >> lx >> ly >> ux >> uy;
-        lx += offset;
-        ly += offset;
-        ux += offset;
-        uy += offset;
         assert(lx <= ux && ly <= uy);
-        std::fill(row_taken.data() + ly, row_taken.data() + uy, true);
-        std::fill(col_taken.data() + lx, col_taken.data() + ux, true);
+        mx = std::min(mx, lx);
+        Mx = std::max(Mx, ux);
+        my = std::min(my, ly);
+        My = std::max(My, uy);
+        pictures.push_back({lx, ly, ux, uy});
+    }
+
+    const int size_x = Mx - mx + 2;
+    const int size_y = My - my + 2;
+    const int offset_x = (mx <= 0) ? -mx + 1 : 0;
+    const int offset_y = (my <= 0) ? -my + 1 : 0;
+
+    std::vector<std::vector<bool>> canvas(size_y, std::vector<bool>(size_x));
+    std::vector<bool> row_taken(size_y), col_taken(size_x);
+    for (auto& [lx, ly, ux, uy] : pictures) {
+        lx += offset_x;
+        ly += offset_y;
+        ux += offset_x;
+        uy += offset_y;
+        for (int x = lx; x < ux; ++x)
+            col_taken[x] = true;
+        for (int y = ly; y < uy; ++y)
+            row_taken[y] = true;
         for (int r = ly; r < uy; ++r)
             for (int c = lx; c < ux; ++c)
                 canvas[r][c] = true;
@@ -37,17 +54,17 @@ int main(int, char**)
 
     int ans{};
     auto& prev_row = canvas[0];
-    for (int r = 1; r < size; ++r) {
+    for (int r = 1; r < size_y; ++r) {
         const auto& cur_row = canvas[r];
         if (row_taken[r] || row_taken[r - 1]) {
-            for (int c = 0; c < size; ++c)
+            for (int c = 0; c < size_x; ++c)
                 ans += prev_row[c] ^ cur_row[c];
         }
 
         prev_row = cur_row;
     }
 
-    for (int cur_col = 1; cur_col < size; ++cur_col)
+    for (int cur_col = 1; cur_col < size_x; ++cur_col)
         if (col_taken[cur_col - 1] || col_taken[cur_col])
             for (const auto& cur_row : canvas)
                 ans += cur_row[cur_col - 1] ^ cur_row[cur_col];
