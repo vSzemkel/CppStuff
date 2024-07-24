@@ -9,6 +9,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=RVlGy5XNBIY&S=picture
 #include <array>
 #include <cassert>
 #include <fstream>
+#include <set>
 #include <vector>
 
 std::ifstream task_in("picture.in");
@@ -16,11 +17,32 @@ std::ofstream task_out("picture.out");
 
 static constexpr int MAX = 10000;
 
+using rect_t = std::array<int, 4>;
+const auto left_check = [](const rect_t& p1, const rect_t& p2) {
+    return p1[0] < p2[0];
+};
+const auto right_check = [](const rect_t& p1, const rect_t& p2) {
+    return p1[2] < p2[2];
+};
+std::multiset<rect_t, decltype(right_check)> window(right_check);
+
+void get_strip(std::vector<bool>& strip, int col)
+{
+    while (!window.empty() && (*window.begin())[2] <= col)
+        window.erase(window.begin());
+
+    std::fill(strip.begin(), strip.end(), false);
+    for (const auto& r : window)
+        std::fill(strip.begin() + r[1], strip.begin() + r[3], true);
+}
+
 int main(int, char**)
 {
     int N, mx{MAX}, Mx{-MAX}, my{MAX}, My{-MAX};
-    std::vector<std::array<int, 4>> pictures;
-    for (task_in >> N; N; --N) {
+    task_in >> N;
+    std::vector<rect_t> pictures;
+    pictures.reserve(N);
+    for (int z = N; z; --z) {
         int lx, ly, ux, uy;
         task_in >> lx >> ly >> ux >> uy;
         assert(lx <= ux && ly <= uy);
@@ -31,43 +53,44 @@ int main(int, char**)
         pictures.push_back({lx, ly, ux, uy});
     }
 
-    const int size_x = Mx - mx + 2;
-    const int size_y = My - my + 2;
+    int size_x = Mx - mx + 2;
+    int size_y = My - my + 2;
     const int offset_x = (mx <= 0) ? -mx + 1 : 0;
     const int offset_y = (my <= 0) ? -my + 1 : 0;
 
-    std::vector<std::vector<bool>> canvas(size_y, std::vector<bool>(size_x));
-    std::vector<bool> row_taken(size_y), col_taken(size_x);
     for (auto& [lx, ly, ux, uy] : pictures) {
         lx += offset_x;
         ly += offset_y;
         ux += offset_x;
         uy += offset_y;
-        for (int x = lx; x < ux; ++x)
-            col_taken[x] = true;
-        for (int y = ly; y < uy; ++y)
-            row_taken[y] = true;
-        for (int r = ly; r < uy; ++r)
-            for (int c = lx; c < ux; ++c)
-                canvas[r][c] = true;
     }
 
     int ans{};
-    auto& prev_row = canvas[0];
-    for (int r = 1; r < size_y; ++r) {
-        const auto& cur_row = canvas[r];
-        if (row_taken[r] || row_taken[r - 1]) {
-            for (int c = 0; c < size_x; ++c)
-                ans += prev_row[c] ^ cur_row[c];
+    for (int z = 2; true; --z) {
+        std::vector<bool> prev_strip(size_y), cur_strip(size_y);
+        std::sort(pictures.begin(), pictures.end(), left_check);
+
+        int pi{};
+        while (pi < N && pictures[pi][0] == 0)
+            window.insert(pictures[pi++]);
+        for (int i = 1; i < size_x; ++i) {
+            while (pi < N && pictures[pi][0] == i)
+                window.insert(pictures[pi++]);
+            get_strip(cur_strip, i);
+            for (int r = 0; r < size_y; ++r)
+                ans += prev_strip[r] ^ cur_strip[r];
+            std::swap(prev_strip, cur_strip);
         }
 
-        prev_row = cur_row;
-    }
+        if (z == 1)
+            break;
 
-    for (int cur_col = 1; cur_col < size_x; ++cur_col)
-        if (col_taken[cur_col - 1] || col_taken[cur_col])
-            for (const auto& cur_row : canvas)
-                ans += cur_row[cur_col - 1] ^ cur_row[cur_col];
+        std::swap(size_x, size_y);
+        for (auto& [lx, ly, ux, uy] : pictures) {
+            std::swap(lx, ly);
+            std::swap(ux, uy);
+        }
+    }
 
     task_out << ans << '\n';
 }
