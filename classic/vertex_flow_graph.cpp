@@ -18,8 +18,6 @@ struct vertex_flow_graph_t
         reset(); 
     }
 
-    auto size() const { return _size; }
-
     void add_edge(const int from, const int to, const int capacity = INF) {
         assert(0 <= from && from < _size && 0 <= to && to < _size);
         _adj[from].push_back(to);
@@ -88,14 +86,15 @@ struct vertex_flow_graph_t
 
     /**
      * Every proper path must include returning edge, so it has unit flow
+     * Skip internal edge in target node
      */
     T compute_max_flow(const int source, const int target) {
         T flow{};
         while (bfs(source, target)) {
             ++flow;
             for (int cur = _pred[target], prev = _pred[cur]; ~prev; cur = prev, prev = _pred[prev]) {
-                _capacity[prev][cur] -= 1;
-                _capacity[cur][prev] += 1;
+                --_capacity[prev][cur];
+                ++_capacity[cur][prev];
             }
         }
 
