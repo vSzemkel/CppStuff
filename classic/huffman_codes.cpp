@@ -22,8 +22,9 @@ int main(int, char**)
     int uncompresed_length{};
     std::unordered_map<char, int> freq;
     std::ifstream text("huffman_codes.cpp", std::ios_base::binary);
+    text >> std::noskipws;
     while (text.good()) {
-        text >> std::noskipws >> c;
+        text >> c;
         ++uncompresed_length;
         ++freq[c];
     }
@@ -31,7 +32,7 @@ int main(int, char**)
     // enumerate chars and build mpq
     short next{0};
     std::unordered_map<short, char> rev_index;
-    min_pq_t<std::pair<int, short>> mpq; // { freq, decltype(next)}
+    min_pq_t<std::pair<int, short>> mpq; // { freq, decltype(next) }
     for (const auto& f : freq) {
         rev_index[next] = f.first;
         mpq.emplace(f.second, next++);
@@ -50,7 +51,7 @@ int main(int, char**)
     assert(mpq.size() == 1);
 
     // DFS the tree and save codes
-    std::vector<std::pair<int, std::string>> stack(1, {next - 1, {}});
+    std::vector<std::pair<short, std::string>> stack(1, {short(next - 1), {}});
     std::unordered_map<char, std::string> char2code;
     std::unordered_map<std::string, char> code2char;
     while (!stack.empty()) {
@@ -70,7 +71,7 @@ int main(int, char**)
     text.clear();
     text.seekg(0);
     while (text.good()) {
-        text >> std::noskipws >> c;
+        text >> c;
         compressed << char2code[c];
     }
     text.close();
@@ -100,7 +101,7 @@ g++ -Wall -Wextra -ggdb3 -Og -std=c++20 -fsanitize=address huffman_codes.cpp -o 
 Output:
 
 Number of distinct characters: 69
-Original length: 3211
+Original length: 3215
 Compressed length: 1965
 
 #include <assert.h>
