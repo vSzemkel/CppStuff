@@ -10,9 +10,10 @@
 
 // Suffix Array
 // https://cp-algorithms.com/string/suffix-array.html
+// see: /usaco/chapter5/hidden.cpp
 
 struct suffix_array_t {
-    auto sort_cyclic_shifts(const std::string& s) { // O(NlogN)
+    static auto sort_cyclic_shifts(const std::string& s) { // O(NlogN)
         const int alphabet = 256;
         const int n = int(s.size());
         // preprocess single characters with counting sort
@@ -62,7 +63,7 @@ struct suffix_array_t {
         return rank;
     }
 
-    std::vector<int> suffix_array(const std::string& s) {
+    static std::vector<int> suffix_array(const std::string& s) {
         const auto sorted_shifts = sort_cyclic_shifts(s + '$');
         return {sorted_shifts.begin() + 1, sorted_shifts.end()};
     }

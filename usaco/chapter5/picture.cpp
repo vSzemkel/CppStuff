@@ -18,13 +18,10 @@ std::ofstream task_out("picture.out");
 static constexpr int MAX = 10000;
 
 using rect_t = std::array<int, 4>;
-const auto left_check = [](const rect_t& p1, const rect_t& p2) {
-    return p1[0] < p2[0];
-};
-const auto right_check = [](const rect_t& p1, const rect_t& p2) {
-    return p1[2] < p2[2];
-};
-std::multiset<rect_t, decltype(right_check)> window(right_check);
+const auto sort_by_left = [](const rect_t& p1, const rect_t& p2) { return p1[0] < p2[0]; };
+const auto sort_by_right = [](const rect_t& p1, const rect_t& p2) { return p1[2] < p2[2]; };
+// use multiset to include all rectangles sharing the same right coordinate
+std::multiset<rect_t, decltype(sort_by_right)> window(sort_by_right);
 
 void get_strip(std::vector<bool>& strip, int col)
 {
@@ -36,6 +33,11 @@ void get_strip(std::vector<bool>& strip, int col)
         std::fill(strip.begin() + r[1], strip.begin() + r[3], true);
 }
 
+/**
+ * 1. Shift and bound, leaving an empty unit size margin
+ * 2. Solve for verticals, rotate, solve for horizontals
+ * 3. Sweep verticals keeping sliding window of overlapping rectangles
+ */
 int main(int, char**)
 {
     int N, mx{MAX}, Mx{-MAX}, my{MAX}, My{-MAX};
@@ -58,25 +60,24 @@ int main(int, char**)
     const int offset_x = (mx <= 0) ? -mx + 1 : 0;
     const int offset_y = (my <= 0) ? -my + 1 : 0;
 
+    std::set<int> verticals, horizontals;
     for (auto& [lx, ly, ux, uy] : pictures) {
-        lx += offset_x;
-        ly += offset_y;
-        ux += offset_x;
-        uy += offset_y;
+        verticals.insert(lx += offset_x);
+        horizontals.insert(ly += offset_y);
+        verticals.insert(ux += offset_x);
+        horizontals.insert(uy += offset_y);
     }
 
     int ans{};
     for (int z = 2; true; --z) {
         std::vector<bool> prev_strip(size_y), cur_strip(size_y);
-        std::sort(pictures.begin(), pictures.end(), left_check);
+        std::sort(pictures.begin(), pictures.end(), sort_by_left);
 
         int pi{};
-        while (pi < N && pictures[pi][0] == 0)
-            window.insert(pictures[pi++]);
-        for (int i = 1; i < size_x; ++i) {
-            while (pi < N && pictures[pi][0] == i)
+        for (const int c : verticals) {
+            while (pi < N && pictures[pi][0] == c)
                 window.insert(pictures[pi++]);
-            get_strip(cur_strip, i);
+            get_strip(cur_strip, c);
             for (int r = 0; r < size_y; ++r)
                 ans += prev_strip[r] ^ cur_strip[r];
             std::swap(prev_strip, cur_strip);
@@ -85,7 +86,9 @@ int main(int, char**)
         if (z == 1)
             break;
 
+        assert(window.empty());
         std::swap(size_x, size_y);
+        std::swap(verticals, horizontals);
         for (auto& [lx, ly, ux, uy] : pictures) {
             std::swap(lx, ly);
             std::swap(ux, uy);
