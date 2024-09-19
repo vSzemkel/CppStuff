@@ -21,33 +21,29 @@ union state_t {
     int32_t state;
 } ;
 
-int SZ, ALL, final, ans{}, count{1};
+state_t final;
+int SZ, ALL, ans{}, count{1};
 std::vector<bool> visited;
 constexpr const int /*N{0}, E{1},*/ S{2}, W{3};
 constexpr const int8_t DR[] = {-1, 0, +1, 0};
 constexpr const int8_t DC[] = {0, +1, 0, -1};
 
-void ride(int state)
+void ride(const state_t s)
 {
-    if (count == ALL && state == final) {
+    if (count == ALL && s.state == final.state) {
         ++ans;
         return;
     }
 
     ++count;
-    state_t s = *reinterpret_cast<state_t*>(&state);
-//std::cout << (int)s.row << ' ' << (int)s.column << " avoid " << (int)s.avoid << '\n';
     for (int z = 3, dir = (s.avoid + 1) % 4; z; --z, dir = (dir + 1) % 4) {
-        const auto nr = s.row + DR[dir];
-        const auto nc = s.column + DC[dir];
+        const int8_t nr = s.row + DR[dir];
+        const int16_t nc = s.column + DC[dir];
         const auto vertex = nr * SZ + nc;
         if (0 <= nr && nr < 4 && 0 <= nc && nc < SZ && !visited[vertex]) {
-            state_t next;
-            next.row = nr;
-            next.column = nc;
-            next.avoid = (dir + 2) % 4;
+            state_t next{ .row = nr, .column = nc, .avoid = static_cast<int8_t>((dir + 2) % 4) };
             visited[vertex] = true;
-            ride(*reinterpret_cast<int*>(&next));
+            ride(next);
             visited[vertex] = false;
         }
     }
@@ -59,17 +55,11 @@ int main(int, char**)
     task_in >> SZ;
     if (SZ > 1) {
         ALL = 4 * SZ;
-        visited.assign(4 * SZ, false);
+        visited.assign(ALL, false);
         visited[1] = true;
-        state_t init;
-        init.row = 0;
-        init.column = 1;
-        init.avoid = W;
-        auto f = init;
-        f.column = 0;
-        f.avoid = S;
-        final = *reinterpret_cast<int*>(&f);
-        ride(*reinterpret_cast<int*>(&init));
+        state_t init{ .row = 0, .column = 1, .avoid = W };
+        final = state_t{ .row = 0, .column = 0, .avoid = S };
+        ride(init);
     }
 
     task_out << 2 * ans << '\n';
@@ -86,8 +76,10 @@ vans.exe && type vans.out
 
 Input:
 
+10 
 
 Output:
 
+3034
 
 */
