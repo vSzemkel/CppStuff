@@ -125,3 +125,16 @@ for (int dir = 0; dir < 4; ++dir) {
         // ...
     }
 }
+
+/************************ NO WAY BACK***********************************/
+
+constexpr const int N{0}, E{1}, S{2}, W{3};
+constexpr const int DR[] = {-1, 0, +1, 0};
+constexpr const int DC[] = {0, +1, 0, -1};
+
+for (int z = 3, dir = (s.avoid + 1) % 4; z; --z, dir = (dir + 1) % 4) {
+    const auto nr = s.row + DR[dir];
+    const auto nc = s.column + DC[dir];
+    if (0 <= nr && nr < 4 && 0 <= nc && nc < SZ && !visited[vertex]) {
+    }
+}
