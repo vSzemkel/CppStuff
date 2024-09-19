@@ -6,6 +6,7 @@ KUDOS: NerdMomentwDavid
 PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=FIktgbZZPYQ&S=twofive
 */
 
+#include <cstring>
 #include <fstream>
 #include <string>
 
@@ -36,8 +37,8 @@ int countPos(char l) {
 }
 
 void reset() {
-    ::memset(cir, 0, sizeof(cir));
-    ::memset(dp, 0, sizeof(dp));
+    std::memset(cir, 0, sizeof(cir));
+    std::memset(dp, 0, sizeof(dp));
     cir[0] = 5;
     dp[5][5][5][5][5] = 1;
 }
@@ -61,15 +62,18 @@ int main() {
     } else {
         int x;
         task_in >> x;
-        int acc{};
-        for (int i = 0; i < 25; ++i) {
-            for (char ch = 'A'; ch <= 'Y'; ++ch) {
-                reset();
-                tmp[i] = ch;
-                const int y = countPos('A');
-                if (acc + y < x) acc += y;
-                else break;
-            }
+        int acc{}, mask{};
+        for (int i = 0, bit = 1; i < 25; ++i) {
+            for (char ch = 'A'; ch <= 'Y'; ++ch, bit <<= 1)
+                if ((mask & bit) == 0) {
+                    reset();
+                    tmp[i] = ch;
+                    const int y = countPos('A');
+                    if (acc + y < x) acc += y;
+                    else break;
+                }
+
+            mask |= 1 << (tmp[i] - 'A');
         }
         task_out << tmp << '\n';
     }
