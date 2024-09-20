@@ -5,7 +5,7 @@
 #include <iterator>
 #include <string>
 
-// Bignum
+// Positive big number
 // Unsigned decimal base calculations
 // DO NOT USE in production, use Python or this:
 // https://github.com/michaeljclark/bignum
@@ -69,6 +69,10 @@ struct bignum_t {
         const auto& tail = (_bignum.size() < other._bignum.size()) ? other._bignum : _bignum;
         const auto tsz = int(tail.size());
         for (int i = sz; i < tsz; ++i) {
+            if (carry == 0) {
+                std::copy(tail.begin() + i, tail.end(), std::back_inserter(ret));
+                break;
+            }
             ret.push_back(tail[i] + carry);
             auto& last = ret.back();
             carry = last / 10;
@@ -98,6 +102,8 @@ struct bignum_t {
         if (sz < tsz)
             _bignum.resize(tsz);
         for (int i = sz; i < tsz; ++i) {
+            if (carry == 0)
+                break;
             auto& cur = _bignum[i];
             const auto val = tail[i] + carry;
             cur = val % 10;
@@ -130,6 +136,10 @@ struct bignum_t {
         const auto& tail = (_bignum.size() < other._bignum.size()) ? other._bignum : _bignum;
         const auto tsz = int(tail.size());
         for (int i = sz; i < tsz; ++i) {
+            if (borrow == 0) {
+                std::copy(tail.begin() + i, tail.end(), std::back_inserter(ret));
+                break;
+            }
             ret.push_back(tail[i] - borrow);
             auto& last = ret.back();
             if (last < 0) {
@@ -241,6 +251,9 @@ int main(int, char**)
 
     assert((bignum_t(138) ^ bignum_t(5)).to_string() == "50049003168");
     assert((bignum_t(180) ^ bignum_t(92)).to_string().substr(0, 6) == "305541");
+
+    assert(bignum_t("10000000009999999999") + 1 == bignum_t("10000000010000000000"));
+    assert(bignum_t("10000000009999999999") == bignum_t("10000000010000000000") - 1);
     std::cout << "PASSED\n";
 }
 
