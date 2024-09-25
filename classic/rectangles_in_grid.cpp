@@ -9,6 +9,7 @@
 // Rectangles in Grid
 // Maximal square, maximal rectangle, largest in histogram
 // see: /kickstart/2019/circuit_board.cpp
+// for area only histogram subtask see: /usaco/chapter6/rectbarn.cpp
 
 constexpr const int R = 10, C = 20;
 const std::string grid =
