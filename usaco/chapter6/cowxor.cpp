@@ -6,6 +6,8 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=VDkbdceba9s&S=cowxor
 */
 
 #include <fstream>
+#include <memory>
+#include <memory_resource>
 #include <unordered_map>
 #include <vector>
 
@@ -21,7 +23,7 @@ std::ofstream task_out("cowxor.out");
 static const int BITS = 21;
 static const int high_bit = 1 << (BITS - 1);
 
-int main(int, char**)
+void solution1() // MLE, TLE
 {
     int N;
     task_in >> N;
@@ -72,6 +74,94 @@ int main(int, char**)
     }
 
     task_out << ans << ' ' << beg << ' ' << end << '\n';
+}
+
+struct node_t;
+struct no_op {
+    void operator()(node_t*) const {}
+};
+using node_ptr_t = std::unique_ptr<node_t, no_op>;
+
+struct node_t
+{
+    node_t(int n) : _node(n) {}
+    operator int() const { return _node; }
+    void operator=(int n) { _node = n; }
+
+    int _node{};
+    node_ptr_t left{};
+    node_ptr_t right{};
+};
+
+void solution2()
+{
+    int N;
+    task_in >> N;
+
+    constexpr std::size_t bufferSize = 7'000'000;
+    auto buffer = std::make_unique<std::byte []>(bufferSize);
+    std::pmr::monotonic_buffer_resource poolResource(buffer.get(), bufferSize);
+    
+    int beg{1}, end{1}, ans{};
+    std::vector<int> prefix_xor(N + 1);
+    node_t root(0);
+
+    for (int i = 1; i <= N; ++i) {
+        int n;
+        task_in >> n;
+        const int cur = prefix_xor[i - 1] ^ n;
+        prefix_xor[i] = cur;
+
+        // search
+        int best{0};
+        node_t* node = &root;
+        for (int bit = high_bit; bit && node; bit >>= 1) {
+            if (cur & bit) {
+                if (node->left) {
+                    node = node->left.get();
+                    best = *node;
+                } else
+                    node = node->right.get();
+            } else {
+                if (node->right) {
+                    node = node->right.get();
+                    best = *node;
+                } else
+                    node = node->left.get();
+            }
+        }
+
+        // check
+        const int can = prefix_xor[best] ^ cur;
+        if (ans < can) {
+            ans = can;
+            beg = best + 1;
+            end = i;
+        }
+
+        // memo
+        node = &root;
+        for (int bit = high_bit; bit; bit >>= 1) {
+            if (cur & bit) {
+                if (!node->right)
+                    node->right = node_ptr_t{new (poolResource.allocate(sizeof(node_t), alignof(node_t))) node_t(i)};
+                node = node->right.get();
+            } else {
+                if (!node->left)
+                    node->left = node_ptr_t{new (poolResource.allocate(sizeof(node_t), alignof(node_t))) node_t(i)};
+                node = node->left.get();
+            }
+            *node = i;
+        }
+    }
+
+    task_out << ans << ' ' << beg << ' ' << end << '\n';
+}
+
+int main(int, char**)
+{
+    // solution1();
+    solution2();
 }
 
 /*

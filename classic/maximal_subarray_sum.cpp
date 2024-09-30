@@ -6,7 +6,7 @@
 #include <vector>
 
 // Maximal decreasing sequence
-// Given an integer sequence find the length of maximal decreasing non-consecutive subsequence
+// Given an integer sequence find the subsequence of maximal sum
 
 const auto rand_in_range = [](const int ubound){ std::random_device seed; std::mt19937 gen{seed()}; std::uniform_int_distribution<int> dist(0, ubound - 1); return dist(gen); };
 
