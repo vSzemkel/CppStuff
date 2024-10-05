@@ -32,8 +32,8 @@ class manacher_t {
     void expand(const std::string& s) {
         const int size = int(s.size());
         _exp_size = 2 * size + 3;
-        _expanded.resize(_exp_size, '#');
-        _expanded[0] = '$';
+        _expanded.assign(_exp_size, '#');
+        _expanded.front() = '$';
         _expanded.back() = '&';
         for (int i = 0; i < size; ++i)
             _expanded[2 * (i + 1)] = s[i];
