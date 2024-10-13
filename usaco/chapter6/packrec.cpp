@@ -8,6 +8,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=6xoencO1s1u&S=packrec
 #include <algorithm>
 #include <array>
 #include <fstream>
+#include <numeric>
 #include <set>
 #include <utility>
 
@@ -16,52 +17,68 @@ std::ofstream task_out("packrec.out");
 
 int ans = 1e09;
 static constexpr int N = 4;
+std::array<int, N> perm;
 std::array<std::pair<int, int>, N> rects;
 std::set<std::pair<int, int>> solution;
+
+/**
+ * As rectangles have specific roles in analyse() we need all 
+ * 384 permutation, even if some rectangles are identical
+ */
+auto rw(const int ind)
+{
+    return rects[perm[ind]].first;
+}
+
+auto rh(const int ind)
+{
+    return rects[perm[ind]].second;
+}
 
 void check(int w, int h) 
 {
     const auto can = w * h;
-    if (can < ans) {
-        if (w > h) std::swap(w, h);
-        if (can < ans)
+    if (can <= ans) {
+        if (w > h)
+            std::swap(w, h);
+        if (can < ans) {
             solution.clear();
+            ans = can;
+        }
         solution.emplace(w, h);
-        ans = can;
     }
 }
 
-void analyze() 
+void analyze()
 {
     int w{}, h{};
     for (int i = 0; i < N; ++i) {
-        w += rects[i].first;
-        h = std::max(h, rects[i].second);
+        w += rw(i);
+        h = std::max(h, rh(i));
     }
     check(w, h);
 
-    w -= rects[3].first;
-    w = std::max(w, rects[3].first);
-    h = rects[3].second + std::max({rects[0].second, rects[1].second, rects[2].second});
+    w = std::max(w - rw(3), rw(3));
+    h = rh(3) + std::max({rh(0), rh(1), rh(2)});
     check(w, h);
 
-    w = std::max(rects[0].first + rects[1].first, rects[2].first) + rects[3].first;
-    h = std::max(std::max(rects[0].second, rects[1].second) + rects[2].second, rects[3].second);
+    w = std::max(rw(0) + rw(1), rw(2)) + rw(3);
+    h = std::max(std::max(rh(0), rh(1)) + rh(2), rh(3));
     check(w, h);
 
-    w = std::max(rects[0].first, rects[1].first) + rects[2].first + rects[3].first;
-    h = std::max({rects[0].second + rects[1].second, rects[2].second, rects[3].second});
+    w = std::max(rw(0), rw(1)) + rw(2) + rw(3);
+    h = std::max({rh(0) + rh(1), rh(2), rh(3)});
     check(w, h);
 
-    if (rects[0].first <= rects[1].first && rects[1].second <= rects[2].second && rects[3].first <= rects[1].first + rects[2].first
-    && ((rects[0].first + rects[3].first <= rects[1].first + rects[2].first) || (rects[0].second + rects[1].second <= rects[2].second))) {
-        w = rects[1].first + rects[2].first;
-        h = std::max(rects[0].second + rects[1].second, rects[2].second + rects[3].second);
+    if (rw(0) <= rw(1) && rh(1) <= rh(2) && rw(3) <= rw(1) + rw(2)
+    && ((rw(0) + rw(3) <= rw(1) + rw(2)) || (rh(0) + rh(1) <= rh(2)))) {
+        w = rw(1) + rw(2);
+        h = std::max(rh(0) + rh(1), rh(2) + rh(3));
         check(w, h);
     }
 }
 
-void rotate(int order)
+void rotate(const int order)
 {
     if (order == N)
         analyze();
@@ -78,13 +95,13 @@ int main(int, char**)
     for (auto& [w, h] : rects)
         task_in >> w >> h;
 
-    std::sort(rects.begin(), rects.end());
+    std::iota(perm.begin(), perm.end(), 0);
     do {
         rotate(0);
-    } while (std::next_permutation(rects.begin(), rects.end()));
+    } while (std::next_permutation(perm.begin(), perm.end()));
 
     task_out << ans << '\n';
-    for (auto& [w, h] : solution)
+    for (const auto& [w, h] : solution)
         task_out << w << ' ' << h << '\n';
 }
 
