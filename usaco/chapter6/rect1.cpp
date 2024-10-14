@@ -8,6 +8,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=j4kadQZ1Cxc&S=rect1
 #include <algorithm>
 #include <array>
 #include <fstream>
+#include <functional>
 #include <map>
 #include <vector>
 
@@ -54,9 +55,72 @@ void solution1()
         task_out << color << ' ' << count << '\n';
 }
 
+void solution2()
+{
+    using rect_t = std::array<int, 4>;
+    int R, C, N, cnt{};
+    task_in >> C >> R >> N;
+    std::map<int, int> ans;
+    std::vector<int> taken(R);
+    std::vector<int> color(N);
+    std::vector<rect_t> rect(N); // llx, lly, urx, ury, color
+    for (auto& s : rect)
+        task_in >> s[0] >> s[1] >> s[2] >> s[3] >> color[cnt++];
+
+    color.push_back(1);
+    rect.push_back(rect_t{0, 0, C, R});
+    std::rotate(color.begin(), color.end() - 1, color.end());
+    std::rotate(rect.begin(), rect.end() - 1, rect.end());
+
+    const auto intersection = [&](const rect_t& lower, const rect_t& upper) {
+        std::vector<rect_t> ret;
+        if (upper[2] <= lower[0] || lower[2] <= upper[0] || upper[3] <= lower[1] || lower[3] <= upper[1])
+            ret.push_back(lower);
+        else {
+            if (lower[0] < upper[0])
+                ret.push_back({lower[0], lower[1], upper[0], lower[3]});
+            if (lower[1] < upper[1])
+                ret.push_back({std::max(lower[0], upper[0]), lower[1], std::min(lower[2], upper[2]), upper[1]});
+            if (upper[2] < lower[2])
+                ret.push_back({upper[2], lower[1], lower[2], lower[3]});
+            if (upper[3] < lower[3])
+                ret.push_back({std::max(lower[0], upper[0]), upper[3], std::min(lower[2], upper[2]), lower[3]});
+        }
+
+        return ret;
+    };
+
+    const std::function<int(const rect_t&, int)> visible_area = [&](const rect_t& r, int pos) {
+        if (pos == N)
+            return (r[2] - r[0]) * (r[3] - r[1]);
+
+        ++pos;
+        int ans{};
+        for (const auto& s : intersection(r, rect[pos]))
+            ans += visible_area(s, pos);
+
+        return ans;
+    };
+
+    for (int i = N; ~i; --i) {
+        auto& s = rect[i];
+        if (s[2] < s[0])
+            std::swap(s[2], s[0]);
+        if (s[3] < s[1])
+            std::swap(s[3], s[1]);
+
+        const auto va = visible_area(s, i);
+        if (0 < va)
+            ans[color[i]] += va;
+    }
+
+    for (const auto& [color, count] : ans)
+        task_out << color << ' ' << count << '\n';
+}
+
 int main(int, char**)
 {
-    solution1();
+    solution2();
 }
 /*
 
