@@ -48,6 +48,26 @@ void print_intersection(const section_t<T>& s1, const section_t<T>& s2)
         std::cout << " do not intersect\n";
 }
 
+// Lower rectangle occluded by upper gives shape that can be divided to at most 4 rectangles
+using rect_t = std::array<int, 4>;
+const auto intersection = [&](const rect_t& lower, const rect_t& upper) { // { x, y, X, Y }
+    std::vector<rect_t> ret;
+    if (upper[2] <= lower[0] || lower[2] <= upper[0] || upper[3] <= lower[1] || lower[3] <= upper[1])
+        ret.push_back(lower);
+    else {
+        if (lower[0] < upper[0])
+            ret.push_back({lower[0], lower[1], upper[0], lower[3]});
+        if (lower[1] < upper[1])
+            ret.push_back({std::max(lower[0], upper[0]), lower[1], std::min(lower[2], upper[2]), upper[1]});
+        if (upper[2] < lower[2])
+            ret.push_back({upper[2], lower[1], lower[2], lower[3]});
+        if (upper[3] < lower[3])
+            ret.push_back({std::max(lower[0], upper[0]), upper[3], std::min(lower[2], upper[2]), lower[3]});
+    }
+
+    return ret;
+};
+
 int main(int argc, char* argv[])
 {
     print_intersection<float>({{0, 0}, {10, 0}}, {{5, -5}, {5, 5}});

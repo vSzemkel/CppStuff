@@ -15,64 +15,27 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=j4kadQZ1Cxc&S=rect1
 std::ifstream task_in("rect1.in");
 std::ofstream task_out("rect1.out");
 
-void solution1()
-{
-    const int WHITE = 1;
-    int R, C, N, total{};
-    task_in >> C >> R >> N;
-    std::map<int, int> ans;
-    std::vector<int> taken(R);
-    std::vector<std::vector<bool>> board(R);
-
-    std::vector<std::array<int, 5>> rect(N); // llx, lly, urx, ury, color
-    for (auto& r : rect)
-        task_in >> r[0] >> r[1] >> r[2] >> r[3] >> r[4];
-
-    for (int i = N - 1; ~i; --i) {
-        auto& s = rect[i];
-        if (s[2] < s[0])
-            std::swap(s[2], s[0]);
-        if (s[3] < s[1])
-            std::swap(s[3], s[1]);
-
-        for (int r = s[1]; r < s[3]; ++r) {
-            auto& row = board[r];
-            if (row.empty())
-                row.resize(C);
-            std::fill_n(row.begin() + s[0], s[2] - s[0], true);
-            const auto ntaken = std::count_if(row.begin(), row.end(), [](const bool value){ return value; });
-            const auto d = ntaken - taken[r];
-            if (s[4] != WHITE && 0 < d) {
-                total += d;
-                ans[s[4]] += d;
-            }
-            taken[r] = ntaken;
-        }
-    }
-
-    task_out << "1 " << R * C - total << '\n';
-    for (const auto& [color, count] : ans)
-        task_out << color << ' ' << count << '\n';
-}
-
-void solution2()
+/**
+ * As board color is reported at an additional rectangle at the very bottom
+ * Lower rectangle ocluded by upper gives shape that can be divided to at most 4 rectangles
+ */
+int main(int, char**)
 {
     using rect_t = std::array<int, 4>;
-    int R, C, N, cnt{};
+    int R, C, N;
     task_in >> C >> R >> N;
     std::map<int, int> ans;
     std::vector<int> taken(R);
-    std::vector<int> color(N);
-    std::vector<rect_t> rect(N); // llx, lly, urx, ury, color
-    for (auto& s : rect)
-        task_in >> s[0] >> s[1] >> s[2] >> s[3] >> color[cnt++];
+    std::vector<int> color(N + 1);
+    std::vector<rect_t> rect(N + 1);
+    color[0] = 1;
+    rect[0] = {0, 0, C, R};
+    for (int i = 1; i <= N; ++i) {
+        auto& s = rect[i];
+        task_in >> s[0] >> s[1] >> s[2] >> s[3] >> color[i];
+    }
 
-    color.push_back(1);
-    rect.push_back(rect_t{0, 0, C, R});
-    std::rotate(color.begin(), color.end() - 1, color.end());
-    std::rotate(rect.begin(), rect.end() - 1, rect.end());
-
-    const auto intersection = [&](const rect_t& lower, const rect_t& upper) {
+    const auto intersection = [&](const rect_t& lower, const rect_t& upper) { // { x, y, X, Y }
         std::vector<rect_t> ret;
         if (upper[2] <= lower[0] || lower[2] <= upper[0] || upper[3] <= lower[1] || lower[3] <= upper[1])
             ret.push_back(lower);
@@ -118,10 +81,6 @@ void solution2()
         task_out << color << ' ' << count << '\n';
 }
 
-int main(int, char**)
-{
-    solution2();
-}
 /*
 
 Compile:
