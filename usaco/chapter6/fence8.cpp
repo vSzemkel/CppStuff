@@ -37,10 +37,11 @@ std::ifstream task_in("fence8.in");
 std::ofstream task_out("fence8.out");
 
 bool can;
-int K, N, B, total{};
+int K, N, B, A{}, total{};
 std::vector<int> board;
 std::vector<int> rail, prefsum;
 std::vector<int> buckets;
+std::vector<std::vector<int>> content;
 
 template <typename T, typename U>
 static T last_true(T lo, T hi, U f) {
@@ -53,17 +54,55 @@ static T last_true(T lo, T hi, U f) {
     return lo;
 }
 
-void distribute_bitmask(std::vector<int>& buckets, const int pos)
+void basic_truncate()
 {
-    if (pos == B)
+    const auto M = *std::max_element(board.begin(), board.end());
+    const auto nend = std::upper_bound(rail.begin(), rail.end(), M);
+    rail.erase(nend, rail.end());
+
+    N = int(rail.size());
+    prefsum.resize(N);
+    std::inclusive_scan(rail.begin(), rail.end(), prefsum.begin());
+
+    total = std::accumulate(board.begin(), board.end(), 0);
+}
+
+void distribute(std::vector<int>& buckets, int pos)
+{
+    if (pos == B) {
         can = true;
-    else {
+        std::vector<int> full_buckets;
+        for (int i = 0; i < K; ++i)
+            if (buckets[i] == board[i])
+                full_buckets.push_back(i);
+
+        std::vector<int> rails_to_del;
+        const auto sz = int(full_buckets.size());
+        for (int i = sz - 1; ~i; --i) {
+            const auto del_bucket = full_buckets[i];
+            board.erase(board.begin() + del_bucket);
+            rails_to_del.insert(rails_to_del.end(), content[del_bucket].begin(), content[del_bucket].end());
+        }
+
+        const auto rd = int(rails_to_del.size());
+        std::sort(rails_to_del.begin(), rails_to_del.end(), std::greater<>{});
+        for (int i = 0; i < rd; ++i)
+            rail.erase(rail.begin() + rails_to_del[i]);
+
+        A += sz;
+        K -= sz;
+        N -= rd;
+        basic_truncate();
+    } else {
         const int cur = rail[pos];
         for (int i = 0; !can && i < K; ++i) {
             auto& bucket = buckets[i];
+            auto& items = content[i];
             if (bucket + cur <= board[i]) {
                 bucket += cur;
-                distribute_bitmask(buckets, pos + 1);
+                items.push_back(pos);
+                distribute(buckets, pos + 1);
+                items.pop_back();
                 bucket -= cur;
             }
         }
@@ -72,13 +111,14 @@ void distribute_bitmask(std::vector<int>& buckets, const int pos)
 
 bool check(const int b)
 {
-    if (total < prefsum[b - 1])
+    B = b - A;
+    if (total < prefsum[B - 1])
         return false;
 
-    B = b;
     can = false;
+    content.assign(K, {});
     buckets.assign(K, 0);
-    distribute_bitmask(buckets, 0);
+    distribute(buckets, 0);
     return can;
 }
 
@@ -86,6 +126,7 @@ int main(int, char**)
 {
     task_in >> K;
     board.resize(K);
+    content.resize(K);
     for (auto& b : board)
         task_in >> b;
     task_in >> N;
@@ -93,15 +134,8 @@ int main(int, char**)
     for (auto& b : rail)
         task_in >> b;
 
-    const auto M = *std::max_element(board.begin(), board.end());
     std::sort(rail.begin(), rail.end());
-    const auto nend = std::upper_bound(rail.begin(), rail.end(), M);
-    rail.erase(nend, rail.end());
-
-    N = int(rail.size());
-    prefsum.resize(N);
-    std::inclusive_scan(rail.begin(), rail.end(), prefsum.begin());
-    total = std::accumulate(board.begin(), board.end(), 0);
+    basic_truncate();
 
     task_out << last_true(0, N, check) << '\n';
 }
