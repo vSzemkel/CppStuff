@@ -14,7 +14,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=CKUJn5l4XVD&S=fence8
 std::ifstream task_in("fence8.in");
 std::ofstream task_out("fence8.out");
 
-int K, N, W, B, total{};
+int K, N, shortest, required, stock;
 std::vector<int> board, rail, spaces, prefsum;
 
 template <typename T, typename U>
@@ -28,28 +28,38 @@ static T last_true(T lo, T hi, U f) {
     return lo;
 }
 
+/**
+ * Observation1: If we can cut C rails, we can always cut C shortest rails
+ * Observation2: We cut longer rails first, as finding a spece for shorters is easier
+ * Observation3: We can ignore rails longer than longest board
+ * Observation4: If prefix sum of sorted rails gets greater than stock, ignore rest of rails
+ * Def: Waste is unused part of a board shorter than shortest required rail
+ * Observation5: If sum of required rails plus waste is greater than stock, we fail
+ * Observation6: Prefer zero waste. If we can use a board fully, we choose to do so
+ * Observation7: If we fail after zero waste cut, we fail also in other cuts
+ */
 bool distribute(int pos, int waste)
 {
     if (pos < 0)
         return true;
-    if (total - prefsum[B - 1] < waste)
+    if (stock - required < waste) // 5
         return false;
 
-    const int cur = rail[pos];
+    const int cur = rail[pos]; // 1
     for (auto& space : spaces) {
-        if (cur == space) {
+        if (cur == space) { // 6
             space -= cur;
             const auto ret = distribute(pos - 1, waste);
             space += cur;
-            return ret;
+            return ret; // 7
         }
     }
 
     for (auto& space : spaces) {
         if (cur < space) {
             space -= cur;
-            const auto nw = space < W ? waste + space : waste;
-            if (distribute(pos - 1, nw))
+            const auto nw = space < shortest ? waste + space : waste;
+            if (distribute(pos - 1, nw)) // 2
                 return true;
             space += cur;
         }
@@ -60,8 +70,8 @@ bool distribute(int pos, int waste)
 
 bool check(const int b)
 {
-    B = b;
     spaces = board;
+    required = prefsum[b - 1];
     return distribute(b - 1, 0);
 }
 
@@ -77,12 +87,14 @@ int main(int, char**)
     for (auto& b : rail)
         task_in >> b;
 
-    total = std::accumulate(board.begin(), board.end(), 0);
+    stock = std::accumulate(board.begin(), board.end(), 0);
+    const auto longest_board = *std::max_element(board.begin(), board.end());
     std::sort(rail.begin(), rail.end());
-    std::inclusive_scan(rail.begin(), rail.end(), prefsum.begin());
-    W = rail.front();
-    N = std::upper_bound(prefsum.begin(), prefsum.end(), total) - prefsum.begin();
+    N = std::upper_bound(rail.begin(), rail.end(), longest_board) - rail.begin(); // 3
+    std::inclusive_scan(rail.begin(), rail.begin() + N, prefsum.begin());
+    N = std::upper_bound(prefsum.begin(), prefsum.begin() + N, stock) - prefsum.begin(); // 4
     rail.resize(N);
+    shortest = rail.front();
 
     task_out << last_true(0, N, check) << '\n';
 }
