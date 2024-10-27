@@ -16,59 +16,57 @@ std::ifstream task_in("cryptcow.in");
 std::ofstream task_out("cryptcow.out");
 
 static const std::string pattern = "Begin the Escape execution at the Break of Dawn";
-static const int length = int(pattern.size());
+static const auto length = int(pattern.size());
+
+int optimal_rotate(int offset, const std::string& msg) {
+    while (offset < length && msg[offset] == pattern[offset])
+        ++offset;
+
+    if (offset == length)
+        return 0;
+
+    int ans{length}, next_m{offset};
+    while (true) {
+        auto m = msg.find(pattern[offset], next_m);
+        if (m == std::string::npos)
+            break;
+        next_m = m + 1;
+
+        int x{offset}, matched{0};
+        while (int(m) < length && msg[m] == pattern[x]) {
+            ++m;
+            ++x;
+            ++matched;
+        }
+
+        auto mm = msg;
+        std::rotate(mm.begin() + offset, mm.begin() + m - matched, mm.begin() + m);
+        ans = std::min(ans, optimal_rotate(offset + matched, mm));
+    }
+
+    return ans + 1;
+}
 
 int main(int, char**)
 {
     std::string msg;
     std::getline(task_in, msg);
 
-    msg.erase(msg.begin() + msg.find('C'));
-    msg.erase(msg.begin() + msg.find('O'));
-    msg.erase(msg.begin() + msg.find('W'));
+    const auto allowed_rotates = std::count(msg.begin(), msg.end(), 'C');
+    std::string tmpmsg{msg};
+    std::copy_if(msg.begin(), msg.end(), tmpmsg.begin(), [](const char c){ return c != 'C' && c != 'O' && c != 'W'; });
+    tmpmsg.erase(tmpmsg.end() - 3 * allowed_rotates, tmpmsg.end());
+    msg = std::move(tmpmsg);
 
-    int pos{-1};
-    std::unordered_map<char, std::vector<int>> patstat;
-    for (const auto c : msg)
-        patstat[c].push_back(++pos);
-    pos = -1;
-    std::unordered_map<char, std::vector<int>> msgstat;
-    for (const auto c : msg)
-        msgstat[c].push_back(++pos);
+    std::string sortedmsg{msg}, sortedpat{pattern};
+    std::sort(sortedmsg.begin(), sortedmsg.end());
+    std::sort(sortedpat.begin(), sortedpat.end());
+    if (sortedmsg == sortedpat && optimal_rotate(0, msg) <= allowed_rotates) {
+        task_out << "1 " << allowed_rotates << '\n';
+        return 0;
+    }
 
-    if (msgstat == patstat) {
-        int count{}, x{};
-        while (true) {
-            int bestl{}, bestx{};
-            const auto last_x{x};
-            for (auto m : msgstat[pattern[last_x]])
-                if (last_x <= m) {
-                    int matched{0};
-                    x = last_x;
-                    while (m < length && msg[m] == pattern[x]) {
-                        ++m;
-                        ++x;
-                        ++matched;
-                    }
-                    if (bestl < matched) {
-                        bestl = matched;
-                        bestx = m - matched;
-                    }
-                }
-
-            if (bestl) {
-                if (last_x < bestx) {
-                    std::rotate(msg.begin() + last_x, msg.begin() + bestx, msg.begin() + bestx + bestl);
-                    ++count;
-                }
-                x = bestx + bestl;
-            } else
-                break;
-        }
-
-        task_out << "1 " << count << '\n';
-    } else
-        task_out << "0 0\n";
+    task_out << "0 0\n";
 }
 
 /*
