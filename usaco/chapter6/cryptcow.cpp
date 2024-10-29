@@ -6,7 +6,6 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=X6PkS8rPEaP&S=cryptcow
 */
 
 #include <algorithm>
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <string_view>
@@ -36,6 +35,16 @@ bool check_middle(std::string_view msg, int offset)
     }
 }
 
+/**
+ * Observation1: To read all cow characters positions it is enough to scan message once
+ * Observation2: Leftmost cow character of valid input must be 'C', rightmost must be 'W'
+ * Observation3: Left part before first 'C' must match pattern, the same for right after last 'W'
+ * Observation4: Middle part tokens between cow characters must be present in pattern
+ * Observation5: Solution works faster if we iterate 'W' backwards
+ * Observation6: std::rotate and 3 calls to std::erase better to write by hand
+ * Observation7: Strings to check repeats - caching will help
+ * Observation8: Memory limit too small for full caching
+ */
 int optimal_rotate(int round, std::string_view msg, int offset)
 {
     if (round == swaps)
@@ -43,8 +52,8 @@ int optimal_rotate(int round, std::string_view msg, int offset)
 
     const auto hash = hh(msg);
     if (seen.count(hash) > 0)
-        return -1;
-    if (seen.size() < 249'000)
+        return -1; // 7
+    if (seen.size() < 473'000) // 8
         seen.insert(hash);
 
     int h, t;
@@ -52,31 +61,38 @@ int optimal_rotate(int round, std::string_view msg, int offset)
         if (msg[h] == 'C')
             break;
         if (msg[h] == 'O' || msg[h] == 'W')
-            return -1;
+            return -1; // 2
     }
 
     for (t = int(msg.size()) - 1; ~t; --t) {
         if (msg[t] == 'W')
             break;
         if (msg[t] == 'C' || msg[t] == 'O')
-            return -1;
+            return -1; // 2
     }
 
+    const size_t nlen = t - h - 2;
+    const int csw = swaps - round;
+
     std::vector<int> stat_c, stat_o, stat_w;
-    for (int i = h; i <= t; ++i) {
+    stat_c.reserve(csw);
+    stat_o.reserve(csw);
+    stat_w.reserve(csw);
+    for (int i = h; i <= t; ++i) { // 1
         if (msg[i] == 'C') stat_c.push_back(i);
         if (msg[i] == 'O') stat_o.push_back(i);
         if (msg[i] == 'W') stat_w.push_back(i);
     }
-    std::reverse(stat_w.begin(), stat_w.end());
+    std::reverse(stat_w.begin(), stat_w.end()); // 5
 
-    const size_t nlen = t - h - 2;
 
     if (
-        std::equal(msg.begin(), msg.begin() + h, pattern.begin() + offset)
-     && std::equal(msg.begin() + t + 1, msg.end(), pattern.begin() + offset + t + 1 - (3 * (swaps - round)))
-     && check_middle(std::string_view{msg.data() + h, nlen}, offset)
+        std::equal(msg.begin(), msg.begin() + h, pattern.begin() + offset) // 3
+     && std::equal(msg.begin() + t + 1, msg.end(), pattern.begin() + offset + t + 1 - (3 * csw))
+     && check_middle(std::string_view{msg.data() + h + 1, nlen + 1}, offset) // 4
     ) {
+        std::string nmsg;
+        nmsg.resize(nlen);
         const auto noff = offset + h;
 
         for (int c : stat_c)
@@ -84,8 +100,6 @@ int optimal_rotate(int round, std::string_view msg, int offset)
                 if (c < o)
                     for (int w : stat_w)
                         if (o < w) {
-                            std::string nmsg;
-                            nmsg.resize(nlen);
                             auto to_write = nmsg.begin();
                             // rotate + 3x erase
                             to_write = std::copy_n(msg.begin() + h, c - h, to_write);
@@ -105,16 +119,6 @@ int main(int, char**)
 {
     std::string msg;
     std::getline(task_in, msg);
-
-
-    /*if (msg == "CChCC Oe BWOWEscapCreOeOegin tWOe WatWaOe OBCexCOhWC of O tCWcutionWkWDawn") {
-        task_out << "0 0\n";
-        return 0;
-    }
-    if (msg == "CCC COhe BWOWEscapCreOeOegin tWOe WatWaOe OBCexCOhWC of O tCWcutionWkWDawn") {
-        task_out << "0 0\n";
-        return 0;
-    }*/
 
     swaps = std::count(msg.begin(), msg.end(), 'C');
     const auto ans = optimal_rotate(0, msg, 0);
