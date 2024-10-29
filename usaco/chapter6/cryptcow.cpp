@@ -16,13 +16,14 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=X6PkS8rPEaP&S=cryptcow
 std::ifstream task_in("cryptcow.in");
 std::ofstream task_out("cryptcow.out");
 
+static int swaps;
 static const auto is_cow = [](const char c){ return c == 'C' || c == 'O' || c == 'W'; };
 static const std::string pattern = "Begin the Escape execution at the Break of Dawn";
 static const auto length = int(pattern.size());
 static const std::hash<std::string_view> hh{};
 static std::unordered_set<size_t> seen;
 
-bool check_middle(std::string_view msg)
+bool check_middle(std::string_view msg, int offset)
 {
     auto stop = msg.begin();
     while (true) {
@@ -30,39 +31,51 @@ bool check_middle(std::string_view msg)
         stop = std::find_if(start, msg.end(), [](const char c){ return is_cow(c); });
         if (start == msg.end())
             return true;
-        if (pattern.find(std::string_view{&*start, static_cast<size_t>(stop - start)}) == std::string::npos)
+        if (pattern.find(std::string_view{&*start, static_cast<size_t>(stop - start)}, offset) == std::string::npos)
             return false;
     }
 }
 
 int optimal_rotate(int round, std::string_view msg, int offset)
 {
-    if (msg.size() < 54) {
-        auto hash = hh(msg);
-        // hash ^= (offset * 51);
-        if (seen.count(hash) > 0)
-            return -1;
+    if (round == swaps)
+        return (msg == std::string_view{pattern.data() + offset, msg.size()}) ? swaps : -1;
+
+    const auto hash = hh(msg);
+    if (seen.count(hash) > 0)
+        return -1;
+    if (seen.size() < 249'000)
         seen.insert(hash);
+
+    int h, t;
+    for (h = 0; h < int(msg.size()); ++h) {
+        if (msg[h] == 'C')
+            break;
+        if (msg[h] == 'O' || msg[h] == 'W')
+            return -1;
+    }
+
+    for (t = int(msg.size()) - 1; ~t; --t) {
+        if (msg[t] == 'W')
+            break;
+        if (msg[t] == 'C' || msg[t] == 'O')
+            return -1;
     }
 
     std::vector<int> stat_c, stat_o, stat_w;
-    for (int i = 0; i < int(msg.size()); ++i) {
+    for (int i = h; i <= t; ++i) {
         if (msg[i] == 'C') stat_c.push_back(i);
         if (msg[i] == 'O') stat_o.push_back(i);
         if (msg[i] == 'W') stat_w.push_back(i);
     }
+    std::reverse(stat_w.begin(), stat_w.end());
 
-    if (stat_c.empty())
-        return (msg == std::string_view{pattern.data() + offset, msg.size()}) ? round : -1;
-
-    const int h = stat_c.front();
-    const int t = stat_w.back();
     const size_t nlen = t - h - 2;
 
-    if (h < stat_o.front() && h < stat_w.front() && stat_c.back() < t && stat_o.back() < t
-       && std::equal(msg.begin(), msg.begin() + h, pattern.begin() + offset)
-       && std::equal(msg.begin() + t + 1, msg.end(), pattern.begin() + offset + t + 1 - (3 * stat_c.size()))
-       && check_middle(std::string_view{msg.data() + h, nlen})
+    if (
+        std::equal(msg.begin(), msg.begin() + h, pattern.begin() + offset)
+     && std::equal(msg.begin() + t + 1, msg.end(), pattern.begin() + offset + t + 1 - (3 * (swaps - round)))
+     && check_middle(std::string_view{msg.data() + h, nlen}, offset)
     ) {
         const auto noff = offset + h;
 
@@ -74,6 +87,7 @@ int optimal_rotate(int round, std::string_view msg, int offset)
                             std::string nmsg;
                             nmsg.resize(nlen);
                             auto to_write = nmsg.begin();
+                            // rotate + 3x erase
                             to_write = std::copy_n(msg.begin() + h, c - h, to_write);
                             to_write = std::copy_n(msg.begin() + o + 1, w - o - 1, to_write);
                             to_write = std::copy_n(msg.begin() + c + 1, o - c - 1, to_write);
@@ -92,11 +106,8 @@ int main(int, char**)
     std::string msg;
     std::getline(task_in, msg);
 
-    /*if (msg == "BeCOgC CC execuOf DOBCiCCrWaOOt theCOCeak oWWin Oon aWtheOOW EscapeWtWWWwn") {
-        task_out << "1 9\n";
-        return 0;
-    }
-    if (msg == "CChCC Oe BWOWEscapCreOeOegin tWOe WatWaOe OBCexCOhWC of O tCWcutionWkWDawn") {
+
+    /*if (msg == "CChCC Oe BWOWEscapCreOeOegin tWOe WatWaOe OBCexCOhWC of O tCWcutionWkWDawn") {
         task_out << "0 0\n";
         return 0;
     }
@@ -105,6 +116,7 @@ int main(int, char**)
         return 0;
     }*/
 
+    swaps = std::count(msg.begin(), msg.end(), 'C');
     const auto ans = optimal_rotate(0, msg, 0);
     if (~ans) {
         task_out << "1 " << ans << '\n';
