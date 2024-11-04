@@ -5,7 +5,7 @@
 #include <string>
 
 constinit char g_seedname[] = "competition_template.cpp";
-constinit std::string g_replace_pattern{"$TASKNAME$"};
+constinit std::string g_replace_pattern{R"($TASKNAME$)"};
 const auto g_replace_pattern_size = g_replace_pattern.size();
 
 static bool init_input(const std::string& filename)
