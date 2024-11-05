@@ -11,6 +11,8 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=p77QAdyHaX0&S=prime3
 #include <fstream>
 #include <functional>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -18,127 +20,128 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=p77QAdyHaX0&S=prime3
 std::ifstream task_in("prime3.in");
 std::ofstream task_out("prime3.out");
 
-static std::pair<std::array<std::vector<int>, 10>, std::array<std::vector<std::string>, 10>> generate(const int64_t lower, const int64_t upper, const int sum) { // generate primes in [range)
+using board_t = std::array<std::string, 5>;
+static board_t board;
+static auto& r0 = board[0];
+static auto& r1 = board[1];
+static auto& r2 = board[2];
+static auto& r3 = board[3];
+static auto& r4 = board[4];
+static std::vector<board_t> solution;
+static std::vector<std::string_view> tails;
+static std::unordered_set<std::string> all;
+static std::vector<std::string_view> primes[58][58];
+
+static void generate(const int64_t lower, const int64_t upper, const int sum) {
     std::vector<bool> taken(upper);
     const auto sqrt = (int)std::sqrt(upper);
+    const auto p = [](const char c) { return c == '1' || c == '3' || c == '7' || c == '9'; };
+    const auto ds = [](int x) { int ret{}; while (x) { ret += x % 10; x /= 10; } return ret; };
+
     for (int i = 2; i <= sqrt; ++i)
         if (!taken[i])
             for (int j = i * i; j < upper; j += i)
                 taken[j] = true;
 
-    std::array<std::vector<int>, 10> iprimes;
-    std::array<std::vector<std::string>, 10> sprimes;
     for (int i = 2; i < upper; ++i)
-        if (!taken[i] && lower <= i) {
-            int s{}, c{i};
-            while (10 <= c) {
-                s += (c % 10);
-                c /= 10;
-            }
-            if (c + s == sum) {
-                iprimes[c].push_back(i);
-                sprimes[c].push_back(std::to_string(i));
-            }
+        if (!taken[i] && lower <= i && ds(i) == sum) {
+            const auto [s, b] = all.insert(std::to_string(i));
+            std::string_view sv{*s};
+            if (p(sv[0]) && p(sv[1]) && p(sv[2]) && p(sv[3]) && p(sv[4]))
+                tails.push_back(sv);
+            primes[sv[0]][sv[4]].push_back(sv);
         }
-
-    return {iprimes, sprimes};
 }
 
-static std::array<std::string, 5> board;
-static std::array<std::vector<int>, 10> iprimes;
-static std::array<std::vector<std::string>, 10> sprimes;
-static const std::unordered_set<int> invalid = {79, 89, 96, 98, 99};
-
 bool check(const std::string& s) {
-    const auto& bucket = sprimes[s.front() - '0'];
-    return std::binary_search(bucket.begin(), bucket.end(), s);
+    return all.count(s);
 };
 
-bool prime_tail(const char c) {
-    return c == '1' || c == '3' || c == '7' || c == '9';
-};
+void print() {
+    if (solution.empty())
+        task_out << "NONE\n";
+    else {
+        const int sz = int(solution.size());
+        std::sort(solution.begin(), solution.end());
+        for (int i = 0; i < sz - 1; ++i) {
+            const auto& b = solution[i];
+            for (int r = 0; r < 5; ++r)
+                task_out << b[r] << '\n';
+            task_out << '\n';
+        }
+        const auto& b = solution.back();
+        for (int r = 0; r < 5; ++r)
+            task_out << b[r] << '\n';
+    }
+}
 
 /**
  * Observation: Top row number must not contain 0 digit
  * Observation: Left column number must not contain 0 digit
- * Observation: There are no 5 digits primes starting from some 2 digits prefix
+ * Observation: Right and bottom numbers can contain only specific digits
  */
 int main(int, char**)
 {
     int S, N;
     task_in >> S >> N;
 
-    bool found{};
-    std::tie(iprimes, sprimes) = generate(10000, 100000, S);
+    generate(10000, 100000, S);
 
-    const std::function<void(int, const std::string&, const std::string&)> inner_solve = [&](const int c, const std::string& top, const std::string& r1)
+    const std::function<void(int)> inner_solve = [&](const int c)
     {
-        if (c < 0) {
-            if (check(board[2]) && check(board[3]) && check(board[4])) {
-                std::string diag;
-                diag.resize(5);
-                diag[0] = N + '0';
+        if (c == 4) {
+            if (check(r1) && check(r2) && check(r3)) {
+                std::string diag{r0};
                 diag[1] = r1[1];
-                diag[2] = board[2][2];
-                diag[3] = board[3][3];
-                diag[4] = board[4][4];
+                diag[2] = r2[2];
+                diag[3] = r3[3];
+                diag[4] = r4[4];
                 if (check(diag)) {
-                    diag[0] = board[4][0];
-                    diag[1] = board[3][1];
+                    diag[0] = r4[0];
+                    diag[1] = r3[1];
                     diag[3] = r1[3];
-                    diag[4] = top.back();
-                    if (check(diag)) {
-                        if (found)
-                            task_out << '\n';
-                        else
-                            found = true;
-                        task_out << top << '\n' << r1 << '\n';
-                        for (int r = 2; r < 5; ++r)
-                            task_out << board[r] << '\n';
-                    }
+                    diag[4] = r0[4];
+                    if (check(diag))
+                        solution.push_back(board);
                 }
             }
-        } else {
-            const int bucket = top[c] - '0';
-            const int low = 1000 * (10 * bucket + r1[c] - '0');
-            const int hi = low + 1000;
-            const auto& cont = iprimes[bucket];
-            for (auto it = std::lower_bound(cont.begin(), cont.end(), low); it != cont.end() && *it < hi; ++it) {
-                const auto& selected = sprimes[bucket][it - cont.begin()];
-                if (prime_tail(selected.back())) {
-                    board[2][c] = selected[2];
-                    board[3][c] = selected[3];
-                    board[4][c] = selected[4];
-                    inner_solve(c - 1, top, r1);
-                }
+        } else
+            for (const auto& row : primes[r0[c]][r4[c]]) {
+                r1[c] = row[1];
+                r2[c] = row[2];
+                r3[c] = row[3];
+                inner_solve(c + 1);
             }
-        }
     };
 
     board.fill(std::string(5, ' '));
-    for (const auto& top : sprimes[N])
-        if (top.find('0', 1) == std::string::npos) {
-            const int t = top.back() - '0';
-            for (const auto& right : sprimes[t])
-                if (prime_tail(right[1]) && prime_tail(right[2]) && prime_tail(right[3]) && prime_tail(right[4]))
-                    for (int i = 1; i < 10; ++i)
-                        for (const auto& r1 : sprimes[i]) {
-                            if (r1.back() == right[1]) {
-                                if (invalid.count(10 * (top[0] - '0') + r1[0] - '0')
-                                || invalid.count(10 * (top[1] - '0') + r1[1] - '0')
-                                || invalid.count(10 * (top[2] - '0') + r1[2] - '0')
-                                || invalid.count(10 * (top[3] - '0') + r1[3] - '0'))
-                                    break;
-                                board[2][4] = right[2];
-                                board[3][4] = right[3];
-                                board[4][4] = right[4];
-                                inner_solve(3, top, r1);
+    const auto& inits = primes['0' + N];
+    for (char tr : {'1', '3', '7', '9'})
+        for (const auto& top : inits[tr])
+            if (top.find('0', 1) == std::string::npos) {
+                r0 = top;
+                for (const auto& right : tails)
+                    if (right[0] == tr) {
+                        r1[4] = right[1];
+                        r2[4] = right[2];
+                        r3[4] = right[3];
+                        for (const auto& bottom : tails)
+                            if (bottom[4] == right[4]) {
+                                r4 = bottom;
+                                for (const auto& left : inits[bottom[0]])
+                                    if (left.find('0', 1) == std::string::npos
+                                    && !primes[left[1]][right[1]].empty() && !primes[left[2]][right[2]].empty() && !primes[left[3]][right[3]].empty()
+                                    && !primes[r0[0]][r4[4]].empty() && !primes[r4[0]][r0[4]].empty()) {
+                                        r1[0] = left[1];
+                                        r2[0] = left[2];
+                                        r3[0] = left[3];
+                                        inner_solve(1);
+                                    }
                             }
-                        }
-        }
+                    }
+            }
 
-    if (!found)
-        task_out << "NONE\n";
+    print();
 }
 
 /*
