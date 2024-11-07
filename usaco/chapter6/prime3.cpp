@@ -22,15 +22,11 @@ std::ofstream task_out("prime3.out");
 
 using board_t = std::array<std::string, 5>;
 static board_t board;
-static auto& r0 = board[0];
-static auto& r1 = board[1];
-static auto& r2 = board[2];
-static auto& r3 = board[3];
-static auto& r4 = board[4];
 static std::vector<board_t> solution;
-static std::vector<std::string_view> tails;
-static std::unordered_set<std::string> all;
-static std::vector<std::string_view> primes[58][58];
+static std::vector<std::string> tails;
+static std::unordered_set<int> all;
+static std::vector<std::string> primes[10][10];
+static std::string_view top, bottom, left, right, middle[5];
 
 static void generate(const int64_t lower, const int64_t upper, const int sum) {
     std::vector<bool> taken(upper);
@@ -45,17 +41,24 @@ static void generate(const int64_t lower, const int64_t upper, const int sum) {
 
     for (int i = 2; i < upper; ++i)
         if (!taken[i] && lower <= i && ds(i) == sum) {
-            const auto [s, b] = all.insert(std::to_string(i));
-            std::string_view sv{*s};
-            if (p(sv[0]) && p(sv[1]) && p(sv[2]) && p(sv[3]) && p(sv[4]))
-                tails.push_back(sv);
-            primes[sv[0]][sv[4]].push_back(sv);
+            all.insert(i);
+            auto s = std::to_string(i);
+            primes[s[0] - '0'][s[4] - '0'].push_back(s);
+            if (p(s[0]) && p(s[1]) && p(s[2]) && p(s[3]) && p(s[4]))
+                tails.push_back(s);
         }
 }
 
-bool check(const std::string& s) {
-    return all.count(s);
+bool check(const int p) {
+    return all.count(p);
 };
+
+int get_col(int c) {
+    int ret = top[c] - '0';
+    for (int r = 1; r <= 3; ++r)
+        ret = 10 * ret + middle[r][c] - '0';
+    return 10 * ret + bottom[c] - '0';
+}
 
 void print() {
     if (solution.empty())
@@ -87,59 +90,71 @@ int main(int, char**)
 
     generate(10000, 100000, S);
 
-    const std::function<void(int)> inner_solve = [&](const int c)
+    const std::function<void(int)> inner_solve = [&](const int r)
     {
-        if (c == 4) {
-            if (check(r1) && check(r2) && check(r3)) {
-                std::string diag{r0};
-                diag[1] = r1[1];
-                diag[2] = r2[2];
-                diag[3] = r3[3];
-                diag[4] = r4[4];
-                if (check(diag)) {
-                    diag[0] = r4[0];
-                    diag[1] = r3[1];
-                    diag[3] = r1[3];
-                    diag[4] = r0[4];
-                    if (check(diag))
+        if (r == 4) {
+            if (check(get_col(1)) && check(get_col(2)) && check(get_col(3))) {
+                int diag = top[0] - '0';
+                diag = 10 * diag + middle[1][1] - '0';
+                diag = 10 * diag + middle[2][2] - '0';
+                diag = 10 * diag + middle[3][3] - '0';
+                if (check(10 * diag + bottom[4]  - '0')) {
+                    diag = bottom[0]  - '0';
+                    diag = 10 * diag + middle[3][1] - '0';
+                    diag = 10 * diag + middle[2][2] - '0';
+                    diag = 10 * diag + middle[1][3] - '0';
+                    if (check(10 * diag + top[4]  - '0')) {
+                        board[0] = top;
+                        board[1] = middle[1];
+                        board[2] = middle[2];
+                        board[3] = middle[3];
+                        board[1][0] = left[1]; board[1][4] = right[1];
+                        board[2][0] = left[2]; board[2][4] = right[2];
+                        board[3][0] = left[3]; board[3][4] = right[3];
+                        board[4] = bottom;
                         solution.push_back(board);
+                    }
                 }
             }
         } else
-            for (const auto& row : primes[r0[c]][r4[c]]) {
-                r1[c] = row[1];
-                r2[c] = row[2];
-                r3[c] = row[3];
-                inner_solve(c + 1);
+            for (const auto& row : primes[left[r] - '0'][right[r] - '0']) {
+                middle[r] = row;
+                inner_solve(r + 1);
             }
     };
 
+    std::vector<std::string_view> inits[10];
+    const auto& starting_from_n = primes[N];
+    for (int tr : {1, 3, 7, 9}) {
+        std::copy_if(starting_from_n[tr].begin(), starting_from_n[tr].end(), std::back_inserter(inits[tr]), [](const auto sv){
+            return sv[1] != '0' && sv[2] != '0' && sv[3] != '0' && sv[4] != '0';
+        });
+
+        if (inits[tr].empty())
+            tails.erase(std::remove_if(tails.begin(), tails.end(), [tr](const auto sv){
+                return sv[0] == tr + '0';
+            }), tails.end());
+    }
+
     board.fill(std::string(5, ' '));
-    const auto& inits = primes['0' + N];
-    for (char tr : {'1', '3', '7', '9'})
-        for (const auto& top : inits[tr])
-            if (top.find('0', 1) == std::string::npos) {
-                r0 = top;
-                for (const auto& right : tails)
-                    if (right[0] == tr) {
-                        r1[4] = right[1];
-                        r2[4] = right[2];
-                        r3[4] = right[3];
-                        for (const auto& bottom : tails)
-                            if (bottom[4] == right[4]) {
-                                r4 = bottom;
-                                for (const auto& left : inits[bottom[0]])
-                                    if (left.find('0', 1) == std::string::npos
-                                    && !primes[left[1]][right[1]].empty() && !primes[left[2]][right[2]].empty() && !primes[left[3]][right[3]].empty()
-                                    && !primes[r0[0]][r4[4]].empty() && !primes[r4[0]][r0[4]].empty()) {
-                                        r1[0] = left[1];
-                                        r2[0] = left[2];
-                                        r3[0] = left[3];
-                                        inner_solve(1);
-                                    }
-                            }
-                    }
-            }
+    for (int tr : {1, 3, 7, 9})
+        for (const auto& t : inits[tr]) {
+            top = t;
+            for (const auto& r : tails)
+                if (r[0] == tr + '0') {
+                    right = r;
+                    for (const auto& b : tails)
+                        if (b[4] == r[4]) {
+                            bottom = b;
+                            for (const auto& l : inits[b[0] - '0'])
+                                if (!primes[l[1] - '0'][r[1] - '0'].empty() && !primes[l[2] - '0'][r[2] - '0'].empty() && !primes[l[3] - '0'][r[3] - '0'].empty()
+                                 && !primes[t[0] - '0'][b[4] - '0'].empty() && !primes[b[0] - '0'][t[4] - '0'].empty()) {
+                                    left = l;
+                                    inner_solve(1);
+                                }
+                        }
+                }
+        }
 
     print();
 }
