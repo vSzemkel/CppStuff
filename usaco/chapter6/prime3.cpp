@@ -10,28 +10,20 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=p77QAdyHaX0&S=prime3
 #include <cmath>
 #include <fstream>
 #include <functional>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
 std::ifstream task_in("prime3.in");
 std::ofstream task_out("prime3.out");
 
-using board_t = std::array<std::string, 5>;
-static board_t board;
-static std::vector<board_t> solution;
-static std::vector<std::string> tails;
-static std::unordered_set<int> all;
-static std::vector<std::string> primes[10][10];
-static std::string_view top, bottom, left, right, middle[5];
+static std::vector<int> primes, inits;
+static std::array<int, 5> rows{}, cols{};
+static std::vector<std::array<int, 5>> solution;
 
 static void generate(const int64_t lower, const int64_t upper, const int sum) {
     std::vector<bool> taken(upper);
     const auto sqrt = (int)std::sqrt(upper);
-    const auto p = [](const char c) { return c == '1' || c == '3' || c == '7' || c == '9'; };
+    const auto no0 = [](int x) { x /= 10; for (int z = 3; z; --z, x /= 10) if (x % 10 == 0) return false; return true; };
     const auto ds = [](int x) { int ret{}; while (x) { ret += x % 10; x /= 10; } return ret; };
 
     for (int i = 2; i <= sqrt; ++i)
@@ -41,24 +33,15 @@ static void generate(const int64_t lower, const int64_t upper, const int sum) {
 
     for (int i = 2; i < upper; ++i)
         if (!taken[i] && lower <= i && ds(i) == sum) {
-            all.insert(i);
-            auto s = std::to_string(i);
-            primes[s[0] - '0'][s[4] - '0'].push_back(s);
-            if (p(s[0]) && p(s[1]) && p(s[2]) && p(s[3]) && p(s[4]))
-                tails.push_back(s);
+            if (no0(i))
+                inits.push_back(i);
+            primes.push_back(i);
         }
 }
 
 bool check(const int p) {
-    return all.count(p);
+    return std::binary_search(primes.begin(), primes.end(), p);
 };
-
-int get_col(int c) {
-    int ret = top[c] - '0';
-    for (int r = 1; r <= 3; ++r)
-        ret = 10 * ret + middle[r][c] - '0';
-    return 10 * ret + bottom[c] - '0';
-}
 
 void print() {
     if (solution.empty())
@@ -90,71 +73,61 @@ int main(int, char**)
 
     generate(10000, 100000, S);
 
-    const std::function<void(int)> inner_solve = [&](const int r)
+    const std::function<void(int)> inner_solve = [&](const int n)
     {
-        if (r == 4) {
-            if (check(get_col(1)) && check(get_col(2)) && check(get_col(3))) {
-                int diag = top[0] - '0';
-                diag = 10 * diag + middle[1][1] - '0';
-                diag = 10 * diag + middle[2][2] - '0';
-                diag = 10 * diag + middle[3][3] - '0';
-                if (check(10 * diag + bottom[4]  - '0')) {
-                    diag = bottom[0]  - '0';
-                    diag = 10 * diag + middle[3][1] - '0';
-                    diag = 10 * diag + middle[2][2] - '0';
-                    diag = 10 * diag + middle[1][3] - '0';
-                    if (check(10 * diag + top[4]  - '0')) {
-                        board[0] = top;
-                        board[1] = middle[1];
-                        board[2] = middle[2];
-                        board[3] = middle[3];
-                        board[1][0] = left[1]; board[1][4] = right[1];
-                        board[2][0] = left[2]; board[2][4] = right[2];
-                        board[3][0] = left[3]; board[3][4] = right[3];
-                        board[4] = bottom;
-                        solution.push_back(board);
-                    }
+        if (n == 10) {
+            int diag = rows[0] / 10000;
+            diag = 10 * diag + (rows[1] / 1000) % 10;
+            diag = 10 * diag + (rows[2] / 100) % 10;
+            diag = 10 * diag + (rows[3] / 10) % 10;
+            if (check(10 * diag + rows[4] % 10)) {
+                diag = rows[4] / 10000;
+                diag = 10 * diag + (rows[3] / 1000) % 10;
+                diag = 10 * diag + (rows[2] / 100) % 10;
+                diag = 10 * diag + (rows[1] / 10) % 10;
+                if (check(10 * diag + rows[0] % 10))
+                    solution.push_back(rows);
+            }
+        } else {
+            const bool edge = n < 2;
+            const int ready = n / 2;
+            const auto& cont = edge ? inits : primes;
+            int scale = 1;
+            if (n & 1) { // column
+                int low = cols[ready];
+                while (low < 10000) {
+                    low *= 10;
+                    scale *= 10;
+                }
+                const int hi = low + scale;
+                for (auto it = std::lower_bound(cont.begin(), cont.end(), low); it != cont.end() && *it < hi; ++it) {
+                    cols[ready] = *it;
+                    const auto old_rows = rows;
+                    for (int c = *it, p = 4, z = 5 - ready - 1; z; --z, --p, c /= 10)
+                        rows[p] = rows[p] * 10 + c % 10;
+                    inner_solve(n + 1);
+                    rows = old_rows;
+                }
+            } else { // row
+                int low = edge ? N : rows[ready];
+                while (low < 10000) {
+                    low *= 10;
+                    scale *= 10;
+                }
+                const int hi = low + scale;
+                for (auto it = std::lower_bound(cont.begin(), cont.end(), low); it != cont.end() && *it < hi; ++it) {
+                    rows[ready] = *it;
+                    const auto old_cols = cols;
+                    for (int r = *it, p = 4, z = 5 - ready; z; --z, --p, r /= 10)
+                        cols[p] = cols[p] * 10 + r % 10;
+                    inner_solve(n + 1);
+                    cols = old_cols;
                 }
             }
-        } else
-            for (const auto& row : primes[left[r] - '0'][right[r] - '0']) {
-                middle[r] = row;
-                inner_solve(r + 1);
-            }
+        }
     };
 
-    std::vector<std::string_view> inits[10];
-    const auto& starting_from_n = primes[N];
-    for (int tr : {1, 3, 7, 9}) {
-        std::copy_if(starting_from_n[tr].begin(), starting_from_n[tr].end(), std::back_inserter(inits[tr]), [](const auto sv){
-            return sv[1] != '0' && sv[2] != '0' && sv[3] != '0' && sv[4] != '0';
-        });
-
-        if (inits[tr].empty())
-            tails.erase(std::remove_if(tails.begin(), tails.end(), [tr](const auto sv){
-                return sv[0] == tr + '0';
-            }), tails.end());
-    }
-
-    board.fill(std::string(5, ' '));
-    for (int tr : {1, 3, 7, 9})
-        for (const auto& t : inits[tr]) {
-            top = t;
-            for (const auto& r : tails)
-                if (r[0] == tr + '0') {
-                    right = r;
-                    for (const auto& b : tails)
-                        if (b[4] == r[4]) {
-                            bottom = b;
-                            for (const auto& l : inits[b[0] - '0'])
-                                if (!primes[l[1] - '0'][r[1] - '0'].empty() && !primes[l[2] - '0'][r[2] - '0'].empty() && !primes[l[3] - '0'][r[3] - '0'].empty()
-                                 && !primes[t[0] - '0'][b[4] - '0'].empty() && !primes[b[0] - '0'][t[4] - '0'].empty()) {
-                                    left = l;
-                                    inner_solve(1);
-                                }
-                        }
-                }
-        }
+    inner_solve(0);
 
     print();
 }
