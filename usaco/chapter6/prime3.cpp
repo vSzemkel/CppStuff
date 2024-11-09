@@ -18,8 +18,8 @@ std::ifstream task_in("prime3.in");
 std::ofstream task_out("prime3.out");
 
 static std::vector<int> primes, inits;
-static std::unordered_set<int> primes_set;
 static std::array<int, 5> rows{}, cols{};
+static std::vector<bool> prime_prefix(100000);
 static std::vector<std::array<int, 5>> solution;
 
 static void generate(const int64_t lower, const int64_t upper, const int sum) {
@@ -38,10 +38,9 @@ static void generate(const int64_t lower, const int64_t upper, const int sum) {
             if (no0(i))
                 inits.push_back(i);
             primes.push_back(i);
+            for (int prefix = i; prefix; prefix /= 10)
+                prime_prefix[prefix] = true;
         }
-
-    primes_set.reserve(primes.size());
-    primes_set.insert(primes.begin(), primes.end());
 }
 
 void print() {
@@ -81,12 +80,12 @@ int main(int, char**)
             diag = 10 * diag + (rows[1] / 1000) % 10;
             diag = 10 * diag + (rows[2] / 100) % 10;
             diag = 10 * diag + (rows[3] / 10) % 10;
-            if (primes_set.count(10 * diag + rows[4] % 10)) {
+            if (prime_prefix[10 * diag + rows[4] % 10]) {
                 diag = rows[4] / 10000;
                 diag = 10 * diag + (rows[3] / 1000) % 10;
                 diag = 10 * diag + (rows[2] / 100) % 10;
                 diag = 10 * diag + (rows[1] / 10) % 10;
-                if (primes_set.count(10 * diag + rows[0] % 10))
+                if (prime_prefix[10 * diag + rows[0] % 10])
                     solution.push_back(rows);
             }
         } else {
@@ -103,10 +102,20 @@ int main(int, char**)
                 const int hi = low + scale;
                 const auto old_rows = rows;
                 for (auto it = std::lower_bound(cont.begin(), cont.end(), low); it != cont.end() && *it < hi; ++it) {
-                    cols[ready] = *it;
-                    for (int c = *it, p = 4, z = 5 - ready - 1; z; --z, --p, c /= 10)
-                        rows[p] = rows[p] * 10 + c % 10;
-                    inner_solve(n + 1);
+                    bool prefixes_ok{true};
+                    for (int c = *it, p = 4, z = 5 - ready - 1; z; --z, --p, c /= 10) {
+                        const auto prefix = rows[p] * 10 + c % 10;
+                        if (!prime_prefix[prefix]) {
+                            prefixes_ok = false;
+                            break;
+                        }
+                        rows[p] = prefix;
+                    }
+    
+                    if (prefixes_ok) {
+                        cols[ready] = *it;
+                        inner_solve(n + 1);
+                    }
                     rows = old_rows;
                 }
             } else { // row
@@ -118,10 +127,20 @@ int main(int, char**)
                 const int hi = low + scale;
                 const auto old_cols = cols;
                 for (auto it = std::lower_bound(cont.begin(), cont.end(), low); it != cont.end() && *it < hi; ++it) {
-                    rows[ready] = *it;
-                    for (int r = *it, p = 4, z = 5 - ready; z; --z, --p, r /= 10)
-                        cols[p] = cols[p] * 10 + r % 10;
-                    inner_solve(n + 1);
+                    bool prefixes_ok{true};
+                    for (int r = *it, p = 4, z = 5 - ready; z; --z, --p, r /= 10) {
+                        const auto prefix = cols[p] * 10 + r % 10;
+                        if (!prime_prefix[prefix]) {
+                            prefixes_ok = false;
+                            break;
+                        }
+                        cols[p] = prefix;
+                    }
+
+                    if (prefixes_ok) {
+                        rows[ready] = *it;
+                        inner_solve(n + 1);
+                    }
                     cols = old_cols;
                 }
             }
