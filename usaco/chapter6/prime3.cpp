@@ -17,6 +17,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=p77QAdyHaX0&S=prime3
 std::ifstream task_in("prime3.in");
 std::ofstream task_out("prime3.out");
 
+static int decdiag{}, incdiag{};
 static std::vector<int> primes, inits;
 static std::array<int, 5> rows{}, cols{};
 static std::vector<bool> prime_prefix(100000);
@@ -75,20 +76,9 @@ int main(int, char**)
 
     const std::function<void(int)> inner_solve = [&](const int n)
     {
-        if (n == 10) {
-            int diag = rows[0] / 10000;
-            diag = 10 * diag + (rows[1] / 1000) % 10;
-            diag = 10 * diag + (rows[2] / 100) % 10;
-            diag = 10 * diag + (rows[3] / 10) % 10;
-            if (prime_prefix[10 * diag + rows[4] % 10]) {
-                diag = rows[4] / 10000;
-                diag = 10 * diag + (rows[3] / 1000) % 10;
-                diag = 10 * diag + (rows[2] / 100) % 10;
-                diag = 10 * diag + (rows[1] / 10) % 10;
-                if (prime_prefix[10 * diag + rows[0] % 10])
-                    solution.push_back(rows);
-            }
-        } else {
+        if (n == 10)
+            solution.push_back(rows);
+        else {
             const bool edge = n < 2;
             const int ready = n / 2;
             const auto& cont = edge ? inits : primes;
@@ -100,7 +90,8 @@ int main(int, char**)
                     scale *= 10;
                 }
                 const int hi = low + scale;
-                const auto old_rows = rows;
+                const auto prows = rows;
+                const auto pdecdiag{decdiag}, pincdiag{incdiag};
                 for (auto it = std::lower_bound(cont.begin(), cont.end(), low); it != cont.end() && *it < hi; ++it) {
                     bool prefixes_ok{true};
                     for (int c = *it, p = 4, z = 5 - ready - 1; z; --z, --p, c /= 10) {
@@ -111,12 +102,19 @@ int main(int, char**)
                         }
                         rows[p] = prefix;
                     }
-    
-                    if (prefixes_ok) {
+
+                    const auto decdiag_prefix = 10 * decdiag + (*it / scale) % 10;
+                    const auto incdiag_prefix = 10 * incdiag + (*it * scale / 10000) % 10;
+
+                    if (prefixes_ok && prime_prefix[decdiag_prefix] && prime_prefix[incdiag_prefix]) {
+                        incdiag = incdiag_prefix;
+                        decdiag = decdiag_prefix;
                         cols[ready] = *it;
                         inner_solve(n + 1);
                     }
-                    rows = old_rows;
+                    rows = prows;
+                    incdiag = pincdiag;
+                    decdiag = pdecdiag;
                 }
             } else { // row
                 int low = edge ? N : rows[ready];
