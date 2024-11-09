@@ -17,11 +17,12 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=p77QAdyHaX0&S=prime3
 std::ifstream task_in("prime3.in");
 std::ofstream task_out("prime3.out");
 
-static int decdiag{}, incdiag{};
+static int decdiag{};
 static std::vector<int> primes, inits;
 static std::array<int, 5> rows{}, cols{};
 static std::vector<bool> prime_prefix(100000);
 static std::vector<std::array<int, 5>> solution;
+static const int scales[] = {10000, 10000, 10000, 1000, 1000, 100, 100, 10, 10, 1};
 
 static void generate(const int64_t lower, const int64_t upper, const int sum) {
     std::vector<bool> taken(upper);
@@ -42,6 +43,9 @@ static void generate(const int64_t lower, const int64_t upper, const int sum) {
             for (int prefix = i; prefix; prefix /= 10)
                 prime_prefix[prefix] = true;
         }
+
+    inits.push_back(1e09);
+    primes.push_back(1e09);
 }
 
 void print() {
@@ -62,10 +66,11 @@ void print() {
     }
 }
 
-/**
+/** Let's find a solution adding rows and columns alternating from left and top
  * Observation: Top row number must not contain 0 digit
  * Observation: Left column number must not contain 0 digit
- * Observation: Right and bottom numbers can contain only specific digits
+ * Observation: Cut early: increasing diagonal is known after adding 2 rows and 3 columns
+ * Observation: We cant't elimitating sorting in this approach
  */
 int main(int, char**)
 {
@@ -76,26 +81,23 @@ int main(int, char**)
 
     const std::function<void(int)> inner_solve = [&](const int n)
     {
-        if (n == 10)
-            solution.push_back(rows);
-        else {
+        if (n == 9) {
+            if (prime_prefix[cols[4]] && prime_prefix[10 * decdiag + cols[4] % 10])
+                solution.push_back(rows);
+        } else {
             const bool edge = n < 2;
             const int ready = n / 2;
+            const int scale = scales[n];
             const auto& cont = edge ? inits : primes;
-            int scale = 1;
             if (n & 1) { // column
-                int low = cols[ready];
-                while (low < 10000) {
-                    low *= 10;
-                    scale *= 10;
-                }
+                const int low = cols[ready] * scale;
                 const int hi = low + scale;
                 const auto prows = rows;
-                const auto pdecdiag{decdiag}, pincdiag{incdiag};
-                for (auto it = std::lower_bound(cont.begin(), cont.end(), low); it != cont.end() && *it < hi; ++it) {
+                const auto pdecdiag{decdiag};
+                for (auto it = std::lower_bound(cont.begin(), cont.end(), low); *it < hi; ++it) {
                     bool prefixes_ok{true};
                     for (int c = *it, p = 4, z = 5 - ready - 1; z; --z, --p, c /= 10) {
-                        const auto prefix = rows[p] * 10 + c % 10;
+                        const auto prefix = 10 * rows[p] + c % 10;
                         if (!prime_prefix[prefix]) {
                             prefixes_ok = false;
                             break;
@@ -103,31 +105,31 @@ int main(int, char**)
                         rows[p] = prefix;
                     }
 
-                    const auto decdiag_prefix = 10 * decdiag + (*it / scale) % 10;
-                    const auto incdiag_prefix = 10 * incdiag + (*it * scale / 10000) % 10;
 
-                    if (prefixes_ok && prime_prefix[decdiag_prefix] && prime_prefix[incdiag_prefix]) {
-                        incdiag = incdiag_prefix;
-                        decdiag = decdiag_prefix;
-                        cols[ready] = *it;
-                        inner_solve(n + 1);
+                    if (prefixes_ok) {
+                        decdiag = 10 * decdiag + (*it / scale) % 10;
+                        if (prime_prefix[decdiag]) {
+                            cols[ready] = *it;
+                            inner_solve(n + 1);
+                        }
                     }
                     rows = prows;
-                    incdiag = pincdiag;
                     decdiag = pdecdiag;
                 }
             } else { // row
-                int low = edge ? N : rows[ready];
-                while (low < 10000) {
-                    low *= 10;
-                    scale *= 10;
-                }
+                const int low = (edge ? N : rows[ready]) * scale;
                 const int hi = low + scale;
                 const auto old_cols = cols;
-                for (auto it = std::lower_bound(cont.begin(), cont.end(), low); it != cont.end() && *it < hi; ++it) {
+                for (auto it = std::lower_bound(cont.begin(), cont.end(), low); *it < hi; ++it) {
+                    if (n == 4) {
+                        const auto incdiag = 10 * (10 * (10 * (10 * (cols[0] % 10) + (cols[1] / 10) % 10) + (*it / 100) % 10) + (rows[1] / 10) % 10) + rows[0] % 10;
+                        if (!prime_prefix[incdiag])
+                            continue;
+                    }
+
                     bool prefixes_ok{true};
                     for (int r = *it, p = 4, z = 5 - ready; z; --z, --p, r /= 10) {
-                        const auto prefix = cols[p] * 10 + r % 10;
+                        const auto prefix = 10 * cols[p] + r % 10;
                         if (!prime_prefix[prefix]) {
                             prefixes_ok = false;
                             break;
