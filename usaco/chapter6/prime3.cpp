@@ -18,6 +18,7 @@ std::ifstream task_in("prime3.in");
 std::ofstream task_out("prime3.out");
 
 static int decdiag{};
+static std::unordered_set<int> seen;
 static std::vector<int> primes, inits;
 static std::array<int, 5> rows{}, cols{};
 static std::vector<bool> prime_prefix(100000);
@@ -46,6 +47,16 @@ static void generate(const int64_t lower, const int64_t upper, const int sum) {
 
     inits.push_back(1e09);
     primes.push_back(1e09);
+}
+
+static int hash(const int diag) {
+    static const int M{998244353}, BASE{53};
+    int64_t h = rows[0];
+    h = (h * BASE + rows[1]) % M;
+    h = (h * BASE + diag) % M;
+    h = (h * BASE + cols[0]) % M;
+    h = (h * BASE + cols[1]);
+    return h % M;
 }
 
 void print() {
@@ -79,11 +90,27 @@ int main(int, char**)
 
     generate(10000, 100000, S);
 
+    const auto incdiag = [&](int mid_row){
+        return 10 * (10 * (10 * (10 * (cols[0] % 10) + (cols[1] / 10) % 10) + (mid_row / 100) % 10) + (rows[1] / 10) % 10) + rows[0] % 10;
+    };
+
     const std::function<void(int)> inner_solve = [&](const int n)
     {
         if (n == 9) {
-            if (prime_prefix[cols[4]] && prime_prefix[10 * decdiag + cols[4] % 10])
+            if (prime_prefix[cols[4]] && prime_prefix[10 * decdiag + cols[4] % 10]) {
                 solution.push_back(rows);
+                if (rows != cols) {
+                    int revdiag{};
+                    for (int diag = incdiag(rows[2]), z = 5; z; --z, diag /= 10)
+                        revdiag = 10 * revdiag + diag % 10;
+                    if (prime_prefix[revdiag]) {
+                        std::swap(rows, cols);
+                        seen.insert(hash(revdiag));
+                        solution.push_back(rows);
+                        std::swap(rows, cols);
+                    }
+                }
+            }
         } else {
             const bool edge = n < 2;
             const int ready = n / 2;
@@ -105,13 +132,14 @@ int main(int, char**)
                         rows[p] = prefix;
                     }
 
-
                     if (prefixes_ok) {
                         decdiag = 10 * decdiag + (*it / scale) % 10;
                         if (prime_prefix[decdiag]) {
                             cols[ready] = *it;
                             inner_solve(n + 1);
-                        }
+                        } else 
+                            while (*it / scale == *(it + 1) / scale)
+                                ++it;
                     }
                     rows = prows;
                     decdiag = pdecdiag;
@@ -119,12 +147,15 @@ int main(int, char**)
             } else { // row
                 const int low = (edge ? N : rows[ready]) * scale;
                 const int hi = low + scale;
-                const auto old_cols = cols;
+                const auto pcols = cols;
                 for (auto it = std::lower_bound(cont.begin(), cont.end(), low); *it < hi; ++it) {
                     if (n == 4) {
-                        const auto incdiag = 10 * (10 * (10 * (10 * (cols[0] % 10) + (cols[1] / 10) % 10) + (*it / 100) % 10) + (rows[1] / 10) % 10) + rows[0] % 10;
-                        if (!prime_prefix[incdiag])
+                        const auto diag = incdiag(*it);
+                        if (!prime_prefix[diag] || seen.count(hash(diag))) {
+                            while (*it / 100 == *(it + 1) / 100)
+                                ++it;
                             continue;
+                        }
                     }
 
                     bool prefixes_ok{true};
@@ -141,7 +172,7 @@ int main(int, char**)
                         rows[ready] = *it;
                         inner_solve(n + 1);
                     }
-                    cols = old_cols;
+                    cols = pcols;
                 }
             }
         }
