@@ -6,7 +6,7 @@
 #include <queue>
 #include <vector>
 
-// Vertex flow problem solvier
+// Vertex flow problem solver
 // see: /usaco/chapter5/telecow.cpp
 
 template <typename T = int>
