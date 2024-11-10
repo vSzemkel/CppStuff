@@ -81,6 +81,7 @@ void print() {
  * Observation: Top row number must not contain 0 digit
  * Observation: Left column number must not contain 0 digit
  * Observation: Cut early: increasing diagonal is known after adding 2 rows and 3 columns
+ * Observation: Right and bottom edges contain only digits: 1, 3, 7 and 9
  * Observation: We cant't elimitating sorting in this approach
  */
 int main(int, char**)
@@ -96,18 +97,30 @@ int main(int, char**)
 
     const std::function<void(int)> inner_solve = [&](const int n)
     {
-        if (n == 9) {
-            if (prime_prefix[cols[4]] && prime_prefix[10 * decdiag + cols[4] % 10]) {
-                solution.push_back(rows);
-                if (rows != cols) {
-                    int revdiag{};
-                    for (int diag = incdiag(rows[2]), z = 5; z; --z, diag /= 10)
-                        revdiag = 10 * revdiag + diag % 10;
-                    if (prime_prefix[revdiag]) {
-                        std::swap(rows, cols);
-                        seen.insert(hash(revdiag));
-                        solution.push_back(rows);
-                        std::swap(rows, cols);
+        if (n == 8) {
+            rows[4] *= 10;
+            for (const auto d : {1, 2, 4, 2}) {
+                rows[4] += d;
+                if (prime_prefix[rows[4]]) {
+                    const auto br = rows[4] % 10;
+                    cols[4] = 10 * cols[4] + br;
+                    if (prime_prefix[cols[4]]) {
+                        decdiag = 10 * decdiag + br;
+                        if (prime_prefix[decdiag]) {
+                            seen.insert(hash(decdiag));
+                            solution.push_back(rows);
+                            if (rows != cols) {
+                                int revdiag{};
+                                for (int diag = incdiag(rows[2]), z = 5; z; --z, diag /= 10)
+                                    revdiag = 10 * revdiag + diag % 10;
+                                if (prime_prefix[revdiag]) {
+                                    std::swap(rows, cols);
+                                    seen.insert(hash(revdiag));
+                                    solution.push_back(rows);
+                                    std::swap(rows, cols);
+                                }
+                            }
+                        }
                     }
                 }
             }
