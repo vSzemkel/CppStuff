@@ -5,6 +5,9 @@
 // Positional_number
 // Helper class for easy digits extraction
 // After manipulating arbitrary digits, sync() call is required to have changes reflected in _value
+// Least significant digit has index 0
+
+// see: /usaco/chapter6/prime3.cpp
 
 template<int N>
 class positional_number_t
@@ -78,8 +81,8 @@ class positional_number_t
         }
     }
 
-    int _digits[N] = {};
     int _value{};
+    int _digits[N] = {};
 };
 
 int main(int, char**)

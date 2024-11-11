@@ -7,6 +7,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=p77QAdyHaX0&S=prime3
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <fstream>
 #include <functional>
@@ -17,11 +18,89 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=p77QAdyHaX0&S=prime3
 std::ifstream task_in("prime3.in");
 std::ofstream task_out("prime3.out");
 
-static int decdiag{};
-static std::vector<int> primes, inits;
-static std::array<int, 5> rows{}, cols{};
-static std::set<std::array<int, 5>> solution;
-static std::vector<int>::const_iterator start;
+template<int N>
+class positional_number_t
+{
+  public:
+    positional_number_t(const int value = 0) : _value(value) {
+        syncn2d();
+    }
+
+    positional_number_t(const std::initializer_list<int> digits) {
+        assert(digits.size() <= N);
+        int i = int(digits.size());
+        for (const int d : digits)
+            _digits[--i] = d;
+        sync();
+    }
+
+    positional_number_t& operator=(const int value) {
+        _value = value;
+        syncn2d();
+        return *this;
+    }
+
+    operator int() const {
+        return _value;
+    }
+
+    int operator[](const int index) const {
+        return _digits[index];
+    }
+
+    int& operator[](const int index) {
+        return _digits[index];
+    }
+
+    int reverse() const {
+        int ret{};
+        for (const int& d : _digits)
+            ret = 10 * ret + d;
+
+        return ret;
+    }
+
+    int push_back(const int digit) {
+        assert(0 <= digit && digit < 10);
+        _value = 10 * _value + digit;
+        syncn2d();
+        return _value;
+    }
+
+    int pop_back(int count) {
+        assert(0 <= count && count <= N);
+        for (; count; --count)
+            _value /= 10;
+        syncn2d();
+        return _value;
+    }
+
+    void sync() {
+        _value = 0;
+        for (int i = N - 1; ~i; --i)
+            _value = 10 * _value + _digits[i];
+    }
+
+  private:
+    void syncn2d() {
+        auto tmp = _value;
+        for (int& d : _digits) {
+            d = tmp % 10;
+            tmp /= 10;
+        }
+    }
+
+    int _value{};
+    int _digits[N] = {};
+};
+
+using num_t = positional_number_t<5>;
+
+static num_t decdiag{};
+static std::vector<num_t> primes, inits;
+static std::array<num_t, 5> rows{}, cols{};
+static std::set<std::array<num_t, 5>> solution;
+static std::vector<num_t>::const_iterator start;
 static std::vector<bool> prime_prefix(100000);
 static const int scales[] = {10000, 10000, 10000, 1000, 1000, 100, 100, 10, 10, 1};
 
@@ -54,7 +133,7 @@ void print() {
         task_out << "NONE\n";
     else {
         auto z = solution.size();
-        for (const auto s : solution) {
+        for (const auto& s : solution) {
             for (int r = 0; r < 5; ++r)
                 task_out << s[r] << '\n';
             if (--z)
@@ -80,31 +159,27 @@ int main(int, char**)
 
     generate(10000, 100000, S);
 
-    const auto incdiag = [&](int mid_row){
-        return 10 * (10 * (10 * (10 * (cols[0] % 10) + (cols[1] / 10) % 10) + (mid_row / 100) % 10) + (rows[1] / 10) % 10) + rows[0] % 10;
-    };
-
-    const auto revdiag = [&](int diag){
-        int revdiag{}; for (int z = 5; z; --z, diag /= 10) revdiag = 10 * revdiag + diag % 10; return revdiag;
+    const auto incdiag = [&](const num_t& mid_row){
+        return num_t{cols[0][0], cols[1][1], mid_row[2], rows[1][1], rows[0][0]};
     };
 
     const std::function<void(int)> inner_solve = [&](const int n)
     {
         if (n == 8) {
-            rows[4] *= 10;
+            auto& lr = rows[4];
+            lr.push_back(0);
             for (const auto d : {1, 2, 4, 2}) {
-                rows[4] += d;
-                if (prime_prefix[rows[4]]) {
-                    const auto br = rows[4] % 10;
-                    cols[4] = 10 * cols[4] + br;
+                lr = lr + d;
+                if (prime_prefix[lr]) {
+                    cols[4].push_back(lr[0]);
                     if (prime_prefix[cols[4]]) {
-                        decdiag = 10 * decdiag + br;
+                        decdiag.push_back(lr[0]);
                         if (prime_prefix[decdiag]) {
-                            const int diag = incdiag(rows[2]);
+                            const auto diag = incdiag(rows[2]);
                             if (prime_prefix[diag])
                                 solution.insert(rows);
                             if (rows != cols) {
-                                if (prime_prefix[revdiag(diag)]) {
+                                if (prime_prefix[diag.reverse()]) {
                                     std::swap(rows, cols);
                                     solution.insert(rows);
                                     std::swap(rows, cols);
@@ -127,8 +202,8 @@ int main(int, char**)
                 const auto st = edge ? start : std::lower_bound(cont.begin(), cont.end(), low);
                 for (auto it = st; *it < hi; ++it) {
                     bool prefixes_ok{true};
-                    for (int c = *it, p = 4, z = 5 - ready - 1; z; --z, --p, c /= 10) {
-                        const auto prefix = 10 * rows[p] + c % 10;
+                    for (int p = 4, z = 5 - ready - 1; z; --z, --p) {
+                        const auto prefix = int(rows[p].push_back((*it)[4 - p]));
                         if (!prime_prefix[prefix]) {
                             prefixes_ok = false;
                             if (z == 1)
@@ -145,22 +220,22 @@ int main(int, char**)
                     rows = prows;
                 }
             } else { // row
-                const int low = (edge ? N : rows[ready]) * scale;
+                const int low = (edge ? N : int(rows[ready])) * scale;
                 const int hi = low + scale;
                 const auto pcols = cols;
                 const auto pdecdiag{decdiag};
                 for (auto it = std::lower_bound(cont.begin(), cont.end(), low); *it < hi; ++it) {
                     if (n == 4) {
                         const auto diag = incdiag(*it);
-                        if (!prime_prefix[diag] && !prime_prefix[revdiag(diag)]) {
+                        if (!prime_prefix[diag] && !prime_prefix[diag.reverse()]) {
                             while (*it / prefix_scale == *(it + 1) / prefix_scale) ++it;
                             continue;
                         }
                     }
 
                     bool prefixes_ok{true};
-                    for (int r = *it, p = 4, z = 5 - ready; z; --z, --p, r /= 10) {
-                        const auto prefix = 10 * cols[p] + r % 10;
+                    for (int p = 4, z = 5 - ready; z; --z, --p) {
+                        const auto prefix = int(cols[p].push_back((*it)[4 - p]));
                         if (!prime_prefix[prefix]) {
                             prefixes_ok = false;
                             if (z == 1)
@@ -171,7 +246,7 @@ int main(int, char**)
                     }
 
                     if (prefixes_ok) {
-                        decdiag = 10 * decdiag + cols[ready] % 10;
+                        decdiag.push_back(cols[ready][0]);
                         if (prime_prefix[decdiag]) {
                             if (edge)
                                 start = it;
