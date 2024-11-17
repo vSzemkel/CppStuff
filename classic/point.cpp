@@ -269,6 +269,18 @@ static auto perimeter_len(const std::vector<point_t<T>>& points) { // points are
     return perm;
 }
 
+template <typename T = double>
+static std::array<T, 4> bounding_box(const std::vector<point_t<T>>& points) {
+    T x0(INF), y0(INF), x1(-INF), y1(-INF);
+    for (const auto& p : points) {
+        if (p.x < x0) x0 = p.x;
+        else if (x1 < p.x) x1 = p.x;
+        if (p.y < y0) y0 = p.y;
+        else if (y1 < p.y) y1 = p.y;
+    }
+    return {x0, y0, x1, y1};
+}
+
 int main(int, char**)
 {
     const point_t<> a{0, 0};
@@ -327,6 +339,7 @@ int main(int, char**)
     assert(std::abs(point_t<double>::area(t1, t2, t3) - (t1 - t2).len() * (t3 - t3.foot(line_t<double>{t1, t2})).len() / 2) < EPS);
 
     std::vector<point_t<double>> v{{0, 0}, {2, 0}, {1, 1}, {1, 2}, {0, 2}};
+    assert((bounding_box(v) == std::array<double, 4>{0, 0, 2, 2}));
     polygon_t p{v};
     assert(p.area2() - 5 < EPS);
     const auto ch = p.convex_hull();
