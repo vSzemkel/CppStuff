@@ -1,29 +1,11 @@
 
-#include <algorithm>
-#include <array>
-#include <bitset>
-#include <cassert>
 #include <chrono>
-#include <cmath>
-#include <iomanip>
+#include <condition_variable>
 #include <iostream>
-#include <filesystem>
 #include <format>
 #include <fstream>
 #include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -36,29 +18,47 @@ class actor_t
 {
   public:
     actor_t(std::function<void(T)> process_work)
-        : _process_work(std::move(process_work)) {
-        // TODO create worker thread
+        : _process_work(std::move(process_work))
+        , _worker([this](){ this->run(); })
+    {
     }
 
     void push(const T& work) {
-
+        std::unique_lock lock{_mutex};
+        _queue[_active_id].push_back(work);
+        lock.unlock();
+        _condv.notify_one();
     }
 
   private:
     void run() {
+        std::unique_lock lock{_mutex};
+        while (_queue[_active_id].empty())
+            _condv.wait(lock);
 
+        _active_id = 1 - _active_id;
+        lock.unlock();
+
+        auto& work_queue = _queue[1 - _active_id];
+        for (const auto& w : work_queue)
+            _process_work(w);
+        work_queue.clear();
     }
 
     int _active_id{};
-    std::vector<T> queue[2];
-    std::vector<T>& _active_queue = queue[0];
+    std::vector<T> _queue[2];
     std::function<void(T)> _process_work;
+    std::mutex _mutex;
+    std::condition_variable _condv;
+    std::jthread _worker;
 };
 
 /***************************** TESTING ************************** */
 
 using hr_clock_t = std::chrono::high_resolution_clock;
 using duration_t = std::chrono::duration<double, std::milli>;
+
+std::ofstream log_file("actor.log");
 
 struct work_t {
     std::thread::id thread_id{std::this_thread::get_id()};
@@ -69,14 +69,33 @@ struct work_t {
 void work(const work_t& w) {
     std::this_thread::sleep_for(duration_t{1});
     const duration_t duration = hr_clock_t::now() - w.created;
-    std::cout << std::format("Job {:0>2} from thread {:0>5} processed in {} ms.\n", w.message_id, w.thread_id, duration);
+    log_file << std::format("Executor {:0>5}, job {:0>2} from thread {:0>5} processed in {} ms.\n", std::this_thread::get_id(), w.message_id, w.thread_id, duration);
+}
+
+actor_t<work_t> superstar{work};
+
+void type1_worker() {
+    work_t w;
+    for (int i = 0; i < 1000; ++i) {
+        w.message_id = i;
+        superstar.push(w);
+    }
+}
+
+void type2_worker() {
+    work_t w;
+    for (int i = 0; i < 1000; ++i) {
+        w.message_id = 100 + i;
+        superstar.push(w);
+    }
 }
 
 int main(int, char**)
 {
-    work_t w;
-    w.message_id = 3;
-    work(w);
+    std::jthread wt1(type1_worker);
+    std::jthread wt2(type2_worker);
+    wt1.join();
+    wt2.join();
 }
 
 /*
