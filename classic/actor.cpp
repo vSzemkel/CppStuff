@@ -32,7 +32,7 @@ class actor_t
      */
     void push(const T& work) {
         std::unique_lock lock{_mutex};
-        _queue[_active_id].push_back(work);
+        _receiving_queue.push_back(work);
         lock.unlock();
         _condv.notify_one();
     }
@@ -71,23 +71,21 @@ std::cerr << std::format("Actor {:0>5} terminates after completing {} jobs.\n", 
 
     void run() {
         std::unique_lock lock{_mutex};
-        while (_queue[_active_id].empty() && !_stop_requested)
+        while (_receiving_queue.empty() && !_stop_requested)
             _condv.wait(lock);
 
-        _active_id = 1 - _active_id;
+        std::swap(_receiving_queue, _processed_queue);
         lock.unlock();
 
-        auto& work_queue = _queue[1 - _active_id];
-        for (const auto& w : work_queue)
+        for (const auto& w : _processed_queue)
             _process_work(w);
 
-std::cerr << std::format("Actor {:0>5} next jobs chunk of size {}.\n", std::this_thread::get_id(), work_queue.size());
-        _counter += work_queue.size();
-        work_queue.clear();
+std::cerr << std::format("Actor {:0>5} next jobs chunk of size {}.\n", std::this_thread::get_id(), _processed_queue.size());
+        _counter += _processed_queue.size();
+        _processed_queue.clear();
     }
 
-    int _active_id{};
-    std::vector<T> _queue[2];
+    std::vector<T> _receiving_queue, _processed_queue;
     std::function<void(T)> _process_work;
     std::jthread _worker;
     std::atomic<size_t> _counter{};
@@ -115,7 +113,8 @@ struct work_t {
 void work(const work_t& w) {
     // std::this_thread::sleep_for(duration_t{0.01});
     const duration_t duration = hr_clock_t::now() - w.created;
-    std::cout << std::format("Executor {:0>5}, job {:0>2} from thread {:0>5} processed in {}.\n", std::this_thread::get_id(), w.message_id, w.thread_id, duration);
+    std::cout << std::format("Executor {:0>5}, job {:0>2} from thread {:0>5} processed in {}.", std::this_thread::get_id(), w.message_id, w.thread_id, duration);
+    std::cout << std::endl; // intentional
 }
 
 actor_t<work_t> superstar{work};
