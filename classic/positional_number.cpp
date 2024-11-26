@@ -54,15 +54,20 @@ class positional_number_t
     int push_back(const int digit) {
         assert(0 <= digit && digit < 10);
         _value = 10 * _value + digit;
-        syncn2d();
+        for (int i = N - 1; i > 0; --i)
+            _digits[i] = _digits[i - 1];
+        _digits[0] = digit;
         return _value;
     }
 
     int pop_back(int count) {
         assert(0 <= count && count <= N);
-        for (; count; --count)
+        for (int i = count; i < N; ++i)
+            _digits[i - count] = _digits[i];
+        for (int i = N - 1; count; --i, --count) {
+            _digits[i] = 0;
             _value /= 10;
-        syncn2d();
+        }
         return _value;
     }
 
