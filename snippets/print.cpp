@@ -10,3 +10,10 @@ static void print(const C& v, std::ostream& task_out = std::cout)
         task_out << e << sep;
     }
 }
+
+template <class... Args>
+void printv(const char* fmt, Args&&... args)
+{
+  std::string msg = std::vformat(fmt, std::make_format_args(args...));
+  std::cout << msg;
+}
