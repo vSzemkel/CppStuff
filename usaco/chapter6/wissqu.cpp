@@ -26,22 +26,24 @@ struct move_t {
 };
 
 bool found{};
-int64_t count;
-std::vector<move_t> solution;
-std::vector<bool> visited(SZ2);
-std::array<int, BREEDS> calves;
-std::array<std::vector<bool>, BREEDS> breeds;
-std::vector<std::string> board(SZ);
+int64_t count;                                // number of solutions
+std::vector<move_t> solution;                 // lexicographically smallest solution
+std::vector<bool> visited(SZ2);               // progress map
+std::array<int, BREEDS> calves;               // how many cows of particular breed still not moved to yearling pasture
+std::array<std::vector<bool>, BREEDS> breeds; // for each breed map of allowed positions
+std::vector<std::string> board(SZ);           // yearling pasture state
 
 void search(const int pending);
 
-void map_possible_local(const int row, const int col)
+auto map_possible_local(const int row, const int col)
 {
     auto& cur_breed_map = breeds[board[row][col] - 'A'];
+    const auto old = cur_breed_map;
     for (int r = row - 1; r <= row + 1; ++r)
         for (int c = col - 1; c <= col + 1; ++c)
             if (0 <= r && 0 <= c && r < SZ && c < SZ)
-                cur_breed_map[r * SZ + c] = true;
+                cur_breed_map[r * SZ + c] = false;
+    return old;
 }
 
 void map_possible()
@@ -59,12 +61,12 @@ void arrange(const int pos, char next, const int pending)
     const auto [r, c] = std::div(pos, SZ);
     auto& b = board[r][c];
     std::swap(b, next);
-    map_possible_local(r, c);
+    const auto old = map_possible_local(r, c);
     visited[pos] = true;
     search(pending);
     visited[pos] = false;
     std::swap(b, next);
-    map_possible_local(r, c);
+    breeds[next - 'A'] = old;
 }
 
 void search(const int pending)
@@ -77,13 +79,26 @@ void search(const int pending)
                 task_out << s.breed << ' ' << s.r + 1 << ' ' << s.c + 1 << '\n';
         }
     } else {
-        for (int b = 0; b < BREEDS; ++b) {
-            char next = 'A' + b;
-            auto& breed = breeds[b];
-            for (int pos = 0; pos < SZ2; ++pos)
-                if (!visited[pos] && breed[pos])
-                    arrange(pos, next, pending - 1);
-        }
+        /*for (int b = 0; b < BREEDS; ++b)
+            if (calves[b]) {
+                auto& breed = breeds[b];
+                for (int pos = 0; pos < SZ2; ++pos)
+                    if (!visited[pos] && breed[pos]) {
+                        --calves[b];
+                        arrange(pos, 'A' + b, pending - 1);
+                        ++calves[b];
+                    }
+            }*/
+        for (int pos = 0; pos < SZ2; ++pos)
+            if (!visited[pos])
+                for (int b = 0; b < BREEDS; ++b) {
+                    auto& breed = breeds[b];
+                    if (breed[pos] && calves[b]) {
+                        --calves[b];
+                        arrange(pos, 'A' + b, pending - 1);
+                        ++calves[b];
+                    }
+                }
     }
 }
 
@@ -92,9 +107,11 @@ int main(int, char**)
     for (auto& r : board)
         task_in >> r;
 
-    char init{'D'};
     calves.fill(3);
     breeds.fill(std::vector<bool>(SZ2, true));
+    map_possible();
+
+    const char init{'D'};
     const auto& d = breeds[init - 'A'];
     for (int pos = 0; pos < SZ2; ++pos)
         if (d[pos]) 
