@@ -8,6 +8,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=d7HUb5da4a6&S=wissqu
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstdlib>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -27,13 +28,12 @@ struct move_t {
 bool found{};
 int64_t count;
 std::vector<move_t> solution;
-std::array<int, BREEDS> calves; 
+std::vector<bool> visited(SZ2);
+std::array<int, BREEDS> calves;
 std::array<std::vector<bool>, BREEDS> breeds;
 std::vector<std::string> board(SZ);
 
-void report()
-{
-}
+void search(const int pending);
 
 void map_possible_local(const int row, const int col)
 {
@@ -54,16 +54,36 @@ void map_possible()
             map_possible_local(r, c);
 }
 
+void arrange(const int pos, char next, const int pending)
+{
+    const auto [r, c] = std::div(pos, SZ);
+    auto& b = board[r][c];
+    std::swap(b, next);
+    map_possible_local(r, c);
+    visited[pos] = true;
+    search(pending);
+    visited[pos] = false;
+    std::swap(b, next);
+    map_possible_local(r, c);
+}
+
 void search(const int pending)
 {
-    if (!pendinf) {
+    if (!pending) {
+        ++count;
         if (!found) {
             found = true;
             for (const auto& s : solution)
                 task_out << s.breed << ' ' << s.r + 1 << ' ' << s.c + 1 << '\n';
         }
     } else {
-
+        for (int b = 0; b < BREEDS; ++b) {
+            char next = 'A' + b;
+            auto& breed = breeds[b];
+            for (int pos = 0; pos < SZ2; ++pos)
+                if (!visited[pos] && breed[pos])
+                    arrange(pos, next, pending - 1);
+        }
     }
 }
 
@@ -72,16 +92,13 @@ int main(int, char**)
     for (auto& r : board)
         task_in >> r;
 
-    calves.fill(3);
     char init{'D'};
+    calves.fill(3);
+    breeds.fill(std::vector<bool>(SZ2, true));
     const auto& d = breeds[init - 'A'];
     for (int pos = 0; pos < SZ2; ++pos)
-        if (d[pos]) {
-            auto& b = board[pos / SZ][pos % SZ];
-            std::swap(b, init);
-            search(SZ2 - 1);
-            std::swap(b, init);
-        }
+        if (d[pos]) 
+            arrange(pos, init, SZ2 - 1);
 
     task_out << count << '\n';
 }
