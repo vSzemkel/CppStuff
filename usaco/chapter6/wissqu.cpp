@@ -35,7 +35,7 @@ std::vector<std::string> board(SZ);           // yearling pasture state
 
 void search(const int pending);
 
-auto map_possible_local(const int row, const int col)
+auto sync_enter(const int row, const int col)
 {
     auto& cur_breed_map = breeds[board[row][col] - 'A'];
     const auto old = cur_breed_map;
@@ -46,14 +46,16 @@ auto map_possible_local(const int row, const int col)
     return old;
 }
 
-void map_possible()
+auto sync_leave(const int breed)
 {
-    for (auto& b : breeds)
-        b.assign(SZ2, true);
-
+    auto& cur_breed_map = breeds[breed];
+    const auto old = cur_breed_map;
+    cur_breed_map.assign(SZ2, true);
     for (int r = 0; r < SZ; ++r)
         for (int c = 0; c < SZ; ++c)
-            map_possible_local(r, c);
+            if (board[r][c] == 'A' + breed)
+                sync_enter(r, c);
+    return old;
 }
 
 void arrange(const int pos, char next, const int pending)
@@ -61,12 +63,20 @@ void arrange(const int pos, char next, const int pending)
     const auto [r, c] = std::div(pos, SZ);
     auto& b = board[r][c];
     std::swap(b, next);
-    const auto old = map_possible_local(r, c);
+    const auto enter_org = sync_enter(r, c);
+    const auto leave_org = sync_leave(next);
     visited[pos] = true;
-    search(pending);
+    if (!found) {
+        solution.emplace_back(move_t{r, c, next});
+        search(pending);
+        solution.pop_back();
+    } else
+        search(pending);
+
     visited[pos] = false;
     std::swap(b, next);
-    breeds[next - 'A'] = old;
+    breeds[next - 'A'] = enter_org;
+    breeds[b - 'A'] = leave_org;
 }
 
 void search(const int pending)
@@ -79,7 +89,7 @@ void search(const int pending)
                 task_out << s.breed << ' ' << s.r + 1 << ' ' << s.c + 1 << '\n';
         }
     } else {
-        /*for (int b = 0; b < BREEDS; ++b)
+        for (int b = 0; b < BREEDS; ++b)
             if (calves[b]) {
                 auto& breed = breeds[b];
                 for (int pos = 0; pos < SZ2; ++pos)
@@ -88,8 +98,8 @@ void search(const int pending)
                         arrange(pos, 'A' + b, pending - 1);
                         ++calves[b];
                     }
-            }*/
-        for (int pos = 0; pos < SZ2; ++pos)
+            }
+        /*for (int pos = 0; pos < SZ2; ++pos)
             if (!visited[pos])
                 for (int b = 0; b < BREEDS; ++b) {
                     auto& breed = breeds[b];
@@ -98,7 +108,7 @@ void search(const int pending)
                         arrange(pos, 'A' + b, pending - 1);
                         ++calves[b];
                     }
-                }
+                }*/
     }
 }
 
@@ -108,8 +118,8 @@ int main(int, char**)
         task_in >> r;
 
     calves.fill(3);
-    breeds.fill(std::vector<bool>(SZ2, true));
-    map_possible();
+    for (int b = 0; b < BREEDS; ++b)
+        sync_leave(b);
 
     const char init{'D'};
     const auto& d = breeds[init - 'A'];
