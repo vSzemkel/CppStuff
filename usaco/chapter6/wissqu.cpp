@@ -19,7 +19,6 @@ std::ofstream task_out("wissqu.out");
 static constexpr const int SZ = 4;
 static constexpr const int BREEDS = 5;
 static constexpr const int SZ2 = SZ * SZ;
-static const std::vector<bool> all_taken(SZ2);
 
 struct move_t {
     int r, c;
@@ -27,12 +26,12 @@ struct move_t {
 };
 
 bool found{};
-int64_t count;                                // number of solutions
-std::vector<move_t> solution;                 // lexicographically smallest solution
-std::vector<bool> visited(SZ2);               // progress map
-std::array<int, BREEDS> calves;               // how many cows of particular breed still not moved to yearling pasture
-std::array<std::vector<bool>, BREEDS> breeds; // for each breed map of allowed positions
-std::vector<std::string> board(SZ);           // yearling pasture state
+int64_t count;                      // number of solutions
+std::vector<move_t> solution;       // lexicographically smallest solution
+std::vector<bool> visited(SZ2);     // progress map
+std::array<int, BREEDS> calves;     // how many cows of particular breed still not moved to yearling pasture
+std::array<int, BREEDS> breeds;     // for each breed map of allowed positions
+std::vector<std::string> board(SZ); // yearling pasture state
 
 void search(const int pending);
 
@@ -42,8 +41,10 @@ auto sync_enter(const int row, const int col)
     const auto old = cur_breed_map;
     for (int r = row - 1; r <= row + 1; ++r)
         for (int c = col - 1; c <= col + 1; ++c)
-            if (0 <= r && 0 <= c && r < SZ && c < SZ)
-                cur_breed_map[r * SZ + c] = false;
+            if (0 <= r && 0 <= c && r < SZ && c < SZ) {
+                const int mask = 1 << (r * SZ + c);
+                cur_breed_map  &= ~mask;
+            }
     return old;
 }
 
@@ -51,7 +52,7 @@ auto sync_leave(const char breed)
 {
     auto& cur_breed_map = breeds[breed - 'A'];
     const auto old = cur_breed_map;
-    cur_breed_map.assign(SZ2, true);
+    cur_breed_map = -1;
     for (int r = 0; r < SZ; ++r)
         for (int c = 0; c < SZ; ++c)
             if (board[r][c] == breed)
@@ -93,9 +94,9 @@ void search(const int pending)
         for (int b = 0; b < BREEDS; ++b)
             if (calves[b]) {
                 auto& breed = breeds[b];
-                if (breed != all_taken)
+                if (breed != 0)
                     for (int pos = 0; pos < SZ2; ++pos)
-                        if (!visited[pos] && breed[pos]) {
+                        if (!visited[pos] && (breed & (1 << pos))) {
                             --calves[b];
                             arrange(pos, 'A' + b, pending - 1);
                             ++calves[b];
@@ -116,7 +117,7 @@ int main(int, char**)
     const char init{'D'};
     const auto& d = breeds[init - 'A'];
     for (int pos = 0; pos < SZ2; ++pos)
-        if (d[pos]) 
+        if (d & (1 << pos)) 
             arrange(pos, init, SZ2 - 1);
 
     task_out << count << '\n';
