@@ -19,6 +19,7 @@ std::ofstream task_out("wissqu.out");
 static constexpr const int SZ = 4;
 static constexpr const int BREEDS = 5;
 static constexpr const int SZ2 = SZ * SZ;
+static const std::vector<bool> all_taken(SZ2);
 
 struct move_t {
     int r, c;
@@ -46,14 +47,14 @@ auto sync_enter(const int row, const int col)
     return old;
 }
 
-auto sync_leave(const int breed)
+auto sync_leave(const char breed)
 {
-    auto& cur_breed_map = breeds[breed];
+    auto& cur_breed_map = breeds[breed - 'A'];
     const auto old = cur_breed_map;
     cur_breed_map.assign(SZ2, true);
     for (int r = 0; r < SZ; ++r)
         for (int c = 0; c < SZ; ++c)
-            if (board[r][c] == 'A' + breed)
+            if (board[r][c] == breed)
                 sync_enter(r, c);
     return old;
 }
@@ -67,7 +68,7 @@ void arrange(const int pos, char next, const int pending)
     const auto leave_org = sync_leave(next);
     visited[pos] = true;
     if (!found) {
-        solution.emplace_back(move_t{r, c, next});
+        solution.emplace_back(move_t{r, c, b});
         search(pending);
         solution.pop_back();
     } else
@@ -92,23 +93,14 @@ void search(const int pending)
         for (int b = 0; b < BREEDS; ++b)
             if (calves[b]) {
                 auto& breed = breeds[b];
-                for (int pos = 0; pos < SZ2; ++pos)
-                    if (!visited[pos] && breed[pos]) {
-                        --calves[b];
-                        arrange(pos, 'A' + b, pending - 1);
-                        ++calves[b];
-                    }
+                if (breed != all_taken)
+                    for (int pos = 0; pos < SZ2; ++pos)
+                        if (!visited[pos] && breed[pos]) {
+                            --calves[b];
+                            arrange(pos, 'A' + b, pending - 1);
+                            ++calves[b];
+                        }
             }
-        /*for (int pos = 0; pos < SZ2; ++pos)
-            if (!visited[pos])
-                for (int b = 0; b < BREEDS; ++b) {
-                    auto& breed = breeds[b];
-                    if (breed[pos] && calves[b]) {
-                        --calves[b];
-                        arrange(pos, 'A' + b, pending - 1);
-                        ++calves[b];
-                    }
-                }*/
     }
 }
 
@@ -118,7 +110,7 @@ int main(int, char**)
         task_in >> r;
 
     calves.fill(3);
-    for (int b = 0; b < BREEDS; ++b)
+    for (char b = 'A', z = BREEDS; z; ++b, --z)
         sync_leave(b);
 
     const char init{'D'};
