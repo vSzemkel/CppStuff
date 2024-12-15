@@ -52,14 +52,6 @@ class positional_number_t
         sync();
     }
 
-    positional_number_t(const std::vector<int>& digits) {
-        assert(digits.size() <= N);
-        int i = int(digits.size());
-        for (const int d : digits)
-            _digits[--i] = d;
-        sync();
-    }
-
     positional_number_t(const std::initializer_list<int> digits) {
         assert(digits.size() <= N);
         int i = int(digits.size());
@@ -136,23 +128,78 @@ class positional_number_t
 int N, ans{};
 using num_t = positional_number_t<7>;
 std::unordered_set<int> prefixes;
-std::vector<num_t> numbers;
+std::vector<num_t> numbers, rows, cols;
 
-void generate() {
+int generate() {
     std::vector<int> digits(N);
     std::iota(digits.begin(), digits.end(), 1);
     do {
         num_t num;
-        numbers.emplace_back(digits);
+        int d = numbers.emplace_back(digits);
+        while (d) {
+            prefixes.insert(d);
+            d /= 10;
+        }
     } while (std::next_permutation(digits.begin(), digits.end()));
+
+    return numbers.size();
+}
+
+auto prefix_range(const num_t& prefix)
+{
+    assert(prefix > 0);
+    auto low = prefix;
+    while (low[N - 1] == 0)
+        low.push_back(0);
+    auto high = prefix;
+    while (high[N - 1] == 0)
+        high.push_back(9);
+
+    const auto beg = std::lower_bound(numbers.begin(), numbers.end(), low);
+    return std::make_pair(beg, std::lower_bound(beg, numbers.end(), high));
+}
+
+void inner_solve(const int round)
+{
+    if (round == N - 1) {
+        ++ans;
+        return;
+    }
+
+    int cur = round / 2;
+    if (round & 1) { // fill colund
+
+    } else { // fill row
+        const auto [low, high] = prefix_range(rows[cur]);
+        for (auto it = low; it != high; ++it) {
+            // TODO: check column prefixed
+            rows[cur] = *it;
+            inner_solve(cur + 1);
+        }
+
+    }
 }
 
 int main(int, char**)
 {
-    std::vector<int> test = {4, 2, 0, 1};
-    num_t x{test};
-
     task_in >> N;
+    rows.resize(N);
+    cols.resize(N);
+    const int sz = generate();
+
+    for (int i = 0; i < sz; ++i) {
+        rows[0] = numbers[i];
+        for (int c = 1; c < N; ++c)
+            cols[c] = rows[0][N - 1 - c];
+        const auto [low, high] = prefix_range(rows[N - 1]);
+        for (auto it = low; it != high; ++it) {
+            cols[0] = *it;
+            for (int r = 1; r < N; ++r)
+                rows[r] = cols[0][N - 1 - r];
+            inner_solve(2);
+        }
+    }
+
     task_out << ans << '\n';
 }
 
