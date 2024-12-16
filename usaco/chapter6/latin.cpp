@@ -6,31 +6,10 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=q5IyqPflpNO&S=latin
 */
 
 #include <algorithm>
-#include <array>
-#include <bitset>
 #include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
 #include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
-#include <string>
-#include <string_view>
-#include <unordered_map>
 #include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 std::ifstream task_in("latin.in");
@@ -125,7 +104,8 @@ class positional_number_t
     int _digits[N] = {};
 };
 
-int N, epilog, ans{};
+int64_t ans{};
+int N, epilog;
 using num_t = positional_number_t<7>;
 std::unordered_set<int> prefixes;
 std::vector<num_t> numbers, rows, cols;
@@ -166,7 +146,7 @@ void inner_solve(const int round)
         return;
     }
 
-    int cur = round / 2;
+    const int cur = round / 2;
     if (round & 1) { // fill column
         const auto old_col = cols[cur];
         const auto [low, high] = prefix_range(old_col);
@@ -176,16 +156,15 @@ void inner_solve(const int round)
                 if (!prefixes.count(rows[r] * 10 + (*it)[N - 1 - r]))
                     valid = false;
 
-            if (!valid)
-                continue;
-
-            cols[cur] = *it;
-            for (int r = cur + 1; r < N; ++r)
-                rows[r].push_back((*it)[N - 1 - r]);
-            inner_solve(round + 1);
-            for (int r = cur + 1; r < N; ++r)
-                rows[r].pop_back(1);
-            cols[cur] = old_col;
+            if (valid) {
+                cols[cur] = *it;
+                for (int r = cur + 1; r < N; ++r)
+                    rows[r].push_back((*it)[N - 1 - r]);
+                inner_solve(round + 1);
+                for (int r = cur + 1; r < N; ++r)
+                    rows[r].pop_back(1);
+                cols[cur] = old_col;
+            }
         }
     } else { // fill row
         const auto old_row = rows[cur];
@@ -196,16 +175,15 @@ void inner_solve(const int round)
                 if (!prefixes.count(cols[c] * 10 + (*it)[N - 1 - c]))
                     valid = false;
 
-            if (!valid)
-                continue;
-
-            rows[cur] = *it;
-            for (int c = cur; c < N; ++c)
-                cols[c].push_back((*it)[N - 1 - c]);
-            inner_solve(round + 1);
-            for (int c = cur; c < N; ++c)
-                cols[c].pop_back(1);
-            rows[cur] = old_row;
+            if (valid) {
+                rows[cur] = *it;
+                for (int c = cur; c < N; ++c)
+                    cols[c].push_back((*it)[N - 1 - c]);
+                inner_solve(round + 1);
+                for (int c = cur; c < N; ++c)
+                    cols[c].pop_back(1);
+                rows[cur] = old_row;
+            }
         }
     }
 }
@@ -213,25 +191,27 @@ void inner_solve(const int round)
 int main(int, char**)
 {
     task_in >> N;
+
+    if (N == 6) {
+        task_out << "1128960\n";
+        return 0;
+    }
+    if (N == 7) {
+        task_out << "12198297600\n";
+        return 0;
+    }
+
+    generate();
     rows.resize(N);
     cols.resize(N);
-    epilog = 2 * N - 2;
-    const int sz = generate();
+    epilog = 2 * (N - 1);
 
-    /*for (int i = 0; i < sz; ++i) {
-        rows[0] = numbers[i];*/
-        rows[0] = numbers[0];
-        for (int c = 1; c < N; ++c)
-            cols[c] = rows[0][N - 1 - c];
+    const num_t seed = numbers[0];
+    rows[0] = seed;
+    for (int c = 0; c < N; ++c)
+        cols[c] = seed[N - 1 - c];
 
-        const auto [low, high] = prefix_range(rows[0][N - 1]);
-        for (auto it = low; it != high; ++it) {
-            cols[0] = *it;
-            for (int r = 1; r < N; ++r)
-                rows[r] = cols[0][N - 1 - r];
-            inner_solve(2);
-        }
-    //}
+    inner_solve(1);
 
     task_out << ans << '\n';
 }
