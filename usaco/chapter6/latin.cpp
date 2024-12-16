@@ -31,14 +31,6 @@ class positional_number_t
         sync();
     }
 
-    positional_number_t(const std::initializer_list<int> digits) {
-        assert(digits.size() <= N);
-        int i = int(digits.size());
-        for (const int d : digits)
-            _digits[--i] = d;
-        sync();
-    }
-
     positional_number_t& operator=(const int value) {
         _value = value;
         syncn2d();
@@ -55,14 +47,6 @@ class positional_number_t
 
     int& operator[](const int index) {
         return _digits[index];
-    }
-
-    int reverse() const {
-        int ret{};
-        for (const int& d : _digits)
-            ret = 10 * ret + d;
-
-        return ret;
     }
 
     int push_back(const int digit) {

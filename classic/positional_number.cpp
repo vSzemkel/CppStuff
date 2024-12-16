@@ -17,6 +17,14 @@ class positional_number_t
         syncn2d();
     }
 
+    positional_number_t(const std::vector<int>& digits) {
+        assert(digits.size() <= N);
+        int i = int(digits.size());
+        for (const int d : digits)
+            _digits[--i] = d;
+        sync();
+    }
+
     positional_number_t(const std::initializer_list<int> digits) {
         assert(digits.size() <= N);
         int i = int(digits.size());
