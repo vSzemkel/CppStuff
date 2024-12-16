@@ -125,7 +125,7 @@ class positional_number_t
     int _digits[N] = {};
 };
 
-int N, ans{};
+int N, epilog, ans{};
 using num_t = positional_number_t<7>;
 std::unordered_set<int> prefixes;
 std::vector<num_t> numbers, rows, cols;
@@ -161,22 +161,52 @@ auto prefix_range(const num_t& prefix)
 
 void inner_solve(const int round)
 {
-    if (round == N - 1) {
+    if (round == epilog) {
         ++ans;
         return;
     }
 
     int cur = round / 2;
-    if (round & 1) { // fill colund
-
-    } else { // fill row
-        const auto [low, high] = prefix_range(rows[cur]);
+    if (round & 1) { // fill column
+        const auto old_col = cols[cur];
+        const auto [low, high] = prefix_range(old_col);
         for (auto it = low; it != high; ++it) {
-            // TODO: check column prefixed
-            rows[cur] = *it;
-            inner_solve(cur + 1);
-        }
+            bool valid{true};
+            for (int r = cur + 1; r < N; ++r)
+                if (!prefixes.count(rows[r] * 10 + (*it)[N - 1 - r]))
+                    valid = false;
 
+            if (!valid)
+                continue;
+
+            cols[cur] = *it;
+            for (int r = cur + 1; r < N; ++r)
+                rows[r].push_back((*it)[N - 1 - r]);
+            inner_solve(round + 1);
+            for (int r = cur + 1; r < N; ++r)
+                rows[r].pop_back(1);
+            cols[cur] = old_col;
+        }
+    } else { // fill row
+        const auto old_row = rows[cur];
+        const auto [low, high] = prefix_range(old_row);
+        for (auto it = low; it != high; ++it) {
+            bool valid{true};
+            for (int c = cur; c < N; ++c)
+                if (!prefixes.count(cols[c] * 10 + (*it)[N - 1 - c]))
+                    valid = false;
+
+            if (!valid)
+                continue;
+
+            rows[cur] = *it;
+            for (int c = cur; c < N; ++c)
+                cols[c].push_back((*it)[N - 1 - c]);
+            inner_solve(round + 1);
+            for (int c = cur; c < N; ++c)
+                cols[c].pop_back(1);
+            rows[cur] = old_row;
+        }
     }
 }
 
@@ -185,20 +215,23 @@ int main(int, char**)
     task_in >> N;
     rows.resize(N);
     cols.resize(N);
+    epilog = 2 * N - 2;
     const int sz = generate();
 
-    for (int i = 0; i < sz; ++i) {
-        rows[0] = numbers[i];
+    /*for (int i = 0; i < sz; ++i) {
+        rows[0] = numbers[i];*/
+        rows[0] = numbers[0];
         for (int c = 1; c < N; ++c)
             cols[c] = rows[0][N - 1 - c];
-        const auto [low, high] = prefix_range(rows[N - 1]);
+
+        const auto [low, high] = prefix_range(rows[0][N - 1]);
         for (auto it = low; it != high; ++it) {
             cols[0] = *it;
             for (int r = 1; r < N; ++r)
                 rows[r] = cols[0][N - 1 - r];
             inner_solve(2);
         }
-    }
+    //}
 
     task_out << ans << '\n';
 }
@@ -206,7 +239,7 @@ int main(int, char**)
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 latin.cpp -o latin.exe
+clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++20 latin.cpp -o latin.exe
 g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address latin.cpp -o latin
 
 Run:

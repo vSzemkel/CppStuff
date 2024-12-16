@@ -30,7 +30,7 @@ int64_t count;                      // number of solutions
 std::vector<move_t> solution;       // lexicographically smallest solution
 std::vector<bool> visited(SZ2);     // progress map
 std::array<int, BREEDS> calves;     // how many cows of particular breed still not moved to yearling pasture
-std::array<int, BREEDS> breeds;     // for each breed map of allowed positions
+std::array<int, BREEDS> breeds;     // for each breed bitmap of allowed positions
 std::vector<std::string> board(SZ); // yearling pasture state
 
 void search(const int pending);
