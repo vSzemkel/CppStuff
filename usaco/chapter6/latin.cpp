@@ -93,6 +93,7 @@ int N, epilog;
 using num_t = positional_number_t<7>;
 std::unordered_set<int> prefixes;
 std::vector<num_t> numbers, rows, cols;
+static const int factorial[] = {1, 1, 2, 6, 24, 120, 720};
 
 int generate() {
     std::vector<int> digits(N);
@@ -123,6 +124,9 @@ auto prefix_range(const num_t& prefix)
     return std::make_pair(beg, std::lower_bound(beg, numbers.end(), high));
 }
 
+/**
+ * Observation: if we find acceptable latin square with sorted rows, we can have (N - 1)! variants of it by permuting all rows but the first one.
+ */
 void inner_solve(const int round)
 {
     if (round == epilog) {
@@ -136,20 +140,24 @@ void inner_solve(const int round)
         const auto [low, high] = prefix_range(old_col);
         for (auto it = low; it != high; ++it) {
             bool valid{true};
-            for (int r = cur + 1; r < N; ++r)
-                if (!prefixes.count(rows[r] * 10 + (*it)[N - 1 - r]))
+            cols[cur] = *it;
+            auto prev = rows[cur];
+            prev.pop_back(N - 1 - cur);
+            int r = cur + 1;
+            for (auto row = rows.begin() + r; row != rows.end(); ++row, ++r) {
+                row->push_back((*it)[N - 1 - r]);
+                if (!prefixes.count(*row) || *row < prev) // only squares with valid and sorted rows prefixes
                     valid = false;
-
-            if (valid) {
-                cols[cur] = *it;
-                for (int r = cur + 1; r < N; ++r)
-                    rows[r].push_back((*it)[N - 1 - r]);
-                inner_solve(round + 1);
-                for (int r = cur + 1; r < N; ++r)
-                    rows[r].pop_back(1);
-                cols[cur] = old_col;
+                prev = *row;
             }
+
+            if (valid)
+                inner_solve(round + 1);
+
+            for (int r = cur + 1; r < N; ++r)
+                rows[r].pop_back(1);
         }
+        cols[cur] = old_col;
     } else { // fill row
         const auto old_row = rows[cur];
         const auto [low, high] = prefix_range(old_row);
@@ -176,14 +184,10 @@ int main(int, char**)
 {
     task_in >> N;
 
-    if (N == 6) {
-        task_out << "1128960\n";
-        return 0;
-    }
-    if (N == 7) {
+    /*if (N == 7) { correct, TLE
         task_out << "12198297600\n";
         return 0;
-    }
+    }*/
 
     generate();
     rows.resize(N);
@@ -197,7 +201,7 @@ int main(int, char**)
 
     inner_solve(1);
 
-    task_out << ans << '\n';
+    task_out << ans * factorial[N - 1] << '\n';
 }
 
 /*
