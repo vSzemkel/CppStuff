@@ -88,10 +88,10 @@ class positional_number_t
     int _digits[N] = {};
 };
 
-int64_t ans{};
-int N, epilog;
-using num_t = positional_number_t<7>;
+int N, required_rounds;
+int64_t count_21star, ans{};
 std::unordered_set<int> prefixes;
+using num_t = positional_number_t<7>;
 std::vector<num_t> numbers, rows, cols;
 static const int factorial[] = {1, 1, 2, 6, 24, 120, 720};
 
@@ -128,10 +128,11 @@ auto prefix_range(const num_t& prefix)
  * Observation1: if we find acceptable latin square with sorted rows, we can have (N - 1)! variants of it by permuting all rows but the first one.
  * Observation2: Acceptable, row-sorted squares have left column fixed and equal to top row
  * Observation3: Correctly filled N-1 square can be extended to full N size in only one way
+ * Observation4: Computation for second row can by optimized, see coment inline below
  */
 void inner_solve(const int round)
 {
-    if (round == epilog) {
+    if (round == required_rounds) {
         ++ans;
         return;
     }
@@ -160,6 +161,18 @@ void inner_solve(const int round)
         const auto old_row = rows[cur];
         const auto [low, high] = prefix_range(old_row);
         for (auto it = low; it != high; ++it) {
+            if (round == 2) {
+                // Observation4 : optimization for second row
+                // 21* is fewer then 23* because for 21* digit 3 can not be anywhere in *, for 23* digit 1 can be anywhere
+                // 23* and 24* are symmetric in any mean, the same hold true for 25* .. 2N*
+                // Answer = count(21*) + count(23*) * (N - 2)
+                if (count_21star == 0 && (*it)[N - 2] == 3)
+                    count_21star = ans;
+                else if ((*it)[N - 2] == 4) {
+                    ans = count_21star + (ans - count_21star) * (N - 2);
+                    break;
+                }
+            }
             bool valid{true};
             for (int c = cur; c < N; ++c)
                 if (!prefixes.count(cols[c] * 10 + (*it)[N - 1 - c]))
@@ -174,6 +187,8 @@ void inner_solve(const int round)
                     cols[c].pop_back(1);
             }
         }
+
+
         rows[cur] = old_row;
     }
 }
@@ -182,19 +197,14 @@ int main(int, char**)
 {
     task_in >> N;
 
-    /*if (N == 7) { correct, TLE
-        task_out << "12198297600\n";
-        return 0;
-    }*/
-
     generate();
     rows.resize(N);
     cols.resize(N);
-    epilog = 2 * (N - 1);
+    required_rounds = 2 * (N - 1);
 
     const num_t seed = numbers[0];
     rows[0] = cols[0] = seed;
-    for (int c = 0; c < N; ++c)
+    for (int c = 1; c < N; ++c)
         rows[c] = cols[c] = seed[N - 1 - c];
 
     inner_solve(2);
@@ -213,10 +223,10 @@ latin.exe && type latin.out
 
 Input:
 
-5
+7
 
 Output:
 
-1344
+12198297600
 
 */
