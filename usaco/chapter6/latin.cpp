@@ -125,7 +125,9 @@ auto prefix_range(const num_t& prefix)
 }
 
 /**
- * Observation: if we find acceptable latin square with sorted rows, we can have (N - 1)! variants of it by permuting all rows but the first one.
+ * Observation1: if we find acceptable latin square with sorted rows, we can have (N - 1)! variants of it by permuting all rows but the first one.
+ * Observation2: Acceptable, row-sorted squares have left column fixed and equal to top row
+ * Observation3: Correctly filled N-1 square can be extended to full N size in only one way
  */
 void inner_solve(const int round)
 {
@@ -140,22 +142,18 @@ void inner_solve(const int round)
         const auto [low, high] = prefix_range(old_col);
         for (auto it = low; it != high; ++it) {
             bool valid{true};
-            cols[cur] = *it;
-            auto prev = rows[cur];
-            prev.pop_back(N - 1 - cur);
-            int r = cur + 1;
-            for (auto row = rows.begin() + r; row != rows.end(); ++row, ++r) {
-                row->push_back((*it)[N - 1 - r]);
-                if (!prefixes.count(*row) || *row < prev) // only squares with valid and sorted rows prefixes
-                    valid = false;
-                prev = *row;
-            }
-
-            if (valid)
-                inner_solve(round + 1);
-
             for (int r = cur + 1; r < N; ++r)
-                rows[r].pop_back(1);
+                if (!prefixes.count(rows[r] * 10 + (*it)[N - 1 - r]))
+                    valid = false;
+
+            if (valid) {
+                cols[cur] = *it;
+                for (int r = cur + 1; r < N; ++r)
+                    rows[r].push_back((*it)[N - 1 - r]);
+                inner_solve(round + 1);
+                for (int r = cur + 1; r < N; ++r)
+                    rows[r].pop_back(1);
+            }
         }
         cols[cur] = old_col;
     } else { // fill row
@@ -174,9 +172,9 @@ void inner_solve(const int round)
                 inner_solve(round + 1);
                 for (int c = cur; c < N; ++c)
                     cols[c].pop_back(1);
-                rows[cur] = old_row;
             }
         }
+        rows[cur] = old_row;
     }
 }
 
@@ -195,11 +193,11 @@ int main(int, char**)
     epilog = 2 * (N - 1);
 
     const num_t seed = numbers[0];
-    rows[0] = seed;
+    rows[0] = cols[0] = seed;
     for (int c = 0; c < N; ++c)
-        cols[c] = seed[N - 1 - c];
+        rows[c] = cols[c] = seed[N - 1 - c];
 
-    inner_solve(1);
+    inner_solve(2);
 
     task_out << ans * factorial[N - 1] << '\n';
 }
