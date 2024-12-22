@@ -10,7 +10,6 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=q5IyqPflpNO&S=latin
 #include <fstream>
 #include <numeric>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 std::ifstream task_in("latin.in");
@@ -91,7 +90,6 @@ class positional_number_t
 
 int N, required_rounds;
 int64_t count_21star, ans{};
-std::unordered_set<int> prefixes;
 using num_t = positional_number_t<7>;
 std::vector<num_t> numbers, rows, cols;
 std::unordered_map<uint64_t, int64_t> memo;
@@ -101,12 +99,7 @@ int generate() {
     std::vector<int> digits(N);
     std::iota(digits.begin(), digits.end(), 1);
     do {
-        num_t num;
-        int d = numbers.emplace_back(digits);
-        while (d) {
-            prefixes.insert(d);
-            d /= 10;
-        }
+        numbers.emplace_back(digits);
     } while (std::next_permutation(digits.begin(), digits.end()));
 
     return numbers.size();
@@ -174,32 +167,10 @@ void inner_solve(const int round, uint64_t cache)
         return;
     }
 
-    const int cur = round / 2;
-    if (round & 1) { // fill column
-        const auto old_col = cols[cur];
-        const auto [low, high] = prefix_range(old_col);
+    for (const auto prefix : valid_prefixes(cache, round + 1)) {
+        const auto [low, high] = prefix_range(prefix);
         for (auto it = low; it != high; ++it) {
-            bool valid{true};
-            for (int r = cur + 1; r < N; ++r)
-                if (!prefixes.count(rows[r] * 10 + (*it)[N - 1 - r]))
-                    valid = false;
-
-            if (valid) {
-                cols[cur] = *it;
-                for (int r = cur + 1; r < N; ++r)
-                    rows[r].push_back((*it)[N - 1 - r]);
-                inner_solve(round + 1, cache);
-                for (int r = cur + 1; r < N; ++r)
-                    rows[r].pop_back(1);
-            }
-        }
-
-        cols[cur] = old_col;
-    } else { // fill row
-        const auto old_row = rows[cur];
-        const auto [low, high] = prefix_range(old_row);
-        for (auto it = low; it != high; ++it) {
-            if (round == 2) {
+            if (round == 1) {
                 // Observation4 : optimization for second row
                 // 21* is fewer then 23* because for 21* digit 3 can not be anywhere in *, for 23* digit 1 can be anywhere
                 // 23* and 24* are symmetric in any mean, the same hold true for 25* .. 2N*
@@ -208,7 +179,7 @@ void inner_solve(const int round, uint64_t cache)
                     count_21star = ans;
                 else if ((*it)[N - 2] == 4) {
                     ans = count_21star + (ans - count_21star) * (N - 2);
-                    break;
+                    return;
                 }
             }
             bool valid{true};
@@ -222,19 +193,13 @@ void inner_solve(const int round, uint64_t cache)
                 if (found != memo.end())
                     ans += found->second;
                 else {
-                    rows[cur] = *it;
-                    for (int c = cur; c < N; ++c)
-                        cols[c].push_back((*it)[N - 1 - c]);
+                    rows[round] = *it;
                     const auto saved_ans = ans;
-                    inner_solve(round + 2, ncache);
+                    inner_solve(round + 1, ncache);
                     memo[ncache] = ans - saved_ans;
-                    for (int c = cur; c < N; ++c)
-                        cols[c].pop_back(1);
                 }
             }
         }
-
-        rows[cur] = old_row;
     }
 }
 
@@ -245,7 +210,7 @@ int main(int, char**)
     generate();
     rows.resize(N);
     cols.resize(N);
-    required_rounds = 2 * (N - 1);
+    required_rounds = N - 1;
 
     const num_t seed = numbers[0];
     rows[0] = cols[0] = seed;
@@ -256,7 +221,7 @@ int main(int, char**)
     for (int d = 0; d < N; ++d)
         try_set_cache(cache, d + 1, d);
 
-    inner_solve(2, cache);
+    inner_solve(1, cache);
 
     task_out << ans * factorial[N - 1] << '\n';
 }
