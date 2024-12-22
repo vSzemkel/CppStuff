@@ -91,7 +91,7 @@ class positional_number_t
 int N, required_rounds;
 int64_t count_21star, ans{};
 using num_t = positional_number_t<7>;
-std::vector<num_t> numbers, rows, cols;
+std::vector<num_t> numbers, rows;
 std::unordered_map<uint64_t, int64_t> memo;
 static const int factorial[] = {1, 1, 2, 6, 24, 120, 720};
 
@@ -209,13 +209,12 @@ int main(int, char**)
 
     generate();
     rows.resize(N);
-    cols.resize(N);
     required_rounds = N - 1;
 
     const num_t seed = numbers[0];
-    rows[0] = cols[0] = seed;
+    rows[0] = seed;
     for (int c = 1; c < N; ++c)
-        rows[c] = cols[c] = seed[N - 1 - c];
+        rows[c] = seed[N - 1 - c];
 
     uint64_t cache{};
     for (int d = 0; d < N; ++d)
