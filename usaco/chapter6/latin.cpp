@@ -9,6 +9,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=q5IyqPflpNO&S=latin
 #include <cassert>
 #include <fstream>
 #include <numeric>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -93,6 +94,7 @@ int64_t count_21star, ans{};
 std::unordered_set<int> prefixes;
 using num_t = positional_number_t<7>;
 std::vector<num_t> numbers, rows, cols;
+std::unordered_map<uint64_t, int64_t> memo;
 static const int factorial[] = {1, 1, 2, 6, 24, 120, 720};
 
 int generate() {
@@ -124,13 +126,48 @@ auto prefix_range(const num_t& prefix)
     return std::make_pair(beg, std::lower_bound(beg, numbers.end(), high));
 }
 
+bool try_set_cache(uint64_t& cache, const int digit, const int column)
+{
+    assert(0 < digit && digit < 8 && 0 <= column && column < 8);
+    auto ptr = reinterpret_cast<uint8_t*>(&cache) + column;
+    const int mask = 1 << (digit - 1);
+    if (*ptr & mask)
+        return false;
+    *ptr |= mask;
+    return true;
+}
+
+std::vector<int> valid_prefixes(const uint64_t cache, const int length)
+{
+    assert(1 < length && length < 8);
+    auto ptr = reinterpret_cast<const uint8_t*>(&cache) + 1;
+    std::vector<int> ret(1, length);
+
+    auto no_such_digit = [](int number, int digit){
+        for (; number; number /= 10)
+            if (number % 10 == digit)
+                return false;
+        return true;
+    };
+    for (int pos = 1; pos < length; ++pos, ++ptr) {
+        std::vector<int> tmp;
+        for (const auto p : ret)
+            for (int d = 1, m = 1; d <= N; ++d, m <<= 1)
+                if ((*ptr & m) == 0 && no_such_digit(p, d))
+                    tmp.push_back(10 * p + d);
+        std::swap(ret, tmp);
+    }
+
+    return ret;
+}
+
 /**
  * Observation1: if we find acceptable latin square with sorted rows, we can have (N - 1)! variants of it by permuting all rows but the first one.
  * Observation2: Acceptable, row-sorted squares have left column fixed and equal to top row
  * Observation3: Correctly filled N-1 square can be extended to full N size in only one way
  * Observation4: Computation for second row can by optimized, see coment inline below
  */
-void inner_solve(const int round)
+void inner_solve(const int round, uint64_t cache)
 {
     if (round == required_rounds) {
         ++ans;
@@ -151,11 +188,12 @@ void inner_solve(const int round)
                 cols[cur] = *it;
                 for (int r = cur + 1; r < N; ++r)
                     rows[r].push_back((*it)[N - 1 - r]);
-                inner_solve(round + 1);
+                inner_solve(round + 1, cache);
                 for (int r = cur + 1; r < N; ++r)
                     rows[r].pop_back(1);
             }
         }
+
         cols[cur] = old_col;
     } else { // fill row
         const auto old_row = rows[cur];
@@ -174,20 +212,27 @@ void inner_solve(const int round)
                 }
             }
             bool valid{true};
-            for (int c = cur; c < N; ++c)
-                if (!prefixes.count(cols[c] * 10 + (*it)[N - 1 - c]))
-                    valid = false;
+            auto ncache = cache;
+            for (int c = 0; c < N; ++c)
+                valid &= try_set_cache(ncache, (*it)[N - 1 - c], c);
 
             if (valid) {
-                rows[cur] = *it;
-                for (int c = cur; c < N; ++c)
-                    cols[c].push_back((*it)[N - 1 - c]);
-                inner_solve(round + 1);
-                for (int c = cur; c < N; ++c)
-                    cols[c].pop_back(1);
+                const auto found = memo.find(ncache);
+                //if (false)
+                if (found != memo.end())
+                    ans += found->second;
+                else {
+                    rows[cur] = *it;
+                    for (int c = cur; c < N; ++c)
+                        cols[c].push_back((*it)[N - 1 - c]);
+                    const auto saved_ans = ans;
+                    inner_solve(round + 2, ncache);
+                    memo[ncache] = ans - saved_ans;
+                    for (int c = cur; c < N; ++c)
+                        cols[c].pop_back(1);
+                }
             }
         }
-
 
         rows[cur] = old_row;
     }
@@ -207,7 +252,11 @@ int main(int, char**)
     for (int c = 1; c < N; ++c)
         rows[c] = cols[c] = seed[N - 1 - c];
 
-    inner_solve(2);
+    uint64_t cache{};
+    for (int d = 0; d < N; ++d)
+        try_set_cache(cache, d + 1, d);
+
+    inner_solve(2, cache);
 
     task_out << ans * factorial[N - 1] << '\n';
 }
