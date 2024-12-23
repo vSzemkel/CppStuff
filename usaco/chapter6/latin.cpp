@@ -92,7 +92,7 @@ int N, required_rounds;
 int64_t count_21star, ans{};
 using num_t = positional_number_t<7>;
 std::vector<num_t> numbers, rows;
-std::unordered_map<uint64_t, int64_t> memo;
+std::unordered_map<uint64_t, int64_t> memo; // cache ignores left column
 static const int factorial[] = {1, 1, 2, 6, 24, 120, 720};
 
 int generate() {
@@ -121,8 +121,8 @@ auto prefix_range(const num_t& prefix)
 
 bool try_set_cache(uint64_t& cache, const int digit, const int column)
 {
-    assert(0 < digit && digit < 8 && 0 <= column && column < 8);
-    auto ptr = reinterpret_cast<uint8_t*>(&cache) + column;
+    assert(0 < digit && digit < 8 && 1 <= column && column < 8);
+    auto ptr = reinterpret_cast<uint8_t*>(&cache) + column - 1;
     const int mask = 1 << (digit - 1);
     if (*ptr & mask)
         return false;
@@ -133,7 +133,7 @@ bool try_set_cache(uint64_t& cache, const int digit, const int column)
 std::vector<int> valid_prefixes(const uint64_t cache, const int length)
 {
     assert(1 < length && length < 8);
-    auto ptr = reinterpret_cast<const uint8_t*>(&cache) + 1;
+    auto ptr = reinterpret_cast<const uint8_t*>(&cache);
     std::vector<int> ret(1, length);
 
     auto no_such_digit = [](int number, int digit){
@@ -184,12 +184,11 @@ void inner_solve(const int round, uint64_t cache)
             }
             bool valid{true};
             auto ncache = cache;
-            for (int c = 0; c < N; ++c)
+            for (int c = 1; c < N; ++c)
                 valid &= try_set_cache(ncache, (*it)[N - 1 - c], c);
 
             if (valid) {
                 const auto found = memo.find(ncache);
-                //if (false)
                 if (found != memo.end())
                     ans += found->second;
                 else {
@@ -211,14 +210,11 @@ int main(int, char**)
     rows.resize(N);
     required_rounds = N - 1;
 
-    const num_t seed = numbers[0];
-    rows[0] = seed;
-    for (int c = 1; c < N; ++c)
-        rows[c] = seed[N - 1 - c];
+    rows[0] = numbers[0];
 
     uint64_t cache{};
-    for (int d = 0; d < N; ++d)
-        try_set_cache(cache, d + 1, d);
+    for (int d = 2; d <= N; ++d)
+        try_set_cache(cache, d, d - 1);
 
     inner_solve(1, cache);
 
