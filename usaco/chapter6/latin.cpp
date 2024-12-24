@@ -15,108 +15,16 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=q5IyqPflpNO&S=latin
 std::ifstream task_in("latin.in");
 std::ofstream task_out("latin.out");
 
-template<int N>
-class positional_number_t
-{
-  public:
-    positional_number_t(const int value = 0) : _value(value) {
-        syncn2d();
-    }
-
-    positional_number_t(const std::vector<int>& digits) {
-        assert(digits.size() <= N);
-        int i = int(digits.size());
-        for (const int d : digits)
-            _digits[--i] = d;
-        sync();
-    }
-
-    positional_number_t& operator=(const int value) {
-        _value = value;
-        syncn2d();
-        return *this;
-    }
-
-    operator int() const {
-        return _value;
-    }
-
-    int operator[](const int index) const {
-        return _digits[index];
-    }
-
-    int& operator[](const int index) {
-        return _digits[index];
-    }
-
-    int push_back(const int digit) {
-        assert(0 <= digit && digit < 10);
-        _value = 10 * _value + digit;
-        for (int i = N - 1; i > 0; --i)
-            _digits[i] = _digits[i - 1];
-        _digits[0] = digit;
-        return _value;
-    }
-
-    int pop_back(int count) {
-        assert(0 <= count && count <= N);
-        for (int i = count; i < N; ++i)
-            _digits[i - count] = _digits[i];
-        for (int i = N - 1; count; --i, --count) {
-            _digits[i] = 0;
-            _value /= 10;
-        }
-        return _value;
-    }
-
-    void sync() {
-        _value = 0;
-        for (int i = N - 1; ~i; --i)
-            _value = 10 * _value + _digits[i];
-    }
-
-  private:
-    void syncn2d() {
-        auto tmp = _value;
-        for (int& d : _digits) {
-            d = tmp % 10;
-            tmp /= 10;
-        }
-    }
-
-    int _value{};
-    int _digits[N] = {};
-};
-
 int N, required_rounds;
 int64_t count_21star, ans{};
-using num_t = positional_number_t<7>;
-std::vector<num_t> numbers, rows;
+std::vector<int> rows;
 std::unordered_map<uint64_t, int64_t> memo; // cache ignores left column
 static const int factorial[] = {1, 1, 2, 6, 24, 120, 720};
+static const int factor10[] = {1, 10, 100, 1000, 10000, 100000, 1000000};
 
-int generate() {
-    std::vector<int> digits(N);
-    std::iota(digits.begin(), digits.end(), 1);
-    do {
-        numbers.emplace_back(digits);
-    } while (std::next_permutation(digits.begin(), digits.end()));
-
-    return numbers.size();
-}
-
-auto prefix_range(const num_t& prefix)
+int nth_digit(int number, int n)
 {
-    assert(prefix > 0);
-    auto low = prefix;
-    while (low[N - 1] == 0)
-        low.push_back(0);
-    auto high = prefix;
-    while (high[N - 1] == 0)
-        high.push_back(9);
-
-    const auto beg = std::lower_bound(numbers.begin(), numbers.end(), low);
-    return std::make_pair(beg, std::lower_bound(beg, numbers.end(), high));
+    return number / factor10[n] % 10;
 }
 
 bool try_set_cache(uint64_t& cache, const int digit, const int column)
@@ -130,11 +38,11 @@ bool try_set_cache(uint64_t& cache, const int digit, const int column)
     return true;
 }
 
-std::vector<int> valid_prefixes(const uint64_t cache, const int length)
+std::vector<int> valid_candidates(const uint64_t cache, const int head)
 {
-    assert(1 < length && length < 8);
+    assert(1 < head && head < 8);
     auto ptr = reinterpret_cast<const uint8_t*>(&cache);
-    std::vector<int> ret(1, length);
+    std::vector<int> ret(1, head);
 
     auto no_such_digit = [](int number, int digit){
         for (; number; number /= 10)
@@ -142,7 +50,7 @@ std::vector<int> valid_prefixes(const uint64_t cache, const int length)
                 return false;
         return true;
     };
-    for (int pos = 1; pos < length; ++pos, ++ptr) {
+    for (int pos = 1; pos < N; ++pos, ++ptr) {
         std::vector<int> tmp;
         for (const auto p : ret)
             for (int d = 1, m = 1; d <= N; ++d, m <<= 1)
@@ -167,37 +75,32 @@ void inner_solve(const int round, uint64_t cache)
         return;
     }
 
-    for (const auto prefix : valid_prefixes(cache, round + 1)) {
-        const auto [low, high] = prefix_range(prefix);
-        for (auto it = low; it != high; ++it) {
-            if (round == 1) {
-                // Observation4 : optimization for second row
-                // 21* is fewer then 23* because for 21* digit 3 can not be anywhere in *, for 23* digit 1 can be anywhere
-                // 23* and 24* are symmetric in any mean, the same hold true for 25* .. 2N*
-                // Answer = count(21*) + count(23*) * (N - 2)
-                if (count_21star == 0 && (*it)[N - 2] == 3)
-                    count_21star = ans;
-                else if ((*it)[N - 2] == 4) {
-                    ans = count_21star + (ans - count_21star) * (N - 2);
-                    return;
-                }
+    for (const auto can : valid_candidates(cache, round + 1)) {
+        if (round == 1) {
+            // Observation4 : optimization for second row
+            // 21* is fewer then 23* because for 21* digit 3 can not be anywhere in *, for 23* digit 1 can be anywhere
+            // 23* and 24* are symmetric in any mean, the same hold true for 25* .. 2N*
+            // Answer = count(21*) + count(23*) * (N - 2)
+            if (count_21star == 0 && nth_digit(can, N - 2) == 3)
+                count_21star = ans;
+            else if (nth_digit(can, N - 2) == 4) {
+                ans = count_21star + (ans - count_21star) * (N - 2);
+                return;
             }
-            bool valid{true};
-            auto ncache = cache;
-            for (int c = 1; c < N; ++c)
-                valid &= try_set_cache(ncache, (*it)[N - 1 - c], c);
+        }
 
-            if (valid) {
-                const auto found = memo.find(ncache);
-                if (found != memo.end())
-                    ans += found->second;
-                else {
-                    rows[round] = *it;
-                    const auto saved_ans = ans;
-                    inner_solve(round + 1, ncache);
-                    memo[ncache] = ans - saved_ans;
-                }
-            }
+        auto ncache = cache;
+        for (int c = 1; c < N; ++c)
+            try_set_cache(ncache, nth_digit(can, N - 1 - c), c);
+
+        const auto found = memo.find(ncache);
+        if (found != memo.end())
+            ans += found->second;
+        else {
+            rows[round] = can;
+            const auto saved_ans = ans;
+            inner_solve(round + 1, ncache);
+            memo[ncache] = ans - saved_ans;
         }
     }
 }
@@ -206,11 +109,10 @@ int main(int, char**)
 {
     task_in >> N;
 
-    generate();
     rows.resize(N);
     required_rounds = N - 1;
 
-    rows[0] = numbers[0];
+    rows[0] = 1234567 / factor10[7 - N];
 
     uint64_t cache{};
     for (int d = 2; d <= N; ++d)
