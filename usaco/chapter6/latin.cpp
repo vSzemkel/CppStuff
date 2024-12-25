@@ -15,58 +15,46 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=q5IyqPflpNO&S=latin
 std::ifstream task_in("latin.in");
 std::ofstream task_out("latin.out");
 
-int N, required_rounds;
-int64_t count_21star, ans{};
-std::vector<int> rows;
-std::unordered_map<uint64_t, int64_t> memo; // cache ignores left column
 static const int factorial[] = {1, 1, 2, 6, 24, 120, 720};
 static const int factor10[] = {1, 10, 100, 1000, 10000, 100000, 1000000};
 
-int nth_digit(int number, int n)
-{
-    return number / factor10[n] % 10;
-}
+int N, required_rounds;
+int64_t count_21star, ans{};
+std::vector<int> rows;
+std::unordered_map<uint64_t, int64_t> memo; // cache ignores left column and numbers starting with 1
+std::unordered_map<int, std::vector<std::pair<int, uint64_t>>> numbers; // MS digit -> {number, cache}
 
-bool try_set_cache(uint64_t& cache, const int digit, const int column)
+void update_cache(uint64_t& cache, const int digit, const int column)
 {
     assert(0 < digit && digit < 8 && 1 <= column && column < 8);
     auto ptr = reinterpret_cast<uint8_t*>(&cache) + column - 1;
-    const int mask = 1 << (digit - 1);
-    if (*ptr & mask)
-        return false;
-    *ptr |= mask;
-    return true;
+    *ptr |= 1 << (digit - 1);
 }
 
-std::vector<int> valid_candidates(const uint64_t cache, const int head)
-{
-    assert(1 < head && head < 8);
-    auto ptr = reinterpret_cast<const uint8_t*>(&cache);
-    std::vector<int> ret(1, head);
-
-    auto no_such_digit = [](int number, int digit){
-        for (; number; number /= 10)
-            if (number % 10 == digit)
-                return false;
-        return true;
-    };
-    for (int pos = 1; pos < N; ++pos, ++ptr) {
-        std::vector<int> tmp;
-        for (const auto p : ret)
-            for (int d = 1, m = 1; d <= N; ++d, m <<= 1)
-                if ((*ptr & m) == 0 && no_such_digit(p, d))
-                    tmp.push_back(10 * p + d);
-        std::swap(ret, tmp);
-    }
-
-    return ret;
+void generate() {
+    std::vector<int> digits(N);
+    std::iota(digits.begin(), digits.end(), 1);
+    do {
+        const int first = digits.front();
+        if (first > 1) {
+            int num{first};
+            uint64_t cache{};
+            for (int c = 1; c < N; ++c) {
+                const int d = digits[c];
+                num = 10 * num + d;
+                update_cache(cache, d, c);
+            }
+            numbers[first].emplace_back(num, cache);
+        }
+    } while (std::next_permutation(digits.begin(), digits.end()));
 }
 
 /**
  * Observation1: if we find acceptable latin square with sorted rows, we can have (N - 1)! variants of it by permuting all rows but the first one.
  * Observation2: Acceptable, row-sorted squares have left column fixed and equal to top row
  * Observation3: Correctly filled N-1 square can be extended to full N size in only one way
- * Observation4: Computation for second row can by optimized, see coment inline below
+ * Observation4: We can cache answers for partially filled board
+ * Observation5: Computation for second row can by optimized, see coment inline below
  */
 void inner_solve(const int round, uint64_t cache)
 {
@@ -75,9 +63,12 @@ void inner_solve(const int round, uint64_t cache)
         return;
     }
 
-    for (const auto can : valid_candidates(cache, round + 1)) {
+    for (const auto& [can, can_cache] : numbers[round + 1]) {
+        if ((cache & can_cache) != 0)
+            continue;
         if (round == 1) {
-            // Observation4 : optimization for second row
+            const auto nth_digit = [](int number, int n) { return number / factor10[n] % 10; };
+            // Observation5 : optimization for second row
             // 21* is fewer then 23* because for 21* digit 3 can not be anywhere in *, for 23* digit 1 can be anywhere
             // 23* and 24* are symmetric in any mean, the same hold true for 25* .. 2N*
             // Answer = count(21*) + count(23*) * (N - 2)
@@ -89,10 +80,7 @@ void inner_solve(const int round, uint64_t cache)
             }
         }
 
-        auto ncache = cache;
-        for (int c = 1; c < N; ++c)
-            try_set_cache(ncache, nth_digit(can, N - 1 - c), c);
-
+        const auto ncache = cache | can_cache;
         const auto found = memo.find(ncache);
         if (found != memo.end())
             ans += found->second;
@@ -109,6 +97,7 @@ int main(int, char**)
 {
     task_in >> N;
 
+    generate();
     rows.resize(N);
     required_rounds = N - 1;
 
@@ -116,7 +105,7 @@ int main(int, char**)
 
     uint64_t cache{};
     for (int d = 2; d <= N; ++d)
-        try_set_cache(cache, d, d - 1);
+        update_cache(cache, d, d - 1);
 
     inner_solve(1, cache);
 
