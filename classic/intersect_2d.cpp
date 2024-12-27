@@ -14,17 +14,35 @@ template <typename T = float>
 using section_t = std::pair<point_t<T>, point_t<T>>;
 
 template <typename T = float>
+bool intersection_status(const section_t<T>& s1, const section_t<T>& s2)
+{
+    const T s1_dx = s1.second.x - s1.first.x;
+    const T s1_dy = s1.second.y - s1.first.y;
+    const T s2_dx = s2.second.x - s2.first.x;
+    const T s2_dy = s2.second.y - s2.first.y;
+
+    const T s = (-s1_dy * (s1.first.x - s2.first.x) + s1_dx * (s1.first.y - s2.first.y)) / (-s2_dx * s1_dy + s1_dx * s2_dy);
+    if (s < 0 || 1 < s)
+        return false;
+    const T t = ( s2_dx * (s1.first.y - s2.first.y) - s2_dy * (s1.first.x - s2.first.x)) / (-s2_dx * s1_dy + s1_dx * s2_dy);
+    if (t < 0 || 1 < t)
+        return false;
+
+    return true;
+}
+
+template <typename T = float>
 std::optional<point_t<T>> find_intersection(const section_t<T>& s1, const section_t<T>& s2)
 {
-    T s1_dx = s1.second.x - s1.first.x;
-    T s1_dy = s1.second.y - s1.first.y;
-    T s2_dx = s2.second.x - s2.first.x;
-    T s2_dy = s2.second.y - s2.first.y;
+    const T s1_dx = s1.second.x - s1.first.x;
+    const T s1_dy = s1.second.y - s1.first.y;
+    const T s2_dx = s2.second.x - s2.first.x;
+    const T s2_dy = s2.second.y - s2.first.y;
 
-    T s = (-s1_dy * (s1.first.x - s2.first.x) + s1_dx * (s1.first.y - s2.first.y)) / (-s2_dx * s1_dy + s1_dx * s2_dy);
+    const T s = (-s1_dy * (s1.first.x - s2.first.x) + s1_dx * (s1.first.y - s2.first.y)) / (-s2_dx * s1_dy + s1_dx * s2_dy);
     if (s < 0 || 1 < s)
         return std::nullopt;
-    T t = ( s2_dx * (s1.first.y - s2.first.y) - s2_dy * (s1.first.x - s2.first.x)) / (-s2_dx * s1_dy + s1_dx * s2_dy);
+    const T t = ( s2_dx * (s1.first.y - s2.first.y) - s2_dy * (s1.first.x - s2.first.x)) / (-s2_dx * s1_dy + s1_dx * s2_dy);
     if (t < 0 || 1 < t)
         return std::nullopt;
 
