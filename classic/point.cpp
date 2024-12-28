@@ -1,9 +1,10 @@
 
 #include <algorithm>
 #include <array>
-#include <assert.h>
+#include <cassert>
 #include <cmath>
 #include <iostream>
+#include <numbers>
 #include <numeric>
 #include <optional>
 #include <vector>
@@ -25,7 +26,7 @@ struct point_t {
     T dot(const point_t& p) const { return x * p.x + y * p.y; }
     T dot(const point_t& a, const point_t& b) const { return (a - *this).dot(b - *this); }
     T sqrLen() const { return dot(*this); }
-    auto len() const { return std::sqrt(dot(*this)); }
+    auto len() const { return std::hypot(x, y); }
     auto polar() const { return std::atan2(y, x); }
     point_t unit() const { return *this / len(); }
     point_t conj() const { return {x, -y}; }
@@ -73,12 +74,12 @@ struct point_t {
         return std::abs(result) == 3;
     }
 
-    bool polar_cmp(const point_t& other) const { return get_polar() > other.get_polar(); };
+    bool polar_cmp(const point_t& other) const { return polar() < other.polar(); };
 
     bool polar_radius_cmp(const point_t& other) const {
         const auto p1 = polar();
         const auto p2 = other.polar();
-        return p1 > p2 || (p1 == p2 && sqrLen() < other.sqrLen());
+        return p1 < p2 || (p1 == p2 && sqrLen() < other.sqrLen());
     };
 
     inline static T area(const point_t& a, const point_t& b, const point_t& c) { return std::abs(a.cross(b, c)) / 2; };
@@ -262,10 +263,9 @@ static auto convex_hull(std::vector<point_t<T>> points) { // copy is sorted
 
 template <typename T = double>
 static auto perimeter_len(const std::vector<point_t<T>>& points) { // points are perimeter ordered
-    T perm{0};
+    T perm = (points.front() - points.back()).len();
     for (int z = int(points.size()) - 1; z; --z)
         perm += (points[z] - points[z - 1]).len();
-    perm += (points.back() - points.front()).len();
     return perm;
 }
 
@@ -324,11 +324,10 @@ int main(int, char**)
     const auto u2 = u.unit();
     assert(std::abs(u2.len() - 1) < EPS && std::abs(u2.cross(u)) < EPS);
 
-    #define M_PI 3.14159265358979323846
     const point_t<double> r{100, 0};
-    const auto r2 = r.rotate(M_PI / 4);
-    const auto r3 = r.rotate(M_PI / -4);
-    const auto r4 = r.rotate(M_PI / 2);
+    const auto r2 = r.rotate(std::numbers::pi / 4);
+    const auto r3 = r.rotate(std::numbers::pi / -4);
+    const auto r4 = r.rotate(std::numbers::pi / 2);
     assert(r2.x == r2.y && r2.x > 0 && r2.y > 0);
     assert(r3.x == r2.x && r3.y == -r2.y && r3.x > 0 && r3.y < 0);
     assert(std::abs(r4.x) < EPS && std::abs(r4.y - r.x) < EPS);
@@ -341,10 +340,11 @@ int main(int, char**)
     std::vector<point_t<double>> v{{0, 0}, {2, 0}, {1, 1}, {1, 2}, {0, 2}};
     assert((bounding_box(v) == std::array<double, 4>{0, 0, 2, 2}));
     polygon_t p{v};
-    assert(p.area2() - 5 < EPS);
+    assert(std::abs(p.area2() - 5) < EPS);
+    assert(std::abs(polygon_area2(v) - 5) < EPS);
     const auto ch = p.convex_hull();
     assert((ch == std::vector{v[0], v[1], v[3], v[4]}));
-    assert(p.perimeter_len() - 6 - std::sqrt(2) < EPS);
+    assert(std::abs(p.perimeter_len() - 6 - std::numbers::sqrt2) < EPS);
     assert((p.center_of_gravity() - point_t<double>{double(2) / 3, double(13) / 15} < point_t<double>{EPS, EPS}));
 
     const auto isn = line_t<double>::find_intersection({{0, 0}, {17.3, -2.5}}, {{2, 5.7}, {15.9, -3.14}});
@@ -355,7 +355,7 @@ int main(int, char**)
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++17 point.cpp -o point.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address point.cpp -o point
+clang++.exe -Wall -Wextra -g -O0 -std=c++20 point.cpp -o point.exe
+g++ -Wall -Wextra -ggdb3 -Og -std=c++20 -fsanitize=address point.cpp -o point
 
 */
