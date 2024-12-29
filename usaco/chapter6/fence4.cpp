@@ -12,7 +12,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=szTEXMwIDAp&S=fence4
 #include <iostream>
 #include <fstream>
 #include <optional>
-//#include <numbers>
+#include <numbers>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -23,11 +23,12 @@ std::ofstream task_out("fence4.out");
 /**
  * Observation1: After translating coordinates center to observer location, computations are easier.
  * Observation2: We can scan a scene ccw and analyze encountered points as events
+ * Observation3: Event with angles crossing point of discontinuity can be represented by two events
  */
 
-static const auto EPS = 0.000000001;
+static const auto EPS = 10 * std::numeric_limits<double>::epsilon();
+static const auto PI = std::numbers::pi_v<double>;
 static const auto LONG_RADIUS = 10'000;
-static const auto PI = 3.14159265358979323846;
 
 #pragma region Point and Section
 template <typename T = float>
@@ -59,6 +60,13 @@ int N;
 std::vector<bool> ans;
 std::vector<section_t<double>> fences;
 
+struct event_t {
+    int fence_id;
+    double angle;
+    bool beginning;
+    bool operator<(const event_t& other) const { return angle < other.angle; }
+};
+
 template <typename T = float>
 std::optional<point_t<T>> find_intersection(const section_t<T>& s1, const section_t<T>& s2)
 {
@@ -67,10 +75,13 @@ std::optional<point_t<T>> find_intersection(const section_t<T>& s1, const sectio
     const T s2_dx = s2.second.x - s2.first.x;
     const T s2_dy = s2.second.y - s2.first.y;
 
-    const T s = (-s1_dy * (s1.first.x - s2.first.x) + s1_dx * (s1.first.y - s2.first.y)) / (-s2_dx * s1_dy + s1_dx * s2_dy);
+    const T denominator = (-s2_dx * s1_dy + s1_dx * s2_dy);
+    if (std::abs(denominator) < EPS) // Check for parallel lines
+        return std::nullopt;
+    const T s = (-s1_dy * (s1.first.x - s2.first.x) + s1_dx * (s1.first.y - s2.first.y)) / denominator;
     if (s <= 0 || 1 <= s)
         return std::nullopt;
-    const T t = ( s2_dx * (s1.first.y - s2.first.y) - s2_dy * (s1.first.x - s2.first.x)) / (-s2_dx * s1_dy + s1_dx * s2_dy);
+    const T t = ( s2_dx * (s1.first.y - s2.first.y) - s2_dy * (s1.first.x - s2.first.x)) / denominator;
     if (t <= 0 || 1 <= t)
         return std::nullopt;
 
@@ -80,20 +91,12 @@ std::optional<point_t<T>> find_intersection(const section_t<T>& s1, const sectio
 double distance_sq(const int fence_id, double angle)
 {
     const auto& fence = fences[fence_id];
-    angle -= PI;
     point distant{LONG_RADIUS * std::cos(angle), LONG_RADIUS * std::sin(angle)};
     section_t<double> ray{{0, 0}, distant};
     const auto intersection = find_intersection(fence, ray);
     assert(intersection.has_value());
     return intersection->dot();
 }
-
-struct event_t {
-    int fence_id;
-    double angle;
-    bool beginning;
-    bool operator<(const event_t& other) const { return angle < other.angle; }
-};
 
 int main(int, char**)
 {
@@ -127,20 +130,24 @@ int main(int, char**)
     int f{};
     std::vector<event_t> angles;
     for (const auto& [p0, p1] : fences) {
-        auto a0 = PI + std::atan2(p0.y, p0.x);
-        auto a1 = PI + std::atan2(p1.y, p1.x);
+        auto a0 = std::atan2(p0.y, p0.x);
+        auto a1 = std::atan2(p1.y, p1.x);
         if (a0 > a1)
             std::swap(a0, a1);
-        if (a1 - a0 < EPS)
-            continue;
-        if (a1 - a0 >= PI) {
-            angles.emplace_back(event_t{f, a1, true});
-            angles.emplace_back(event_t{f, 2 * PI, false});
-            angles.emplace_back(event_t{f, 0, true});
-            angles.emplace_back(event_t{f, a0, false});
-        } else {
-            angles.emplace_back(event_t{f, a0, true});
-            angles.emplace_back(event_t{f, a1, false});
+        if (a1 - a0 > EPS) { // ignore parallel fences
+            if (a1 - a0 >= PI) {
+                if (a0 + PI > EPS) {
+                    angles.emplace_back(event_t{f, -PI, true});
+                    angles.emplace_back(event_t{f, a0, false});
+                }
+                if (PI - a1 > EPS) {
+                    angles.emplace_back(event_t{f, a1, true});
+                    angles.emplace_back(event_t{f, PI, false});
+                }
+            } else {
+                angles.emplace_back(event_t{f, a0, true});
+                angles.emplace_back(event_t{f, a1, false});
+            }
         }
 
         ++f;
@@ -152,13 +159,12 @@ int main(int, char**)
     const int sz = int(angles.size());
     for (int i = 0; i < sz; ++i) {
         const auto& a = angles[i];
-        if (a.beginning == false && std::abs(a.angle - 2 * PI) < EPS)
+        if (a.beginning == false && std::abs(a.angle - PI) < EPS)
             continue;
         if (a.beginning)
             active.push_back(a.fence_id);
         else
-            //std::erase(active, a.fence_id);
-            active.erase(std::find(active.begin(), active.end(), a.fence_id));
+            std::erase(active, a.fence_id);
         if (active.empty())
             continue;
 
@@ -184,8 +190,8 @@ int main(int, char**)
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 fence4.cpp -o fence4.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address fence4.cpp -o fence4
+clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++20 fence4.cpp -o fence4.exe
+g++ -Wall -Wextra -ggdb3 -Og -std=c++20 -fsanitize=address fence4.cpp -o fence4
 
 Run:
 fence4.exe && type fence4.out
