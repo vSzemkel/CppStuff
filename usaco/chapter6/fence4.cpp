@@ -114,7 +114,8 @@ int main(int, char**)
         fences[i] = {prev, next};
         prev = next;
     }
-    fences[N - 1] = {prev, first};
+    fences[N - 1] = fences[N - 2];
+    fences[N - 2] = {first, prev};
 
     for (int i = 0; i < N; ++i)
         for (int j = i + 2; j < N; ++j)
@@ -151,7 +152,7 @@ int main(int, char**)
     const int sz = int(angles.size());
     for (int i = 0; i < sz; ++i) {
         const auto& a = angles[i];
-        if (a.beginning == false && std::fabs(a.angle - 2 * PI) < EPS)
+        if (a.beginning == false && std::abs(a.angle - 2 * PI) < EPS)
             continue;
         if (a.beginning)
             active.push_back(a.fence_id);
@@ -162,7 +163,7 @@ int main(int, char**)
             continue;
 
         const int j = i + 1;
-        if (j < sz && std::fabs(angles[j].angle - a.angle) < EPS)
+        if (j < sz && std::abs(angles[j].angle - a.angle) < EPS)
             continue;
         assert (j < sz);
         const auto angle = (a.angle + angles[j].angle) / 2;
