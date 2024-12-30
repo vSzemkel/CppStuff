@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <string>
 
@@ -39,13 +40,13 @@ static bool init_input(const std::string& filename)
 int main(int argc, char* argv[])
 {
     if (argc != 2) {
-        std::cout << "Usage: " << argv[0] << " <task_name>\n";
+        std::cout << std::format("Usage: {} <task_name>\n", argv[0]);
         return 1;
     }
 
     std::ifstream src{g_seedname};
     if (!src.good()) {
-        std::cerr << "Template file: " << g_seedname << " not found.\n";
+        std::cerr << std::format("Template file: {} not found.\n", g_seedname);
         return 2;
     }
 
@@ -53,14 +54,19 @@ int main(int argc, char* argv[])
     std::string filename = replace_with + ".cpp";
     if (std::filesystem::exists(filename)) {
         if (!init_input(filename))
-            std::cout << "Specialization for " << replace_with << " already exists.\n";
+            std::cout << std::format("Specialization for {} already exists.\n", replace_with);
         else
-            std::cout << "Input data for " << replace_with << " restored.\n";
+            std::cout << std::format("Input data for {} restored.\n", replace_with);
         return 3;
     }
 
     std::string line;
     std::ofstream dst{filename};
+    if (!dst.good()) {
+        std::cout << std::format("Task file name {} is invalid.\n", filename);
+        return 4;
+    }
+
     while (std::getline(src, line)) {
         size_t pos{0};
         while (true) {
