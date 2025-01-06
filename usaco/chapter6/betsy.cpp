@@ -6,6 +6,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=kqiaO7Hw9Oq&S=betsy
 */
 
 #include <bit>
+#include <cstdint>
 #include <fstream>
 #include <unordered_map>
 #include <utility>
@@ -19,18 +20,25 @@ uint64_t FULL, ONE{1};
 
 std::vector<std::unordered_map<uint64_t, int>> memo; // [pos][already visited] = count
 
+//int popcount(uint64_t x)
+//{
+//    int ret{};
+//    while (x) { x &= x - 1; ++ret; }
+//    return ret;
+//}
+
 int betsy(const int pos, const uint64_t visited)
 {
     if (visited == FULL)
         return 1;
 
-    if (pos == MIDPOINT && (N & 1) && std::popcount(visited) < HALFWAY)
+    if (pos == MIDPOINT && (N == 7) && std::popcount(visited) < HALFWAY)
         return 0;
 
     if (pos > MEMO_LIMIT && memo[pos - MEMO_LIMIT].count(visited))
         return memo[pos - MEMO_LIMIT][visited];
 
-    int ans{};
+    int ways{}, avail{}, options[3];
     for (const int move : {-N, -1, 1, N}) {
         const auto can = pos + move;
         const auto bit = ONE << can;
@@ -38,6 +46,7 @@ int betsy(const int pos, const uint64_t visited)
         if (visited ^ nvis) {
             const auto col = pos % N;
             if (0 <= can && can < N2 && (0 < col || move != -1) && (col < N - 1 || move != 1)) {
+                ++avail;
                 if (can < N && move == -N && !(visited & (ONE << (can - 1))))
                     continue;
                 if (STOP < can && can < N2 - 1 && move == N && !(visited & (ONE << (can + 1))))
@@ -49,9 +58,18 @@ int betsy(const int pos, const uint64_t visited)
                     if (ncol == N - 1 && move == 1)
                         continue;
                 }
-                ans += betsy(can, nvis);
+                options[ways++] = move;
             }
         }
+    }
+
+    if (ways == 0 || (ways == 2 && avail == 2 && (options[0] + options[1] == 0)))
+        return 0;
+
+    int ans{};
+    for (int m = 0; m < ways; ++m) {
+        const auto can = pos + options[m];
+        ans += betsy(can, visited | (ONE << can));
     }
 
     if (pos > MEMO_LIMIT)
@@ -71,7 +89,7 @@ int main(int, char**)
         memo.resize(N2 - MEMO_LIMIT);
     FULL = ((ONE << N2) - 1);
     auto score = betsy(0, (ONE << STOP) + 1);
-    if (N & 1)
+    if (N == 7)
         score *= 2;
     task_out << std::max(1,score) << '\n';
 }
@@ -79,8 +97,8 @@ int main(int, char**)
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++17 betsy.cpp -o betsy.exe
-g++ -Wall -Wextra -ggdb3 -Og -std=c++17 -fsanitize=address betsy.cpp -o betsy
+clang++.exe -Wall -Wextra -ggdb3 -O0 -std=c++20 betsy.cpp -o betsy.exe
+g++ -Wall -Wextra -ggdb3 -Og -std=c++20 -fsanitize=address betsy.cpp -o betsy
 
 Run:
 betsy.exe && type betsy.out
