@@ -6,6 +6,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=kqiaO7Hw9Oq&S=betsy
 */
 
 #include <bit>
+#include <cassert>
 #include <cstdint>
 #include <fstream>
 #include <unordered_map>
@@ -15,7 +16,7 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=kqiaO7Hw9Oq&S=betsy
 std::ifstream task_in("betsy.in");
 std::ofstream task_out("betsy.out");
 
-int N, N2, STOP, HALFWAY, MIDPOINT, MEMO_LIMIT{40};
+int N, N2, STOP, HALFWAY, MIDPOINT, MEMO_LIMIT{45};
 uint64_t FULL, ONE{1};
 
 std::vector<std::unordered_map<uint64_t, int>> memo; // [pos][already visited] = count
@@ -27,15 +28,25 @@ std::vector<std::unordered_map<uint64_t, int>> memo; // [pos][already visited] =
 //    return ret;
 //}
 
+/**
+ * Observation1: If Betsy hits a board boundary, she may isolate later inaccesible fragment.
+ * Observation2: If she hits already visited cell, and there are two ways to turn available, one of them is a dead end.
+ * Observation3: For odd N, the midpoint is a special case, every shorter path to midpoint has its longer, symmetric counterpart.
+ * Observation4: To avoid checking destination cell on each move, we can mark it as visited and check only if we can 
+ *               reach it from the last cell visited after visiting all the cells. This check is always positive!
+ * Observation5: Caching is not very effective, but it is still worth it for few last moves.
+ */
 int betsy(const int pos, const uint64_t visited)
 {
-    if (visited == FULL)
+    if (visited == FULL) {
+        assert (pos == STOP + 1 || pos == STOP - N); // 4
         return 1;
+    }
 
-    if (pos == MIDPOINT && (N == 7) && std::popcount(visited) < HALFWAY)
+    if (pos == MIDPOINT && (N == 7) && std::popcount(visited) < HALFWAY) // 3
         return 0;
 
-    if (pos > MEMO_LIMIT && memo[pos - MEMO_LIMIT].count(visited))
+    if (pos > MEMO_LIMIT && memo[pos - MEMO_LIMIT].count(visited)) // 5
         return memo[pos - MEMO_LIMIT][visited];
 
     int ways{}, avail{}, options[3];
@@ -47,11 +58,11 @@ int betsy(const int pos, const uint64_t visited)
             const auto col = pos % N;
             if (0 <= can && can < N2 && (0 < col || move != -1) && (col < N - 1 || move != 1)) {
                 ++avail;
-                if (can < N && move == -N && !(visited & (ONE << (can - 1))))
+                if (can < N && move == -N && !(visited & (ONE << (can - 1)))) // 1
                     continue;
-                if (STOP < can && can < N2 - 1 && move == N && !(visited & (ONE << (can + 1))))
+                if (STOP < can && can < N2 - 1 && move == N && !(visited & (ONE << (can + 1)))) // 1
                     continue;
-                if (can > N && !(visited & (ONE << (can - N)))) {
+                if (can > N && !(visited & (ONE << (can - N)))) { // 1
                     const auto ncol = can % N;
                     if (ncol == 0 && move == -1)
                         continue;
@@ -63,17 +74,17 @@ int betsy(const int pos, const uint64_t visited)
         }
     }
 
-    if (ways == 0 || (ways == 2 && avail == 2 && (options[0] + options[1] == 0)))
+    if (ways == 0 || (ways == 2 && avail == 2 && (options[0] + options[1] == 0))) // 2
         return 0;
 
     int ans{};
     for (int m = 0; m < ways; ++m) {
         const auto can = pos + options[m];
-        ans += betsy(can, visited | (ONE << can));
+        ans += betsy(can, visited | (ONE << can)); // 4
     }
 
     if (pos > MEMO_LIMIT)
-        memo[pos - MEMO_LIMIT][visited] = ans;
+        memo[pos - MEMO_LIMIT][visited] = ans; // 5
 
     return ans;
 }
@@ -89,7 +100,7 @@ int main(int, char**)
         memo.resize(N2 - MEMO_LIMIT);
     FULL = ((ONE << N2) - 1);
     auto score = betsy(0, (ONE << STOP) + 1);
-    if (N == 7)
+    if (N == 7) // 3
         score *= 2;
     task_out << std::max(1,score) << '\n';
 }
