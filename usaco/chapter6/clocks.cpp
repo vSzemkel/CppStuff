@@ -73,7 +73,7 @@ int main(int, char**)
         }
 
         int next{};
-        const bool repeat = cur.last_repeated < 4;
+        const bool repeat = cur.last_repeated < 3;
         if (!cur.path.empty()) {
             next = cur.path.back() - '1';
             if (!repeat)
