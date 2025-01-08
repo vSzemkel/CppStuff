@@ -36,14 +36,16 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=XgCDvqBWYNl&S=clocks
 std::ifstream task_in("clocks.in");
 std::ofstream task_out("clocks.out");
 
-static const std::string moves[9] = {"ABDE", "ABC", "BCEF", "ADG", "BDEFH", "CFI", "DEGH", "GHI", "EFHI"};
+static constexpr const int MOVES = 9;
+static const std::string moves[MOVES] = {"ABDE", "ABC", "BCEF", "ADG", "BDEFH", "CFI", "DEGH", "GHI", "EFHI"};
 
-using state_t = std::array<int, 9>;
+using state_t = std::array<int8_t, MOVES>;
 static const state_t FINAL{};
 
 struct node_t {
     state_t state;
-    std::string path;
+    std::string path;  // moves sequence leading from init to this state
+    int last_repeated; // how many times last move was repeated
 };
 
 int main(int, char**)
@@ -56,7 +58,7 @@ int main(int, char**)
         }
 
     std::queue<node_t> q;
-    q.push(node_t{init, {}});
+    q.push(node_t{init, {}, 0});
     while (true) {
         const auto& cur = q.front();
         if (cur.state == FINAL) {
@@ -68,6 +70,22 @@ int main(int, char**)
             }
             task_out << '\n';
             return 0;
+        }
+
+        int next{};
+        const bool repeat = cur.last_repeated < 4;
+        if (!cur.path.empty()) {
+            next = cur.path.back() - '1';
+            if (!repeat)
+                ++next;
+        }
+
+        for (int i = next; i < MOVES; ++i) {
+            const auto& move = moves[i];
+            state_t next_state = cur.state;
+            for (char c : move)
+                next_state[c - 'A'] = (next_state[c - 'A'] + 1) % 4;
+            q.push(node_t{next_state, cur.path + char('1' + i), repeat && i == next ? cur.last_repeated + 1 : 1});
         }
         q.pop();
     }
