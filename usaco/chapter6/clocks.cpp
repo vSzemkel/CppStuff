@@ -5,33 +5,10 @@ TASK: clocks
 PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=XgCDvqBWYNl&S=clocks
 */
 
-#include <algorithm>
 #include <array>
-#include <bitset>
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
 #include <queue>
-#include <random>
-#include <set>
 #include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
-#include <vector>
 
 std::ifstream task_in("clocks.in");
 std::ofstream task_out("clocks.out");
@@ -48,6 +25,11 @@ struct node_t {
     int last_repeated; // how many times last move was repeated
 };
 
+/**
+ * Observation1: Solving moves can be executed in any order
+ * Observation2: Repeating a move more than 3 times makes no sense
+ * Observation3: To solve in constant time, precompute moves to advance each single clock and cumulate counts modulo 4
+ */
 int main(int, char**)
 {
     state_t init;
