@@ -15,8 +15,8 @@ std::ofstream task_out("checker.out");
 constexpr const int SOL = 3;
 constexpr const int MAX = 30;
 
-std::array<int, MAX> cols{};                        // row is taken
 std::array<int, MAX> solution;                      // row => col mapping
+std::array<bool, MAX> col_taken{};                  // col is taken
 std::array<bool, 2 * MAX - 1> ne_diag{}, se_diag{}; // taken diagonals bitmap
 
 int N, ans{}, sol{};
@@ -38,13 +38,13 @@ void checker(const int row)
     for (int col = 0; col < N; ++col) {
         const int ne = row + col;
         const int se = N - 1 - row + col;
-        if (cols[col] || ne_diag[ne] || se_diag[se])
+        if (col_taken[col] || ne_diag[ne] || se_diag[se])
             continue;
 
         solution[row] = col;
-        cols[col] = ne_diag[ne] = se_diag[se] = true;
+        col_taken[col] = ne_diag[ne] = se_diag[se] = true;
         checker(row + 1);
-        cols[col] = ne_diag[ne] = se_diag[se] = false;
+        col_taken[col] = ne_diag[ne] = se_diag[se] = false;
     }
 }
 
