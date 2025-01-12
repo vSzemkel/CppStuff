@@ -26,9 +26,10 @@ struct node_t {
 };
 
 /**
- * Observation1: Solving moves can be executed in any order
- * Observation2: Repeating a move more than 3 times makes no sense
+ * Observation1: Moves can be executed in any order, so to reduce search space, we execute increasing sequences of moves
+ * Observation2: Repeating a move 4k times is idempotent, so we check only 0, 1, 2 and 3 repetitions
  * Observation3: To solve in constant time, precompute moves to advance each single clock and cumulate counts modulo 4
+ * Observation4: Precomputation can be done with this program and input of one clock pointing to 9 and the rest to 12
  */
 int main(int, char**)
 {
@@ -84,8 +85,12 @@ clocks.exe && type clocks.out
 
 Input:
 
+3 12 9
+6 6 6
+12 12 12
 
 Output:
 
+1 1 2 2 3 3 4 4 4 5 5 6 7 7 7 8 8 9
 
 */

@@ -14,9 +14,9 @@ static auto distribution(const T ubound) {
 
 template <typename T = int>
 static T rand_in_range(const T ubound) {
-    std::random_device seed;
-    std::mt19937 gen{seed()};
-    std::uniform_int_distribution<T> dist(0, ubound - 1);
+    static std::random_device seed;
+    static std::mt19937 gen{seed()};
+    static std::uniform_int_distribution<T> dist(0, ubound - 1);
     return dist(gen);
 };
 
