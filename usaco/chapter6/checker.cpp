@@ -7,7 +7,6 @@ PROBLEM STATEMENT: https://usaco.training/usacoprob2?a=iuNOXJ9T5Ya&S=checker
 
 #include <array>
 #include <fstream>
-#include <string>
 
 std::ifstream task_in("checker.in");
 std::ofstream task_out("checker.out");
@@ -20,17 +19,14 @@ std::array<bool, MAX> col_taken{};                  // col is taken
 std::array<bool, 2 * MAX - 1> ne_diag{}, se_diag{}; // taken diagonals bitmap
 
 int N, ans{}, sol{};
-std::string solutions[SOL];
 
 void checker(const int row)
 {
     if (row == N) {
-        if (sol < SOL) {
-            std::string s;
+        if (++sol <= SOL) {
             for (int i = 0; i < N - 1; ++i)
-                s += std::to_string(solution[i] + 1) + ' ';
-            s += std::to_string(solution[N - 1] + 1);
-            solutions[sol++] = s;
+                task_out << solution[i] + 1 << ' ';
+            task_out << solution[N - 1] + 1 << '\n';
         }
         ++ans;
     }
@@ -50,14 +46,10 @@ void checker(const int row)
 
 int main(int, char**)
 {
-    std::string comet, group;
     task_in >> N;
 
     solution.fill(-1);
     checker(0);
-    for (const auto& s :solutions) {
-        task_out << s << '\n';
-    }
     task_out << ans << '\n';
 }
 
