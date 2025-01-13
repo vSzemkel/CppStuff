@@ -35,12 +35,12 @@ class kd_tree_t {
         if (points.empty())
             return nullptr;
 
+        const auto median = points.size() / 2;
         const auto dim = depth % points[0]._coords.size();
-        std::sort(points.begin(), points.end(), [dim](const point_t& a, const point_t& b) {
+        std::nth_element(points.begin(), points.begin() + median, points.end(), [dim](const point_t& a, const point_t& b) {
             return a._coords[dim] < b._coords[dim];
         });
 
-        const auto median = points.size() / 2;
         std::vector<point_t> left_points(points.begin(), points.begin() + median);
         std::vector<point_t> right_points(points.begin() + median + 1, points.end());
 
