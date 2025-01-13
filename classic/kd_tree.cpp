@@ -16,20 +16,34 @@ struct point_t {
     }
 };
 
-struct node_t {
-    std::unique_ptr<node_t> _left{};
-    std::unique_ptr<node_t> _right{};
-    const point_t _point;
-    const int _dim;
-
-    node_t(point_t p, int d) : _point(p), _dim(d) {}
-};
-
 class kd_tree_t {
   public:
     kd_tree_t(const std::vector<point_t>& points)
         : MAX_DIM(int(points[0]._coords.size()))
         , _root(build(points, 0)) {}
+
+    std::vector<point_t> range_search(const point_t& lower, const point_t& upper) {
+        std::vector<point_t> result;
+        range_search(_root.get(), lower, upper, result);
+        return result;
+    }
+
+    point_t nearest_neighbor(const point_t& target) {
+        return nearest_neighbor(_root.get(), target, _root->_point, 0);
+    }
+
+  private:
+    struct node_t {
+        std::unique_ptr<node_t> _left{};
+        std::unique_ptr<node_t> _right{};
+        const point_t _point;
+        const int _dim;
+
+        node_t(point_t p, int d) : _point(p), _dim(d) {}
+    };
+
+    const int MAX_DIM;
+    std::unique_ptr<node_t> _root;
 
     std::unique_ptr<node_t> build(std::vector<point_t> points, int depth) {
         if (points.empty())
@@ -50,21 +64,6 @@ class kd_tree_t {
 
         return node;
     }
-
-    // Range search method
-    std::vector<point_t> range_search(const point_t& lower, const point_t& upper) {
-        std::vector<point_t> result;
-        range_search(_root.get(), lower, upper, result);
-        return result;
-    }
-
-    point_t nearest_neighbor(const point_t& target) {
-        return nearest_neighbor(_root.get(), target, _root->_point, 0);
-    }
-
-  private:
-    const int MAX_DIM;
-    std::unique_ptr<node_t> _root;
 
     void range_search(const node_t* node, const point_t& lower, const point_t& upper, std::vector<point_t>& result) {
         if (!node)
