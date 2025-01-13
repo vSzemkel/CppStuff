@@ -3,51 +3,47 @@
 #include <cmath>
 #include <format>
 #include <iostream>
-#include <memory>
 #include <random>
 #include <vector>
 
-// Naive KDTree implementation with pointers and single point leaves
+// Naive KDTree implementation with single point leaves
 
 struct point_t {
-    std::array<double, 2> _coords;
     point_t(std::initializer_list<double> init) {
         std::copy(init.begin(), init.end(), _coords.begin());
     }
+    std::array<double, 2> _coords;
 };
 
 class kd_tree_t {
   public:
     kd_tree_t(const std::vector<point_t>& points)
         : MAX_DIM(int(points[0]._coords.size()))
+        , _node_idx(0)
+        , _nodes(points.size())
         , _root(build(points, 0)) {}
 
     std::vector<point_t> range_search(const point_t& lower, const point_t& upper) {
         std::vector<point_t> result;
-        range_search(_root.get(), lower, upper, result);
+        range_search(_root, lower, upper, result);
         return result;
     }
 
     point_t nearest_neighbor(const point_t& target) {
-        return nearest_neighbor(_root.get(), target, _root->_point, 0);
+        return nearest_neighbor(_root, target, _root->_point, 0);
     }
 
   private:
     struct node_t {
-        std::unique_ptr<node_t> _left{};
-        std::unique_ptr<node_t> _right{};
-        const point_t _point;
-        const int _dim;
-
-        node_t(point_t p, int d) : _point(p), _dim(d) {}
+        node_t* _left{};
+        node_t* _right{};
+        point_t _point{};
+        int _dim{};
     };
 
-    const int MAX_DIM;
-    std::unique_ptr<node_t> _root;
-
-    std::unique_ptr<node_t> build(std::vector<point_t> points, int depth) {
+    node_t* build(std::vector<point_t> points, int depth) {
         if (points.empty())
-            return nullptr;
+            return {};
 
         const auto median = points.size() / 2;
         const auto dim = depth % MAX_DIM;
@@ -58,11 +54,13 @@ class kd_tree_t {
         std::vector<point_t> left_points(points.begin(), points.begin() + median);
         std::vector<point_t> right_points(points.begin() + median + 1, points.end());
 
-        auto node = std::make_unique<node_t>(points[median], dim);
-        node->_left = build(left_points, ++depth);
-        node->_right = build(right_points, depth);
+        auto& node = _nodes[_node_idx++];
+        node._point = points[median];
+        node._dim = dim;
+        node._left = build(std::move(left_points), ++depth);
+        node._right = build(std::move(right_points), depth);
 
-        return node;
+        return std::addressof(node);
     }
 
     void range_search(const node_t* node, const point_t& lower, const point_t& upper, std::vector<point_t>& result) {
@@ -83,9 +81,9 @@ class kd_tree_t {
 
         const auto dim_target = node->_point._coords[node->_dim];
         if (node->_left && lower._coords[node->_dim] <= dim_target)
-            range_search(node->_left.get(), lower, upper, result);
+            range_search(node->_left, lower, upper, result);
         if (node->_right && dim_target <= upper._coords[node->_dim])
-            range_search(node->_right.get(), lower, upper, result);
+            range_search(node->_right, lower, upper, result);
     }
 
     point_t nearest_neighbor(const node_t* node, const point_t& target, point_t best, int depth) {
@@ -102,11 +100,11 @@ class kd_tree_t {
         const bool go_left = target._coords[dim] < node->_point._coords[dim];
         const auto& near = go_left ? node->_left : node->_right;
 
-        best = nearest_neighbor(near.get(), target, best, ++depth);
+        best = nearest_neighbor(near, target, best, ++depth);
 
         if (std::abs(target._coords[dim] - node->_point._coords[dim]) < best_dist) {
             const auto& far = go_left ? node->_right : node->_left;
-            best = nearest_neighbor(far.get(), target, best, depth);
+            best = nearest_neighbor(far, target, best, depth);
         }
 
         return best;
@@ -115,6 +113,11 @@ class kd_tree_t {
     double distance(const point_t& a, const point_t& b) {
         return std::hypot(a._coords[0] - b._coords[0], a._coords[1] - b._coords[1]);
     }
+
+    const int MAX_DIM;
+    int _node_idx;
+    std::vector<node_t> _nodes;
+    node_t* _root;
 };
 
 template <typename T = double>
@@ -125,14 +128,14 @@ static T rand_in_range(const T ubound) {
     return dist(gen);
 };
 
-constinit const int NUM_OF_POINTS = 10000;
-constinit const double MANHATTAN_RADIUS = 13.77;
+constinit const int NUM_OF_POINTS = 2'000'000;
+constinit const double MANHATTAN_RADIUS = 2.5;
 
 int main() {
     std::vector<point_t> points;
     points.reserve(NUM_OF_POINTS);
     std::generate_n(std::back_inserter(points), NUM_OF_POINTS, [&]() -> point_t {
-        return {double(rand_in_range(NUM_OF_POINTS)) / 10, double(rand_in_range(NUM_OF_POINTS)) / 10};
+        return {double(rand_in_range(NUM_OF_POINTS)) / 2'000, double(rand_in_range(NUM_OF_POINTS)) / 2'000};
     });
 
     kd_tree_t tree(points);
