@@ -7,7 +7,7 @@
 #include <random>
 #include <vector>
 
-// Basic KDTree implementation with single point leaves
+// Naive KDTree implementation with pointers and single point leaves
 
 struct point_t {
     std::array<double, 2> _coords;
@@ -50,7 +50,7 @@ class kd_tree_t {
             return nullptr;
 
         const auto median = points.size() / 2;
-        const auto dim = depth % points[0]._coords.size();
+        const auto dim = depth % MAX_DIM;
         std::nth_element(points.begin(), points.begin() + median, points.end(), [dim](const point_t& a, const point_t& b) {
             return a._coords[dim] < b._coords[dim];
         });
@@ -92,19 +92,19 @@ class kd_tree_t {
         if (!node)
             return best;
 
-        const auto best_dist = distance(best, target);
-        const auto node_dist = distance(node->_point, target);
-
-        if (node_dist < best_dist)
+        auto best_dist = distance(best, target);
+        if (distance(node->_point, target) < best_dist) {
             best = node->_point;
+            best_dist = distance(best, target);
+        }
 
-        const auto dim = depth % target._coords.size();
+        const auto dim = depth % MAX_DIM;
         const bool go_left = target._coords[dim] < node->_point._coords[dim];
         const auto& near = go_left ? node->_left : node->_right;
 
         best = nearest_neighbor(near.get(), target, best, ++depth);
 
-        if (std::abs(target._coords[dim] - node->_point._coords[dim]) < distance(best, target)) {
+        if (std::abs(target._coords[dim] - node->_point._coords[dim]) < best_dist) {
             const auto& far = go_left ? node->_right : node->_left;
             best = nearest_neighbor(far.get(), target, best, depth);
         }
