@@ -16,7 +16,7 @@ struct point_t {
 };
 
 /**
- * Nodes are allocated in one call but referenced by indexes
+ * Nodes are allocated in one call but referenced by explicit indexes
  */
 class kd_tree_t {
   public:
@@ -239,10 +239,8 @@ class kd_tree_t2 {
 };
 
 /**
- * Nodes are overallocated in one call and referenced by indexes
- * This is slightly slower than kd_tree_t2 and uses more memory (36 < 4 * 12)
+ * Nodes are overallocated in one call and referenced implicit by indexes
  */
-//int last_valid{}, last_ref{};
 class kd_tree_t3 {
   public:
     kd_tree_t3(const std::vector<point_t>& points)
@@ -263,8 +261,10 @@ class kd_tree_t3 {
     point_t nearest_neighbor(const point_t& target) {
         if (_nodes.empty())
             return {};
-        return nearest_neighbor(1, target, _nodes[0]._point, 0);
+        return nearest_neighbor(1, target, _nodes[1]._point, 0);
     }
+
+    int max_valid_id{};
 
   private:
     struct node_t {
@@ -275,7 +275,9 @@ class kd_tree_t3 {
     void build(std::vector<point_t> points, const int node_id, int depth) {
         if (points.empty())
             return;
-//last_valid = std::max(last_valid, node_id);
+        if (max_valid_id < node_id)
+            max_valid_id = node_id;
+
         const auto median = points.size() / 2;
         const auto dim = depth % MAX_DIM;
         std::nth_element(points.begin(), points.begin() + median, points.end(), [dim](const point_t& a, const point_t& b) {
@@ -293,7 +295,6 @@ class kd_tree_t3 {
     }
 
     void range_search(const int node_id, const point_t& lower, const point_t& upper, std::vector<point_t>& result) {
-//last_ref = std::max(last_ref, node_id);
         const auto& node = _nodes[node_id];
         if (node._dim == -1)
             return;
@@ -320,7 +321,6 @@ class kd_tree_t3 {
     }
 
     point_t nearest_neighbor(const int node_id, const point_t& target, point_t best, int depth) {
-//last_ref = std::max(last_ref, node_id);
         const auto& node = _nodes[node_id];
         if (node._dim == -1)
             return best;
@@ -374,8 +374,11 @@ int main() {
     const point_t target = {871.0, 352.0};
     const point_t lower = {target._coords[0] - MANHATTAN_RADIUS, target._coords[1] - MANHATTAN_RADIUS};
     const point_t upper = {target._coords[0] + MANHATTAN_RADIUS, target._coords[1] + MANHATTAN_RADIUS};
+    auto range_result = tree.range_search(lower, upper);
+    std::sort(range_result.begin(), range_result.end(), [&target](const point_t& a, const point_t& b) {
+        return std::hypot(a._coords[0] - target._coords[0], a._coords[1] - target._coords[1]) < std::hypot(b._coords[0] - target._coords[0], b._coords[1] - target._coords[1]);
+    });
     std::cout << std::format("Range search results around ({:5.1f}, {:5.1f}):\n", target._coords[0], target._coords[1]);
-    const auto range_result = tree.range_search(lower, upper);
     for (const auto& p : range_result) {
         const auto dx = p._coords[0] - target._coords[0];
         const auto dy = p._coords[1] - target._coords[1];
@@ -385,9 +388,9 @@ int main() {
     const auto nearest = tree.nearest_neighbor(target);
     std::cout << std::format("Nearest neighbor: ({:5.1f}, {:5.1f})\n", nearest._coords[0], nearest._coords[1]);
 
-//std::cerr << "Number of points: " << NUM_OF_POINTS << '\n';
-//std::cerr << "Last valid node index: " << last_valid << '\n';
-//std::cerr << "Last referenced node index: " << last_ref << '\n';
+    std::cerr << "Number of points: " << NUM_OF_POINTS << '\n';
+    std::cerr << "Last valid node index: " << tree.max_valid_id << '\n';
+    std::cerr << "Last referenced node index: " << 2 * tree.max_valid_id + 1 << '\n';
 }
 
 /*
