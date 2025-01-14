@@ -16,7 +16,7 @@ template <typename T = int>
 static T rand_in_range(const T ubound) {
     static std::random_device seed;
     static std::mt19937 gen{seed()};
-    static std::uniform_int_distribution<T> dist(0, ubound - 1);
+    std::uniform_int_distribution<T> dist(0, ubound - 1);
     return dist(gen);
 };
 
