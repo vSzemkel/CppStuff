@@ -31,14 +31,14 @@ class kd_tree_t {
     std::vector<point_t> range_search(const point_t& lower, const point_t& upper) {
         std::vector<point_t> result;
         if (!_nodes.empty())
-            range_search(0, lower, upper, result);
+            range_search(1, lower, upper, result);
         return result;
     }
 
     point_t nearest_neighbor(const point_t& target) {
         if (_nodes.empty())
             return {};
-        return nearest_neighbor(0, target, _nodes[0]._point, 0);
+        return nearest_neighbor(1, target, _nodes[1]._point, 0);
     }
 
   private:
