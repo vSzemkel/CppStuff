@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iterator>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <functional>
 #include <limits>
