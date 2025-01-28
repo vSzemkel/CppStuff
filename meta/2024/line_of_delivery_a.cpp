@@ -7,7 +7,37 @@
 // Line of Delivery A
 // https://www.facebook.com/codingcompetitions/hacker-cup/2024/practice-round/problems/D1
 
-static void solve()
+static void solve() // O(N)
+{
+    int N, G;
+    std::cin >> N >> G;
+
+    int index{0};
+    int left = std::numeric_limits<int>::min();
+    int right = std::numeric_limits<int>::max();
+    for (int i = 0; i < N; ++i) {
+        int s; std::cin >> s;
+        if (s < G) {
+            ++index;
+            if (left < s)
+                left = s;
+        } else if (s < right)
+            right = s;
+    }
+
+    if (index == 0)
+        std::cout << std::format("{} {}", N, right - G);
+    else if (index == N)
+        std::cout << std::format("1 {}", G - left);
+    else {
+        if (G - left < right - G)
+            std::cout << std::format("{} {}", N - index + 1, G - left);
+        else
+            std::cout << std::format("{} {}", N - index, right - G);
+    }
+}
+
+static void solve_nlogn() // O(N*log(N))
 {
     int N, G;
     std::cin >> N >> G;
@@ -24,8 +54,8 @@ static void solve()
     else if (it == stones.begin())
         std::cout << std::format("{} {}", N, stones.front() - G);
     else {
-        const int left = int(it - 1 - stones.begin());
         const int right = int(it - stones.begin());
+        const int left = right - 1;
         if (G - stones[left] < stones[right] - G)
             std::cout << std::format("{} {}", N - left, G - stones[left]);
         else
