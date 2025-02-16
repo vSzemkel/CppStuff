@@ -47,13 +47,12 @@ struct rmq_t {
         for (int k = 0; k < levels; ++k)
             _range_low[k].resize(_size - (1 << k) + 1);
 
-        auto& prev = _range_low[0];
-        std::iota(prev.begin(), prev.end(), 0);
+        std::iota(_range_low[0].begin(), _range_low[0].end(), 0);
         for (int k = 1; k < levels; ++k) {
+            const auto& prev = _range_low[k - 1];
             auto& curr = _range_low[k];
             for (int i = 0; i <= _size - (1 << k); ++i)
                 curr[i] = better_index(prev[i], prev[i + (1 << (k - 1))]);
-            prev = curr;
         }
     }
 

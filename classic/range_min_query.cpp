@@ -1,6 +1,6 @@
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <numeric>
 #include <random>
@@ -47,13 +47,12 @@ struct rmq_t {
         for (int k = 0; k < levels; ++k)
             _range_low[k].resize(_size - (1 << k) + 1);
 
-        auto& prev = _range_low[0];
-        std::iota(prev.begin(), prev.end(), 0);
+        std::iota(_range_low[0].begin(), _range_low[0].end(), 0);
         for (int k = 1; k < levels; ++k) {
+            const auto& prev = _range_low[k - 1];
             auto& curr = _range_low[k];
             for (int i = 0; i <= _size - (1 << k); ++i)
                 curr[i] = better_index(prev[i], prev[i + (1 << (k - 1))]);
-            prev = curr;
         }
     }
 
@@ -78,21 +77,21 @@ int main(int, char**)
 {
     std::vector<int> data;
     data.resize(size);
-    std::generate_n(std::back_inserter(data), size, []{ return rand_in_range(range); });
+    std::generate_n(data.begin(), size, []{ return rand_in_range(range); });
 
     rmq_t<int, true> rmq{data};
     for (int i = 0; i < trials; ++i) {
-        int lb = rand_in_range(range);
-        int rb = rand_in_range(range);
+        int lb = rand_in_range(size);
+        int rb = rand_in_range(size);
         if (lb == rb) continue;
         if (lb > rb) std::swap(lb, rb);
 
-        const int naive = *std::max(data.begin() + lb, data.begin() + rb + 1);
+        const int naive = *std::max_element(data.begin() + lb, data.begin() + rb);
         const int better = rmq.query_value(lb, rb);
         assert(better == naive);
     }
 }
 
 /* Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++17 range_min_query.cpp -o range_min_query.exe
+clang++.exe -Wall -Wextra -g -O0 -std=c++20 range_min_query.cpp -o range_min_query.exe
 */
