@@ -16,7 +16,8 @@ static void solve() // O(N)
     int left = std::numeric_limits<int>::min();
     int right = std::numeric_limits<int>::max();
     for (int i = 0; i < N; ++i) {
-        int s; std::cin >> s;
+        int s;
+        std::cin >> s;
         if (s < G) {
             ++index;
             if (left < s)
@@ -49,8 +50,6 @@ static void solve_nlogn() // O(N*log(N))
     const auto it = std::lower_bound(stones.begin(), stones.end(), G);
     if (it == stones.end())
         std::cout << std::format("1 {}", G - stones.back());
-    else if (*it == G)
-        std::cout << std::format("{} 0", int(stones.end() - it));
     else if (it == stones.begin())
         std::cout << std::format("{} {}", N, stones.front() - G);
     else {
@@ -84,7 +83,7 @@ Format:
 clang-format -i line_of_delivery_a.cpp
 
 Compile:
-cls && clang++.exe -Wall -Wextra -g -O0 -std=c++20 line_of_delivery_a.cpp -o line_of_delivery_a.exe
+clang++.exe -Wall -Wextra -g -O0 -std=c++20 line_of_delivery_a.cpp -o line_of_delivery_a.exe
 g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address line_of_delivery_a.cpp -o line_of_delivery_a
 
 Run:
