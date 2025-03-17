@@ -13,7 +13,7 @@
 
 static std::mt19937 _gen{std::random_device{}()};
 
-/**
+/*
  * In-order search gives sorted sequence
  * Priority decreases with depth
  * Splitting with existing value moves it to the left
@@ -44,12 +44,15 @@ namespace treap
 
     pnode create(int key) { return new treap_node_t(key); }
 
-    int update_size(pnode n)
+    int get_size(pnode n)
+    {
+        return n ? n->_size : 0;
+    }
+
+    void update_size(pnode n)
     {
         if (n)
-            return n->_size = 1 + update_size(n->_left) + update_size(n->_right);
-
-        return 0;
+            n->_size = 1 + get_size(n->_left) + get_size(n->_right);
     }
 
     void push(pnode n)
@@ -190,6 +193,7 @@ int main(int, char**)
     treap::merge(root, l, r);
     print(treap::get_order(root));
 
+    assert(treap::get_size(root) == treap::get_size(root->_left) + treap::get_size(root->_right) + 1);
     assert((treap::get_order(root) == std::vector{-10, -9, -8, -7, -6, -5, -4, -3, 8, 9, 10, 21, 22, 23, 24, 25, 36, 37, 38, 39}));
     delete root;
 }
