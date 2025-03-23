@@ -45,17 +45,20 @@ namespace treap
 
     pnode create(int key) { return new treap_node_t(key); }
 
-    int update_size(pnode n)
+    int get_size(pnode n)
+    {
+        return n ? n->_size : 0;
+    }
+
+    void update_size(pnode n)
     {
         if (n)
-            return n->_size = 1 + update_size(n->_left) + update_size(n->_right);
-
-        return 0;
+            n->_size = 1 + get_size(n->_left) + get_size(n->_right);
     }
 
     void push(pnode n)
     {
-        if (!n) return;
+        if (!n || n->_lazy_delta == 0) return;
         const int delta = std::exchange(n->_lazy_delta, 0);
 
         n->_key += delta;
@@ -103,6 +106,11 @@ namespace treap
             split(t, it->_key, it->_left, it->_right), t = it;
         else
             insert(it->_key < t->_key ? t->_left : t->_right, it);
+    }
+    
+    void insert(pnode& t, const int key)
+    {
+        insert(t, create(key));
     }
 
     int get_min_key(pnode t)
@@ -171,9 +179,11 @@ std::vector<int> get_positions(const int N)
             root = r;
             return true;
         }
-        const int target = energy + l->_size;
-        const bool taken = treap::get_max_key(l) == position;
-        const bool result = (!taken && target <= position) || target < position;
+        const bool available = treap::get_max_key(l) < position;
+        int target = energy + l->_size;
+        if (!available)
+            --target;
+        const bool result = (available && target <= position) || target < position;
         treap::merge(root, l, r);
         return result;
     };
@@ -184,10 +194,14 @@ std::vector<int> get_positions(const int N)
         treap::split(root, position, l, r);
         if (l) {
             l->_lazy_delta -= 1;
-            treap::merge(root, l, r);
-        } else
-            root = r;
-        treap::insert(root, treap::create(position));
+            //treap::merge(root, l, r);
+        } //else
+            //root = r;
+
+        //treap::insert(root, position);
+        treap::pnode tmp{};
+        treap::merge(tmp, l, treap::create(position));
+        treap::merge(root, tmp, r);
     }
 
     const auto order = treap::get_order(root);

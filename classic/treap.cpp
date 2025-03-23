@@ -57,7 +57,7 @@ namespace treap
 
     void push(pnode n)
     {
-        if (!n) return;
+        if (!n || n->_lazy_delta == 0) return;
         const int delta = std::exchange(n->_lazy_delta, 0);
 
         n->_key += delta;
@@ -105,6 +105,11 @@ namespace treap
             split(t, it->_key, it->_left, it->_right), t = it;
         else
             insert(it->_key < t->_key ? t->_left : t->_right, it);
+    }
+    
+    void insert(pnode& t, const int key)
+    {
+        insert(t, create(key));
     }
 
     int get_min_key(pnode t)
