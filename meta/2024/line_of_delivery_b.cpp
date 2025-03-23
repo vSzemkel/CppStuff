@@ -106,6 +106,8 @@ namespace treap
             split(t, it->_key, it->_left, it->_right), t = it;
         else
             insert(it->_key < t->_key ? t->_left : t->_right, it);
+
+        update_size(t);
     }
     
     void insert(pnode& t, const int key)
@@ -192,13 +194,18 @@ std::vector<int> get_positions(const int N)
         std::cin >> energy;
         const int position = first_true(energy, energy + i, check);
         treap::split(root, position, l, r);
-        if (l) {
-            l->_lazy_delta -= 1;
-            //treap::merge(root, l, r);
-        } //else
-            //root = r;
 
-        //treap::insert(root, position);
+        // Sometimes it gives wrong result - distance greater by 1 than correct
+        // if (l) {
+        //     l->_lazy_delta -= 1;
+        //     treap::merge(root, l, r);
+        // } else
+        //     root = r;
+        // treap::insert(root, position);
+
+        if (l)
+            l->_lazy_delta -= 1;
+
         treap::pnode tmp{};
         treap::merge(tmp, l, treap::create(position));
         treap::merge(root, tmp, r);

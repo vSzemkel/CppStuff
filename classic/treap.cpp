@@ -105,6 +105,8 @@ namespace treap
             split(t, it->_key, it->_left, it->_right), t = it;
         else
             insert(it->_key < t->_key ? t->_left : t->_right, it);
+
+        update_size(t);
     }
     
     void insert(pnode& t, const int key)
