@@ -104,8 +104,10 @@ namespace treap
             t = it;
         else if (t->_priority < it->_priority)
             split(t, it->_key, it->_left, it->_right), t = it;
-        else
+        else {
+            push(t);
             insert(it->_key < t->_key ? t->_left : t->_right, it);
+        }
 
         update_size(t);
     }
@@ -195,7 +197,7 @@ std::vector<int> get_positions(const int N)
         const int position = first_true(energy, energy + i, check);
         treap::split(root, position, l, r);
 
-        // Sometimes it gives wrong result - distance greater by 1 than correct
+        // Alternative
         // if (l) {
         //     l->_lazy_delta -= 1;
         //     treap::merge(root, l, r);

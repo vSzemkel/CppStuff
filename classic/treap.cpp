@@ -103,8 +103,10 @@ namespace treap
             t = it;
         else if (t->_priority < it->_priority)
             split(t, it->_key, it->_left, it->_right), t = it;
-        else
+        else {
+            push(t);
             insert(it->_key < t->_key ? t->_left : t->_right, it);
+        }
 
         update_size(t);
     }
