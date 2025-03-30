@@ -172,6 +172,31 @@ static T first_true(T lo, T hi, U f) {
     return lo;
 }
 
+std::vector<int> get_positions_smart(const int N) // by benq
+{
+    int energy;
+    treap::pnode l, r;
+    treap::pnode root = nullptr;
+
+    for (int i = 0; i < N; ++i) {
+        std::cin >> energy;
+        treap::split(root, energy, l, r);
+        treap::merge(r, treap::create(energy), r);
+        r->_lazy_delta -= 1;
+        if (l)
+            l->_lazy_delta -= 1;
+
+        treap::merge(root, l, r);
+    }
+
+    auto order = treap::get_order(root);
+    for (int i = 0; i < N; ++i)
+        order[i] += i + 1;
+
+    delete root;
+    return order;
+}
+
 std::vector<int> get_positions(const int N)
 {
     int energy;
@@ -222,7 +247,7 @@ void solve()
 {
     int N, G;
     std::cin >> N >> G;
-    const auto positions = get_positions(N);
+    const auto positions = get_positions_smart(N);
     std::pair<int, int> best{2'000'000, -1};
     for (int i = 0; i < N; ++i) {
         const int pos = positions[i];

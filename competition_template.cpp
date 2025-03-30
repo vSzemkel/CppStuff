@@ -53,7 +53,7 @@ int main(int, char**)
         // /*attach_trap();*/ solve();
         std::cout << std::format("Case #{}: ", g); solve(); std::cout << '\n';
         //std::cout << std::format("Case #{}: ", g) << (solve() ? "" : "IM") << "POSSIBLE\n";
-        //std::cout << std::format("Case #{}: ", g); << std::fixed << std::setprecision(9); solve(); std::cout << '\n';
+        //std::cout << std::format("Case #{}: ", g) << std::fixed << std::setprecision(9); solve(); std::cout << '\n';
     }
 }
 
