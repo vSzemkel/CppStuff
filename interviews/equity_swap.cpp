@@ -6,7 +6,7 @@
 
 // Equity swap
 // Given two arrays of integers, find a pair of values (one value from each array)
-// that you can swap to give the two arrays the same sum
+// that you can swap making the two arrays of equal sums
 
 std::vector<int> g_a, g_b;
 
@@ -57,13 +57,13 @@ int main(int argc, char* argv[])
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
         // Set 1
-        std::cout << "Case #" << g << ": "; solve(); std::cout << "\n";
+        std::cout << "Case #" << g << ": "; solve(); std::cout << '\n';
     }
 }
 
 /*
-clang++.exe -Wall -ggdb3 -O0 -std=c++17 equity_swap.cpp -o equity_swap.exe
-g++ -Wall -ggdb3 -O0 -std=c++17 equity_swap.cpp -o equity_swap.o
+clang++.exe -Wall -ggdb3 -O0 -std=c++20 equity_swap.cpp -o equity_swap.exe
+g++ -Wall -ggdb3 -O0 -std=c++20 equity_swap.cpp -o equity_swap.o
 equity_swap.exe < equity_swap.in
 
 Input:
