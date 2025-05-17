@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <format>
 #include <utility>
@@ -8,7 +9,7 @@
 // Prime Subtractorization
 // https://www.facebook.com/codingcompetitions/hacker-cup/2024/round-1/problems/B
 
-std::vector<std::pair<int, int>> primes; // {prime, number of primest <= prime, having prime smaller by 2}
+std::vector<std::pair<int, int>> primes; // {prime, number of primes <= prime, having prime smaller by 2}
 
 static void precompute(const int64_t n)
 {
@@ -20,11 +21,11 @@ static void precompute(const int64_t n)
             for (int64_t j = i * i; j < n; j += i)
                 taken[j] = true;
 
-    for (int i = 2; i < n; ++i) {
-        const auto& [p, c] = primes.back();
-        if (!taken[i])
+    for (int i = 2; i < n; ++i)
+        if (!taken[i]) {
+            const auto& [p, c] = primes.back();
             primes.emplace_back(i, p + 2 == i ? c + 1 : c);
-    }
+        }
 }
 
 static void solve()
