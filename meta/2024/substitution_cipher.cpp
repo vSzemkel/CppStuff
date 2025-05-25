@@ -1,4 +1,5 @@
 
+#include <cassert>
 #include <iostream>
 #include <format>
 #include <string>
@@ -52,14 +53,54 @@ static int64_t decodings_count(const std::string& s)
     return dp.back();
 }
 
-static int64_t solve()
+static std::string solve()
 {
     int K;
     std::string E;
     std::cin >> E >> K;
+    --K;
 
-    std::string s("1111");
-    return decodings_count(s);
+    // validate input string;
+    auto v = E;
+    for (auto& c : v)
+        if (c == '?')
+            c = '1';
+    assert(is_valid(v));
+
+    int end = int(E.size());
+    for (int i = end - 1; ~i; --i)
+        if (E[i] == '0') {
+            if (0 < i && E[i - 1] == '?') {
+                E[i - 1] = '1' + (2 - 1 - (K % 2));
+                K /= 2;
+            }
+            --i;
+            end = i;
+        } else if (E[i] == '?') {
+            if (i + 1 == end) {                 // discard right merge possibility
+                if (0 < i && E[i - 1] == '?') { // '??' can't be replaced by 20 to produce max number of decodings
+                    int r = K % 15; // // check for 11-19 and 21-26, 15 candidates
+                    K /= 15;
+                    if (5 < r) ++r; // skip 20
+                    r = 26 - r;
+                    E[i - 1] = '0' + r / 10;
+                    E[i] = '0' + r % 10;
+                    --i;
+                } else if (0 < i && E[i - 1] == '2') { // only 1..6
+                    E[i] = '1' + (6 - 1 - (K % 6));
+                    K /= 6;
+                } else { // can be 1..9
+                    E[i] = '1' + (9 - 1 - (K % 9));
+                    K /= 9;
+                }
+            } else if ('1' <= E[i + 1] && E[i + 1] <= '6') { // can be 1..2
+                E[i] = '1' + (2 - 1 - (K % 2));
+                K /= 2;
+            } else // E[i + 1] is not 0, already handled above, E[i] must be 1
+                E[i] = '1';
+        }
+
+    return std::format("{} {}", E, decodings_count(E));
 }
 
 int main(int, char**)

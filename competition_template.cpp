@@ -51,7 +51,7 @@ int main(int, char**)
     std::cin >> no_of_cases;
     for (int g = 1; g <= no_of_cases; ++g) {
         // /*attach_trap();*/ solve();
-        std::cout << std::format("Case #{}: ", g); solve(); std::cout << '\n';
+        std::cout << std::format("Case #{}: {}\n", g, solve());
         //std::cout << std::format("Case #{}: ", g) << (solve() ? "" : "IM") << "POSSIBLE\n";
         //std::cout << std::format("Case #{}: ", g) << std::fixed << std::setprecision(9); solve(); std::cout << '\n';
     }
