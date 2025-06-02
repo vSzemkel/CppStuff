@@ -26,7 +26,7 @@ std::vector<std::vector<int>> ancestors;
     ancestors.assign(N, std::vector<int>(lg2size, root));
     // fill parents
     for (int i = 0; i < N; ++i)
-        p[i][0] = ...// parent of node i
+        ancestors[i][0] = ...// parent of node i
     // fill ancestors
     for (int j = 1; j < lg2size; ++j)
         for (int i = 0; i < N - 1; ++i)
