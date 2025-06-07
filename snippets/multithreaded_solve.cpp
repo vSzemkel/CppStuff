@@ -46,8 +46,7 @@ void multithreaded_solve()
         }
         ++case_id;
 
-        for (int i = 0; i < no_of_cases; ++i)
-            std::cin >> arg0[i] >> arg1[i];
+        std::cin >> arg0[cur] >> arg1[cur];
 
         runner_mutex.unlock();
         ans[cur] = solve(arg0[cur], arg1[cur]);

@@ -3,6 +3,7 @@
 #include <array>
 #include <iostream>
 #include <format>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -51,8 +52,39 @@ static int solve(const std::vector<std::string>& words)
             mask.push_back(s[j] == '?');
     }
 
-    int64_t ans{1}; 
-    return ans;
+    int64_t ret{1};
+
+    std::function<void(int, int, int, std::vector<bool>, std::vector<bool>)> drill =
+    [&](int cur, int taken, int cmn_pref, std::vector<bool> selection, std::vector<bool> wildcards){
+        if (cur == N) {
+            if (0 < taken) {
+                int ord{};
+                const int sign = 2 * (taken & 1) - 1;
+                for (int i = 0; i < cmn_pref; ++i) {
+                    if (wildcards[i])
+                        ++ord;
+                    ret += sign * pw[ord] % M;
+                }
+            }
+            return;
+        }
+
+        // ignore cur
+        drill(cur + 1, taken, cmn_pref, selection, wildcards);
+        // take cur
+        selection[cur] = true;
+        const int len = lengths[cur];
+        cmn_pref = std::min(cmn_pref, len);
+        for (int i = 0; i < cur; ++i)
+            if (selection[i])
+                cmn_pref = std::min(cmn_pref, common_prefix[i][cur]);
+        for (int i = 0; i < len; ++i)
+            wildcards[i] = wildcards[i] && masks[cur][i];
+        drill(cur + 1, taken + 1, cmn_pref, selection, wildcards);
+    };
+
+    drill(0, 0, MAX_LEN, std::vector<bool>(MAX_LEN), std::vector<bool>(MAX_LEN, true));
+    return ret;
 }
 
 int case_id{};
@@ -73,13 +105,11 @@ void multithreaded_solve()
         }
         ++case_id;
 
-        for (int i = 0; i < no_of_cases; ++i) {
-            int N; std::cin >> N;
-            auto& arg = arg0[i];
-            arg.resize(N);
-            for (auto& a : arg)
-                std::cin >> a;
-        }
+        int N; std::cin >> N;
+        auto& arg = arg0[cur];
+        arg.resize(N);
+        for (auto& a : arg)
+            std::cin >> a;
 
         runner_mutex.unlock();
         ans[cur] = solve(arg0[cur]);
