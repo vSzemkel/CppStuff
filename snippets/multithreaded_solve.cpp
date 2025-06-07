@@ -9,6 +9,7 @@
 #include <windows.h>
 
 // Solve task cases cuncurrently
+// see: ../meta/2024/wildcard_submissions.cpp
 
 static std::string solve(const char c, const int length)
 {
