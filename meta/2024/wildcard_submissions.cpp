@@ -36,7 +36,7 @@ static int solve(const std::vector<std::string>& words)
         for (int j = i + 1; j < N; ++j) {
             const int common = std::min(lengths[i], lengths[j]);
             for (int k = 0; k < common; ++k) {
-                if (words[i][k] != '?' && words[i][k] != '?' && words[i][k] != words[j][k])
+                if (words[i][k] != '?' && words[j][k] != '?' && words[i][k] != words[j][k])
                     break;
                 ++common_prefix[i][j];
             }
