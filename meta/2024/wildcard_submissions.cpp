@@ -52,8 +52,7 @@ static int solve(const std::vector<std::string>& words)
             mask.push_back(s[j] == '?');
     }
 
-    int64_t ret{1};
-
+    std::vector<int> coeff(MAX_LEN);
     std::function<void(int, int, int, std::vector<bool>, std::vector<bool>)> drill =
     [&](int cur, int taken, int cmn_pref, std::vector<bool> selection, std::vector<bool> wildcards){
         if (cur == N) {
@@ -63,28 +62,34 @@ static int solve(const std::vector<std::string>& words)
                 for (int i = 0; i < cmn_pref; ++i) {
                     if (wildcards[i])
                         ++ord;
-                    ret += sign * pw[ord] % M;
+                    coeff[ord] += sign;
                 }
             }
             return;
         }
-
+        
         // ignore cur
         drill(cur + 1, taken, cmn_pref, selection, wildcards);
         // take cur
         selection[cur] = true;
         const int len = lengths[cur];
+        const auto& mask = masks[cur];
         cmn_pref = std::min(cmn_pref, len);
         for (int i = 0; i < cur; ++i)
             if (selection[i])
                 cmn_pref = std::min(cmn_pref, common_prefix[i][cur]);
-        for (int i = 0; i < len; ++i)
-            wildcards[i] = wildcards[i] && masks[cur][i];
+        for (int i = 0; i < cmn_pref; ++i)
+            wildcards[i] = wildcards[i] && mask[i];
         drill(cur + 1, taken + 1, cmn_pref, selection, wildcards);
     };
-
+    
     drill(0, 0, MAX_LEN, std::vector<bool>(MAX_LEN), std::vector<bool>(MAX_LEN, true));
-    return ret;
+    
+    int64_t ret{1};
+    for (int i = 0; i < MAX_LEN; ++i)
+        ret += coeff[i] * pw[i] % M;
+
+    return (ret + M) % M;
 }
 
 int case_id{};
