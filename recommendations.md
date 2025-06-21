@@ -27,8 +27,9 @@ Below are some preferences regarding coding practices. They are opinionated but 
 - know the limit of integral exact representation in your float type
 - if you catch exception, do not just silence it
 - use almost always auto, but remember: almost
-- prefer std:: containers to GUI framework provided ones
-- prefer `std::span` or `std::string_view` to raw pointer to buffers
+- prefer std::containers over GUI framework provided ones
+- prefer `std::span` or `std::string_view` over raw pointer to buffers
+- for bit masks use proper `1` value of destination type `T{1}`
 
 ## Performance
 - believe no one, measure!
@@ -42,7 +43,7 @@ Below are some preferences regarding coding practices. They are opinionated but 
 >- `(1 << 7)` better then `std::pow(2, 7)`
 >- `a / b` better then `std::floor(float(a) / b)`
 >- `(a + b – 1) / b` better then `std::ceil(float(a) / b)`
-- avoid overflows: prefer `a + (b – a) / 2` to `(a + b) / 2`
+- avoid overflows: prefer `a + (b – a) / 2` over `(a + b) / 2`
 - use streams for in-loop std::strings manipulations
 - use unordered containers when key order doesn't matter
 - allocate memory to reduce cache misses (row major vs column major)

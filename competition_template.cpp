@@ -63,12 +63,12 @@ Format:
 clang-format -i $TASKNAME$.cpp
 
 Compile:
-cls && clang++.exe -Wall -Wextra -g -O0 -std=c++20 $TASKNAME$.cpp -o $TASKNAME$.exe
-g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address $TASKNAME$.cpp -o $TASKNAME$
+clang++.exe -Wall -Wextra -g -O0 -std=c++20 $TASKNAME$.cpp
+g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address $TASKNAME$.cpp
 
 Run:
-py.exe interactive_runner.py py.exe $TASKNAME$_testing_tool.py 1 -- $TASKNAME$.exe
-$TASKNAME$.exe < $TASKNAME$.in
+py.exe interactive_runner.py py.exe $TASKNAME$_testing_tool.py 1 -- a.exe
+a.exe < $TASKNAME$.in
 
 Input:
 
