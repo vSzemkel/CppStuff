@@ -21,7 +21,7 @@ struct subrange_sum_t
 
     void reset(const std::vector<T>& data) {
         _size = data.size();
-        _data.assign(_size, 0);
+        _data.assign(_size, T{});
         for (int i = 0; i < _size; ++i) 
             for (int a = i; a < _size; a |= a + 1)
                 _data[a] += data[i];
