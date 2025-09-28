@@ -2,9 +2,9 @@
 #include <array>
 #include <iostream>
 #include <format>
-#include <vector>
+#include <unordered_map>
 
-// Cottontail Climb - part II
+// Four in a Burrow
 // https://www.facebook.com/codingcompetitions/hacker-cup/2024/round-2/problems/B
 
 
@@ -15,66 +15,90 @@ static constexpr int SIZE = ROWS * COLS;
 using board_t = std::array<char, SIZE>;
 
 board_t board;
+std::unordered_map<char, std::array<int, COLS>> best; // best['F'][3] is the earlist row number F won having burrow in 3rd column
+
+// Observation1: Order of wins by column is indeterminant
+// Observation2: For many non column wins of the same player earliest can be determined as COLS / 2 < WINS
 
 bool wins(const char p)
 {
-    for (int r = 0; r < ROWS; ++r) {
-        int consecutive{};
-        for (int c = 0; c < COLS; ++c) {
-            if (board[r * COLS + c] == p)
-                ++consecutive;
-            else
-                consecutive = 0;
-            if (consecutive == WINS)
-                return true;
-        }
-    }
+    bool ret{};
+    auto& b = best[p];
 
+    // Ignore column wins order 
     for (int c = 0; c < COLS; ++c) {
         int consecutive{};
         for (int r = 0; r < ROWS; ++r) {
-            if (board[r * COLS + c] == p)
-                ++consecutive;
-            else
+            if (board[r * COLS + c] == p) {
+                if (++consecutive == WINS)
+                    ret = true;
+            } else
                 consecutive = 0;
-            if (consecutive == WINS)
-                return true;
+        }
+    }
+
+    for (int r = 0; r < ROWS; ++r) {
+        int consecutive{};
+        for (int c = 0; c < COLS; ++c) {
+            if (board[r * COLS + c] == p) {
+                if (++consecutive == WINS) {
+                    if (b[c - 3] < r || b[c - 2] < r || b[c - 1] < r || b[c] < r)
+                        b[c - 3] = b[c - 2] = b[c - 1] = b[c] = r;
+                    --consecutive;
+                    ret = true;
+                }
+            } else
+                consecutive = 0;
         }
     }
 
     for (int d = WINS - 1; d < ROWS + COLS - 1 - WINS - 1; ++d) {
-        int rd = d < ROWS ? d : ROWS - 1;
-        int cd = d < ROWS ? 0 : d - ROWS + 1;
+        int r = d < ROWS ? d : ROWS - 1;
+        int c = d < ROWS ? 0 : d - ROWS + 1;
         int consecutive{};
-        while (0 <= rd && cd < COLS) {
-            if (board[rd * COLS + cd] == p)
-                ++consecutive;
-            else
+        while (0 <= r && c < COLS) {
+            if (board[r * COLS + c] == p) {
+                if (++consecutive == WINS) {
+                    if (b[c - 3] < r + 3 || b[c - 2] < r + 2 || b[c - 1] < r + 1 || b[c] < r) {
+                        b[c - 3] = r + 3;
+                        b[c - 2] = r + 2;
+                        b[c - 1] = r + 1;
+                        b[c] = r;
+                    }
+                    --consecutive;
+                    ret = true;
+                }
+            } else
                 consecutive = 0;
-            if (consecutive == WINS)
-                return true;
-            --rd;
-            ++cd;
+            --r;
+            ++c;
         }
     }
 
     for (int d = WINS - 1; d < ROWS + COLS - 1 - WINS - 1; ++d) {
-        int rd = d < ROWS ? d : ROWS - 1;
-        int cd = d < ROWS ? COLS - 1 : COLS - (d - ROWS + 1) - 1;
+        int r = d < ROWS ? d : ROWS - 1;
+        int c = d < ROWS ? COLS - 1 : COLS - (d - ROWS + 1) - 1;
         int consecutive{};
-        while (0 <= rd && cd < COLS) {
-            if (board[rd * COLS + cd] == p)
-                ++consecutive;
-            else
+        while (0 <= r && 0 <= c) {
+            if (board[r * COLS + c] == p) {
+                if (++consecutive == WINS) {
+                    if (b[c + 3] < r + 3 || b[c + 2] < r + 2 || b[c + 1] < r + 1 || b[c] < r) {
+                        b[c + 3] = r + 3;
+                        b[c + 2] = r + 2;
+                        b[c + 1] = r + 1;
+                        b[c] = r;
+                    }
+                    --consecutive;
+                    ret = true;
+                }
+            } else
                 consecutive = 0;
-            if (consecutive == WINS)
-                return true;
-            --rd;
-            --cd;
+            --r;
+            --c;
         }
     }
 
-    return false;
+    return ret;
 }
 
 static char solve()
@@ -83,6 +107,8 @@ static char solve()
     for (auto& p : board)
         std::cin >> p;
 
+    best['C'].fill(-1);
+    best['F'].fill(-1);
     const bool cwon = wins('C');
     const bool fwon = wins('F');
 
@@ -93,7 +119,21 @@ static char solve()
     if (!cwon && fwon)
         return 'F';
 
-    // TODO: run simulation
+    int consecutiveC{};
+    int consecutiveF{};
+    for (int c = 0; c < COLS; ++c) {
+        if (best['C'] > best['F']) {
+            ++consecutiveC;
+            consecutiveF = 0;
+        } else {
+            ++consecutiveF;
+            consecutiveC = 0;
+        }
+        if (consecutiveC == WINS)
+            return 'C';
+        if (consecutiveF == WINS)
+            return 'F';
+    }
 
     return '?';
 }
