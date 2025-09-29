@@ -1,4 +1,5 @@
 
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <format>
@@ -30,8 +31,11 @@ bool wins(const char p)
         int consecutive{};
         for (int r = 0; r < ROWS; ++r) {
             if (board[r * COLS + c] == p) {
-                if (++consecutive == WINS)
+                if (++consecutive == WINS) {
+                    if (b[c] < r)
+                        b[c] = r;
                     ret = true;
+                }
             } else
                 consecutive = 0;
         }
@@ -60,10 +64,10 @@ bool wins(const char p)
             if (board[r * COLS + c] == p) {
                 if (++consecutive == WINS) {
                     if (b[c - 3] < r + 3 || b[c - 2] < r + 2 || b[c - 1] < r + 1 || b[c] < r) {
-                        b[c - 3] = r + 3;
-                        b[c - 2] = r + 2;
-                        b[c - 1] = r + 1;
-                        b[c] = r;
+                        b[c - 3] = std::max(b[c - 3], r + 3);
+                        b[c - 2] = std::max(b[c - 2], r + 2);
+                        b[c - 1] = std::max(b[c - 2], r + 1);
+                        b[c] = std::max(b[c], r);
                     }
                     --consecutive;
                     ret = true;
@@ -83,10 +87,10 @@ bool wins(const char p)
             if (board[r * COLS + c] == p) {
                 if (++consecutive == WINS) {
                     if (b[c + 3] < r + 3 || b[c + 2] < r + 2 || b[c + 1] < r + 1 || b[c] < r) {
-                        b[c + 3] = r + 3;
-                        b[c + 2] = r + 2;
-                        b[c + 1] = r + 1;
-                        b[c] = r;
+                        b[c + 3] = std::max(b[c + 3], r + 3);
+                        b[c + 2] = std::max(b[c + 2], r + 2);
+                        b[c + 1] = std::max(b[c + 1], r + 1);
+                        b[c] = std::max(b[c], r);
                     }
                     --consecutive;
                     ret = true;
@@ -122,10 +126,10 @@ static char solve()
     int consecutiveC{};
     int consecutiveF{};
     for (int c = 0; c < COLS; ++c) {
-        if (best['C'] > best['F']) {
+        if (best['C'][c] > best['F'][c]) {
             ++consecutiveC;
             consecutiveF = 0;
-        } else {
+        } else if (best['F'][c] != -1) {
             ++consecutiveF;
             consecutiveC = 0;
         }
@@ -193,5 +197,12 @@ FCFCFCF
 FCFCFCF
 CFCFCFC
 CFCFCFC
+
+Output:
+
+Case #1: C
+Case #2: ?
+Case #3: F
+Case #4: 0
 
 */
