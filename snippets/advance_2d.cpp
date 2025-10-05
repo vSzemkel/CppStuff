@@ -126,7 +126,7 @@ for (int dir = 0; dir < 4; ++dir) {
     }
 }
 
-/************************ NO WAY BACK***********************************/
+/************************ NO WITHDRAWS ********************************/
 
 constexpr const int N{0}, E{1}, S{2}, W{3};
 constexpr const int DR[] = {-1, 0, +1, 0};
@@ -138,3 +138,8 @@ for (int z = 3, dir = (s.avoid + 1) % 4; z; --z, dir = (dir + 1) % 4) {
     if (0 <= nr && nr < 4 && 0 <= nc && nc < SZ && !visited[vertex]) {
     }
 }
+
+/************************ 8 DIRECTION ********************************/
+
+static constexpr int DR[] = {1, 1, 1, 0, -1, -1, -1, 0};
+static constexpr int DC[] = {1, 0, -1, -1, -1, 0, 1, 1};
