@@ -37,7 +37,7 @@ int heights_hash()
 
 int drill(const char p, const int r, const int c, const int dr, const int dc)
 {
-    if (r == -1 || r >= column_height[c] || c == -1 || c == COLS || board[r][c] != p)
+    if (c == -1 || c == COLS || r == -1 || r >= column_height[c] || board[r][c] != p)
         return 0;
 
     return 1 + drill(p, r + dr, c + dc, dr, dc);
@@ -123,7 +123,7 @@ void dfs(const int ord)
     const char p = player(ord);
     for (int c = 0; c < COLS; ++c) {
         auto& r = column_height[c];
-        if (board[r][c] == p)
+        if (r < ROWS && board[r][c] == p)
             if (!drill_check(p, r, c)) {
                 ++r;
                 dfs(ord + 1);
