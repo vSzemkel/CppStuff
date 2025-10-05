@@ -3,46 +3,58 @@
 #include <array>
 #include <iostream>
 #include <format>
-#include <unordered_map>
+#include <unordered_set>
 
 // Four in a Burrow
 // https://www.facebook.com/codingcompetitions/hacker-cup/2024/round-2/problems/B
-
 
 static constexpr int WINS = 4;
 static constexpr int ROWS = 6;
 static constexpr int COLS = 7;
 static constexpr int SIZE = ROWS * COLS;
+static constexpr const char* ANS = "0CF?";
 static constexpr int DR[] = {1, 1, 1, 0, -1, -1, -1, 0};
 static constexpr int DC[] = {1, 0, -1, -1, -1, 0, 1, 1};
 
-bool cwon, fwon;
+int ans; // itmask: C==1, F==2
 std::array<int, COLS> column_height;
 std::array<std::string, ROWS> board;
+std::array<std::unordered_set<int>, SIZE> cache;
 
-// Observation1: Order of wins by column is indeterminant
-// Observation2: For many non column wins of the same player earliest can be determined as COLS / 2 < WINS
+
+char player(const int ord)
+{
+    return (ord & 1) ? 'F' : 'C';
+}
+
+int heights_hash()
+{
+    int ret{};
+    for (int c = 0; c < COLS; ++c)
+        ret |= column_height[c] << (c * 4);
+    return ret;
+}
 
 int drill(const char p, const int r, const int c, const int dr, const int dc)
 {
-    if (r == -1 || r == ROWS || c == -1 || c == COLS || board[r][c] != p)
+    if (r == -1 || r >= column_height[c] || c == -1 || c == COLS || board[r][c] != p)
         return 0;
 
     return 1 + drill(p, r + dr, c + dc, dr, dc);
 }
 
-void drill_check(const char p, const int r, const int c)
+bool drill_check(const char p, const int r, const int c)
 {
     for (int dir = 0, dr2 = 4; dir < 4; ++dir, ++dr2) {
         const int a = drill(p, r + DR[dir], c + DC[dir], DR[dir], DC[dir]);
         const int b = drill(p, r + DR[dr2], c + DC[dr2], DR[dr2], DC[dr2]);
         if (WINS <= a + 1 + b) {
-            if (p == 'C')
-                cwon = true;
-            else
-                fwon = true;
+            ans |= (p == 'C') ? 1 : 2;
+            return true;
         }
     }
+
+    return false;
 }
 
 bool wins(const char p)
@@ -100,30 +112,23 @@ bool wins(const char p)
     return false;
 }
 
-char answer()
-{
-    if (!cwon && !fwon)
-        return '0';
-    if (cwon && !fwon)
-        return 'C';
-    if (fwon && !cwon)
-        return 'F';
-    return '?';
-}
-
-void dfs(const char p, const int ord)
+void dfs(const int ord)
 {
     if (ord == SIZE)
         return;
-    // if in cache return
+    const auto [_, inserted] = cache[ord].insert(heights_hash());
+    if (!inserted)
+        return;
 
+    const char p = player(ord);
     for (int c = 0; c < COLS; ++c) {
         auto& r = column_height[c];
-        if (board[r][c] == p) {
-            ++r;
-            dfs(p == 'C' ? 'F' : 'C', ord + 1);
-            --r;
-        }
+        if (board[r][c] == p)
+            if (!drill_check(p, r, c)) {
+                ++r;
+                dfs(ord + 1);
+                --r;
+            }
     }
 }
 
@@ -135,18 +140,21 @@ static char solve()
     std::reverse(board.begin(), board.end());
 
     // Check simple cases
-    cwon = wins('C');
-    fwon = wins('F');
-    char ans = answer();
-    if (ans != '?')
-        return ans;
+    ans = 0;
+    if (wins('C'))
+        ans |= 1;
+    if (wins('F'))
+        ans |= 2;
+    if (ans < 3)
+        return ANS[ans];
 
     // Run simulation
-    cwon = fwon = false;
+    ans = 0;
+    cache.fill({});
     column_height.fill(0);
-    dfs('C', 0);
+    dfs(0);
 
-    return answer();
+    return ANS[ans];
 }
 
 int main(int, char**)
@@ -175,41 +183,16 @@ a.exe < four_in_burrow.in
 
 Input:
 
-4
-
-FFFFFFF
-CCCCCCC
-FFFFFFF
-CCCCCCC
-FFFFFFF
-CCCCCCC
-
-FCFCFCF
-FCCFCFC
-CFFCFCF
-CFCFCFC
-CFCFFCF
-CFCFCFC
-
-FCFCFCF
-CCFCFCF
-CFCFCCF
-CFFFCFC
-FCCCCCC
+1
 CFFFFFF
-
-FCFCFCF
-CFCFCFC
-FCFCFCF
-FCFCFCF
-CFCFCFC
-CFCFCFC
+CFFCFFF
+CCCFFCC
+CCFFCCC
+FFCFCCF
+CCCFCFC
 
 Output:
 
-Case #1: C
-Case #2: ?
-Case #3: F
-Case #4: 0
+Case #1: ?
 
 */
