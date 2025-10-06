@@ -17,9 +17,9 @@ static constexpr int DR[] = {1, 1, 1, 0, -1, -1, -1, 0};
 static constexpr int DC[] = {1, 0, -1, -1, -1, 0, 1, 1};
 
 int ans; // itmask: C==1, F==2
+std::unordered_set<int> cache;
 std::array<int, COLS> column_height;
 std::array<std::string, ROWS> board;
-std::array<std::unordered_set<int>, SIZE> cache;
 
 
 char player(const int ord)
@@ -116,7 +116,7 @@ void dfs(const int ord)
 {
     if (ord == SIZE)
         return;
-    const auto [_, inserted] = cache[ord].insert(heights_hash());
+    const auto [_, inserted] = cache.insert(heights_hash());
     if (!inserted)
         return;
 
@@ -139,20 +139,18 @@ static char solve()
 
     std::reverse(board.begin(), board.end());
 
-    // Check simple cases
+    // Check simple cases first
     ans = 0;
     if (wins('C'))
         ans |= 1;
     if (wins('F'))
         ans |= 2;
-    if (ans < 3)
-        return ANS[ans];
-
-    // Run simulation
-    ans = 0;
-    cache.fill({});
-    column_height.fill(0);
-    dfs(0);
+    if (ans == 3) { // ? requires running a simulation
+        ans = 0;
+        cache.clear();
+        column_height.fill(0);
+        dfs(0);
+    }
 
     return ANS[ans];
 }
@@ -172,7 +170,7 @@ int main(int, char**)
 /*
 
 Format:
-clang-format -i cottontail_climb_2.cpp
+clang-format -i four_in_burrow.cpp
 
 Compile:
 clang++.exe -Wall -Wextra -g -O0 -std=c++20 four_in_burrow.cpp
