@@ -8,6 +8,8 @@
 // Four in a Burrow
 // https://www.facebook.com/codingcompetitions/hacker-cup/2024/round-2/problems/B
 
+// A win in a game that cannot be continued shall be ignored
+
 static constexpr int WINS = 4;
 static constexpr int ROWS = 6;
 static constexpr int COLS = 7;
@@ -21,15 +23,9 @@ std::unordered_set<int> cache;
 std::array<int, COLS> column_height;
 std::array<std::string, ROWS> board;
 
-
-char player(const int ord)
+int heights_hash(int winner)
 {
-    return (ord & 1) ? 'F' : 'C';
-}
-
-int heights_hash()
-{
-    int ret{};
+    int ret = (winner << 30);
     for (int c = 0; c < COLS; ++c)
         ret |= column_height[c] << (c * 4);
     return ret;
@@ -43,18 +39,16 @@ int drill(const char p, const int r, const int c, const int dr, const int dc)
     return 1 + drill(p, r + dr, c + dc, dr, dc);
 }
 
-bool drill_check(const char p, const int r, const int c)
+int drill_check(const char p, const int r, const int c)
 {
     for (int dir = 0, dr2 = 4; dir < 4; ++dir, ++dr2) {
         const int a = drill(p, r + DR[dir], c + DC[dir], DR[dir], DC[dir]);
         const int b = drill(p, r + DR[dr2], c + DC[dr2], DR[dr2], DC[dr2]);
-        if (WINS <= a + 1 + b) {
-            ans |= (p == 'C') ? 1 : 2;
-            return true;
-        }
+        if (WINS <= a + 1 + b)
+            return (p == 'C') ? 1 : 2;
     }
 
-    return false;
+    return 0;
 }
 
 bool wins(const char p)
@@ -79,7 +73,7 @@ bool wins(const char p)
                 consecutive = 0;
     }
 
-    for (int d = WINS - 1; d < ROWS + COLS - 1 - WINS - 1; ++d) {
+    for (int d = WINS - 1; d < ROWS + COLS - 1 - WINS + 1; ++d) {
         int r = d < ROWS ? d : ROWS - 1;
         int c = d < ROWS ? 0 : d - ROWS + 1;
         int consecutive{};
@@ -94,7 +88,7 @@ bool wins(const char p)
         }
     }
 
-    for (int d = WINS - 1; d < ROWS + COLS - 1 - WINS - 1; ++d) {
+    for (int d = WINS - 1; d < ROWS + COLS - 1 - WINS + 1; ++d) {
         int r = d < ROWS ? d : ROWS - 1;
         int c = d < ROWS ? COLS - 1 : COLS - (d - ROWS + 1) - 1;
         int consecutive{};
@@ -112,23 +106,28 @@ bool wins(const char p)
     return false;
 }
 
-void dfs(const int ord)
+void dfs(const int ord, int winner = 0)
 {
-    if (ord == SIZE)
+    if (ord == SIZE) {
+        ans |= winner;
         return;
-    const auto [_, inserted] = cache.insert(heights_hash());
+    }
+
+    const auto [_, inserted] = cache.insert(heights_hash(winner));
     if (!inserted)
         return;
 
-    const char p = player(ord);
+    const char p = (ord & 1) ? 'F' : 'C';
     for (int c = 0; c < COLS; ++c) {
         auto& r = column_height[c];
-        if (r < ROWS && board[r][c] == p)
-            if (!drill_check(p, r, c)) {
-                ++r;
-                dfs(ord + 1);
-                --r;
-            }
+        if (r < ROWS && board[r][c] == p) {
+            auto local_winner = winner;
+            if (!winner)
+                local_winner = drill_check(p, r, c);
+            ++r;
+            dfs(ord + 1, local_winner);
+            --r;
+        }
     }
 }
 
