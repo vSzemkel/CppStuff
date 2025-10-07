@@ -23,9 +23,9 @@ std::unordered_set<int> cache;
 std::array<int, COLS> column_height;
 std::array<std::string, ROWS> board;
 
-int heights_hash(int winner)
+int play_hash(const int winner)
 {
-    int ret = (winner << 30);
+    int ret = winner << (COLS * 4);
     for (int c = 0; c < COLS; ++c)
         ret |= column_height[c] << (c * 4);
     return ret;
@@ -73,7 +73,8 @@ bool wins(const char p)
                 consecutive = 0;
     }
 
-    for (int d = WINS - 1; d < ROWS + COLS - 1 - WINS + 1; ++d) {
+    constexpr const auto diagonals_end = ROWS + COLS - 1 - WINS + 1;
+    for (int d = WINS - 1; d < diagonals_end; ++d) {
         int r = d < ROWS ? d : ROWS - 1;
         int c = d < ROWS ? 0 : d - ROWS + 1;
         int consecutive{};
@@ -88,7 +89,7 @@ bool wins(const char p)
         }
     }
 
-    for (int d = WINS - 1; d < ROWS + COLS - 1 - WINS + 1; ++d) {
+    for (int d = WINS - 1; d < diagonals_end; ++d) {
         int r = d < ROWS ? d : ROWS - 1;
         int c = d < ROWS ? COLS - 1 : COLS - (d - ROWS + 1) - 1;
         int consecutive{};
@@ -113,7 +114,7 @@ void dfs(const int ord, int winner = 0)
         return;
     }
 
-    const auto [_, inserted] = cache.insert(heights_hash(winner));
+    const auto [_, inserted] = cache.insert(play_hash(winner));
     if (!inserted)
         return;
 
@@ -190,6 +191,6 @@ CCCFCFC
 
 Output:
 
-Case #1: ?
+Case #1: F
 
 */
