@@ -140,6 +140,7 @@ for (int z = 3, dir = (s.avoid + 1) % 4; z; --z, dir = (dir + 1) % 4) {
 }
 
 /************************ 8 DIRECTION ********************************/
+// see: /meta/2024/four_in_burrow.cpp
 
 static constexpr int DR[] = {1, 1, 1, 0, -1, -1, -1, 0};
 static constexpr int DC[] = {1, 0, -1, -1, -1, 0, 1, 1};

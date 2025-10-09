@@ -31,12 +31,16 @@ int play_hash(const int winner)
     return ret;
 }
 
-int drill(const char p, const int r, const int c, const int dr, const int dc)
+int drill(const char p, int r, int c, const int dr, const int dc)
 {
-    if (c == -1 || c == COLS || r == -1 || r >= column_height[c] || board[r][c] != p)
-        return 0;
+    int ret{};
+    while (0 <= c && c < COLS && 0 <= r && r < column_height[c] && board[r][c] == p) {
+        ++ret;
+        r += dr;
+        c += dc;
+    }
 
-    return 1 + drill(p, r + dr, c + dc, dr, dc);
+    return ret;
 }
 
 int drill_check(const char p, const int r, const int c)
