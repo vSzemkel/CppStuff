@@ -19,6 +19,10 @@ struct subrange_sum_t
         reset(data);
     }
 
+    void reset() {
+        std::fill_n(_data.begin(), _size, T{});
+    }
+
     void reset(const std::vector<T>& data) {
         _size = data.size();
         _data.assign(_size, T{});

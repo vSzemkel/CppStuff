@@ -32,6 +32,10 @@ struct subrange_sum_t
         reset(data);
     }
 
+    void reset() {
+        std::fill_n(_data.begin(), _size, T{});
+    }
+
     void reset(const std::vector<T>& data) {
         _size = data.size();
         _data.assign(_size, T{});
@@ -106,9 +110,9 @@ static int64_t how_many_valid_jumps_does_not_exceed_length(const int length) {
         }
 
     // exclude uniform ownership jumps
+    subrange_sum_t owned_in_col(C);
     for (const auto& [b, jumps] : owns) {
         int w{};
-        subrange_sum_t owned_in_col(C);
         // const int sz = int(jumps.size());
         for (const auto [cr, cc] : jumps) {
             while (length < cr - jumps[w].first || length < cc - jumps[w].second) {
@@ -121,6 +125,8 @@ static int64_t how_many_valid_jumps_does_not_exceed_length(const int length) {
             ans -= 2 * owned_in_col.query(l, r);
             owned_in_col.update(cc, +1);
         }
+
+        owned_in_col.reset();
     }
 
     return ans;
