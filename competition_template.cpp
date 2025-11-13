@@ -36,9 +36,9 @@
 // what complexity is demanded given the size of data in the last tests set
 // write std::cerr diagnostics
 
-static void solve() {
+static int64_t solve() {
     int64_t ret{0};
-    std::cout << ret;
+    return ret;
 }
 
 int main(int, char**)
@@ -65,6 +65,7 @@ clang-format -i $TASKNAME$.cpp
 Compile:
 clang++.exe -Wall -Wextra -g -O0 -std=c++20 $TASKNAME$.cpp
 g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address $TASKNAME$.cpp
+clang -Wall -Wextra -Og -ggdb3 -lstdc++ -std=c++20 competition_template.cpp
 
 Run:
 py.exe interactive_runner.py py.exe $TASKNAME$_testing_tool.py 1 -- a.exe
