@@ -65,7 +65,7 @@ clang-format -i $TASKNAME$.cpp
 Compile:
 clang++.exe -Wall -Wextra -g -O0 -std=c++20 $TASKNAME$.cpp
 g++ -Wall -Wextra -g3 -Og -std=c++20 -fsanitize=address $TASKNAME$.cpp
-clang -Wall -Wextra -Og -ggdb3 -lstdc++ -std=c++20 competition_template.cpp
+clang -Wall -Wextra -Og -ggdb3 -lstdc++ -std=c++20 $TASKNAME$.cpp
 
 Run:
 py.exe interactive_runner.py py.exe $TASKNAME$_testing_tool.py 1 -- a.exe

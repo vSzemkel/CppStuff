@@ -114,14 +114,14 @@ static int64_t how_many_valid_jumps_does_not_exceed_length(const int length) {
     for (const auto& [b, jumps] : owns) {
         int w{};
         // const int sz = int(jumps.size());
-        for (const auto [cr, cc] : jumps) {
+        for (const auto& [cr, cc] : jumps) {
             while (length < cr - jumps[w].first || length < cc - jumps[w].second) {
                 owned_in_col.update(jumps[w].second, -1);
                 ++w;
             }
 
             const int l = std::max(0, cc - length);
-            const int r = std::min(R - 1, cc + length);
+            const int r = std::min(C - 1, cc + length);
             ans -= 2 * owned_in_col.query(l, r);
             owned_in_col.update(cc, +1);
         }
@@ -133,6 +133,7 @@ static int64_t how_many_valid_jumps_does_not_exceed_length(const int length) {
 }
 
 static int solve() {
+    owns.clear();
     std::cin >> R >> C >> K;
     for (int r = 0; r < R; ++r)
         for (int c = 0; c < C; ++c) {
