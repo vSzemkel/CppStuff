@@ -115,7 +115,7 @@ static int64_t how_many_valid_jumps_does_not_exceed_length(const int length) {
         int w{};
         // const int sz = int(jumps.size());
         for (const auto& [cr, cc] : jumps) {
-            while (length < cr - jumps[w].first || length < cc - jumps[w].second) {
+            while (length < cr - jumps[w].first || (length == cr - jumps[w].first && length < cc - jumps[w].second)) {
                 owned_in_col.update(jumps[w].second, -1);
                 ++w;
             }
