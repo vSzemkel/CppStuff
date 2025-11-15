@@ -12,12 +12,12 @@
 // https://www.facebook.com/codingcompetitions/hacker-cup/2024/round-2/problems/C
 
 template <typename T, typename U>
-static T last_true(T lo, T hi, U f) {
-    lo--;
-    assert(lo <= hi); // assuming f is decreasing
-    while (lo < hi) { // find last index such that f is true
-        const T mid = lo + (hi - lo + 1) / 2; // this will work for negative numbers too
-        f(mid) ? lo = mid : hi = mid - 1;
+static T first_true(T lo, T hi, U f) {
+    hi++;
+    assert(lo <= hi); // assuming f is increasing
+    while (lo < hi) { // find first index such that f is true
+        const T mid = lo + (hi - lo) / 2; // this will work for negative numbers too
+        f(mid) ? hi = mid : lo = mid + 1;
     }
     return lo;
 }
@@ -102,11 +102,11 @@ static int64_t how_many_valid_jumps_does_not_exceed_length(const int length) {
     // count all valid jumps within the range
     for (int r = 0; r < R; ++r)
         for (int c = 0; c < C; ++c) {
-            const int l = std::max(0, c - length);
-            const int r = std::min(C - 1, c + length);
-            const int t = std::max(0, r - length);
-            const int b = std::min(R - 1, r + length);
-            ans += (r - l + 1) * (b - t + 1) - 1;
+            const int lc = std::max(0, c - length);
+            const int rc = std::min(C - 1, c + length);
+            const int tr = std::max(0, r - length);
+            const int br = std::min(R - 1, r + length);
+            ans += (rc - lc + 1) * (br - tr + 1) - 1;
         }
 
     // exclude uniform ownership jumps
@@ -142,8 +142,8 @@ static int solve() {
             owns[b].emplace_back(r, c);
         }
 
-    const auto predicate = [](int length){ return how_many_valid_jumps_does_not_exceed_length(length) <= K; };
-    return last_true(1, std::max(R, C), predicate);
+    const auto predicate = [](int length){ return K <= how_many_valid_jumps_does_not_exceed_length(length); };
+    return first_true(1, std::max(R, C) - 1, predicate);
 }
 
 int main(int, char**)
