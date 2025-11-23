@@ -26,17 +26,18 @@
         {
             "name": "Linux",
             "includePath": [
-                "/usr/include"
+                "${workspaceFolder}/**",
+                "/usr/include/c++/15/**",
+                "/usr/include/x86_64-linux-gnu/c++/15/**",
+                "/usr/include/**",
+                "/usr/local/include/**"
             ],
-            "browse": {
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": "",
-                "path": [
-                    "/usr/include",
-                    "${workspaceRoot}"
-                ]
-            },
-            "intelliSenseMode": "clang-x64"
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
         },
         {
             "name": "Windows",
