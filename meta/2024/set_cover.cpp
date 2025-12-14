@@ -49,7 +49,7 @@ static int solve() {
     board.resize(N);
     for (auto& r : board)
         std::cin >> r;
-    ans = 0;
+    ans = K;
 
     int r{INF}, R{-1}, c{INF}, C{-1}, rq{INF}, Rq{-1}, cq{INF}, Cq{-1};
     for (int i = 0; i < N; ++i)
@@ -84,7 +84,7 @@ static int solve() {
             break;
         case 2: {
             std::vector<int> min_qcol_in_row(N, INF);
-            std::vector<int> max_qcol_in_row(N, -1);
+            std::vector<int> max_qcol_in_row(N, -INF);
             for (int i = 0; i < N; ++i)
                 for (int j = 0; j < N; ++j)
                     if (board[i][j] == '?') {
@@ -94,15 +94,28 @@ static int solve() {
 
             for (int top = 0; top < N; ++top)
                 for (int bottom = top; bottom < N; ++bottom)
-                    if (0 <= min_qcol_in_row[top] && 0 <= min_qcol_in_row[bottom]) {
+                    if (0 <= max_qcol_in_row[top] && 0 <= max_qcol_in_row[bottom]) {
                         const auto height = std::max(R, bottom) - std::min(r, top);
                         check(height, std::max(C, max_qcol_in_row[top]) - std::min(c, min_qcol_in_row[bottom]));
                         check(height, std::max(C, max_qcol_in_row[bottom]) - std::min(c, min_qcol_in_row[top]));
                     }
             break;
         }
-        case 3:
+        case 3: {
+            const int rr = std::min(r, rq);
+            const int RR = std::max(R, Rq);
+            const int cc = std::min(c, cq);
+            const int CC = std::max(C, Cq);
+            for (int i = 0; i < N; ++i)
+                for (int j = 0; j < N; ++j)
+                    if (board[i][j] == '?') { // try it as a corner
+                        check(RR - std::min(i, rr), CC - std::min(j, cc));
+                        check(std::max(i, RR) - rr, CC - std::min(j, cc));
+                        check(RR - std::min(i, rr), std::max(j, CC) - cc);
+                        check(std::max(i, RR) - rr, std::max(j, CC) - cc);
+                    }
             break;
+        }
         default:
             check(std::max(R, Rq) - std::min(r, rq), std::max(C, Cq) - std::min(c, cq));
             break;
