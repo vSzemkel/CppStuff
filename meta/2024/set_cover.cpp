@@ -40,7 +40,7 @@ template <typename T> void setmax(T& a, T b) { if (a < b) a = b; }
 template <typename T> void setmin(T& a, T b) { if (b < a) a = b; }
 
 static void check(int height, int width) {
-    if (height > 0 && width > 0)
+    if (0 <= height && 0 <= width)
         setmax(ans, (height + 1) * (width + 1));
 }
 
@@ -75,12 +75,8 @@ static int solve() {
         case 1:
             for (int i = 0; i < N; ++i)
                 for (int j = 0; j < N; ++j)
-                    if (board[i][j] == '?') {
-                        check(R - i, C - j);
-                        check(i - r, C - j);
-                        check(i - r, j - c);
-                        check(R - i, j - c);
-                    }
+                    if (board[i][j] == '?')
+                        check(std::max(R, i) - std::min(r, i), std::max(C, j) - std::min(c, j));
             break;
         case 2: {
             std::vector<int> min_qcol_in_row(N, INF);
@@ -109,10 +105,10 @@ static int solve() {
             for (int i = 0; i < N; ++i)
                 for (int j = 0; j < N; ++j)
                     if (board[i][j] == '?') { // try it as a corner
-                        check(RR - std::min(i, rr), CC - std::min(j, cc));
-                        check(std::max(i, RR) - rr, CC - std::min(j, cc));
-                        check(RR - std::min(i, rr), std::max(j, CC) - cc);
-                        check(std::max(i, RR) - rr, std::max(j, CC) - cc);
+                        check(RR - std::min(i, r), CC - std::min(j, c)); // TL
+                        check(RR - std::min(i, r), std::max(j, C) - cc); // TR
+                        check(std::max(i, R) - rr, CC - std::min(j, c)); // BL
+                        check(std::max(i, R) - rr, std::max(j, C) - cc); // BR
                     }
             break;
         }
