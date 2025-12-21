@@ -52,12 +52,27 @@ int least_common(const stats_t& stats) {
     if (stats.empty())
         return 0;
 
-    return 1 + std::min_element(stats.begin(), stats.end(),
-        [](const auto& s1, const auto& s2){ return s1.second < s2.second; })->first;
+    return 1 + stats.begin()->first;
 }
 
-stats_t dfs(int node_idx, const stats_t& root_path) {
-    return {};
+stats_t dfs(int node_idx) {
+    auto& node = tree[node_idx];
+    if (0 <= node._parent) {
+        const auto& parent = tree[node._parent];
+        node._ancestors = parent._ancestors;
+        ++node._ancestors[parent._name];
+    }
+
+    stats_t ret;
+    for (const int c : node._childs) {
+        const auto child_descendants = dfs(c);
+        for (const auto& [name, size] : child_descendants)
+            ret[name] += size;
+    }
+
+    node._descendants = ret;
+    ++ret[node._name];
+    return ret;
 }
 
 static int64_t solve() {
@@ -89,7 +104,7 @@ static int64_t solve() {
             prev = name;
         }
 
-    tree[root]._descendants = dfs(root, {});
+    tree[root]._descendants = dfs(root);
 
     int64_t hash{0};
     return hash;
