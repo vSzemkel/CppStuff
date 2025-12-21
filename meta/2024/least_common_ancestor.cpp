@@ -64,6 +64,43 @@ stats_t dfs(int node_idx) {
     return ret;
 }
 
+void dfs_loop(int node_idx) {
+    struct frame_t {
+        int node_id;
+        size_t next_child;
+        stats_t stats;
+    };
+    std::vector<frame_t> stack(1, {node_idx, 0, {}});
+    stack.reserve(1024);
+    while (!stack.empty()) {
+        auto& cur = stack.back();
+        auto& node = tree[cur.node_id];
+
+        if (cur.next_child == 0)
+            ++root_path[node._name];
+        if (cur.next_child < node._childs.size()) {
+            stack.push_back({node._childs[cur.next_child++], 0, stats_t{}});
+            continue;
+        }
+        if (--root_path[node._name] == 0)
+            root_path.erase(node._name);
+
+        node._least_common_ancestor = least_common(root_path);
+        node._least_common_descendant = least_common(cur.stats);
+
+        if (0 <= node._parent) {
+            size_t pid = stack.size() - 1;
+            while (stack[pid].node_id != node._parent)
+                --pid;
+            auto& parent_stats = stack[pid].stats;
+            for (const auto& [name, size] : cur.stats)
+                parent_stats[name] += size;
+            ++parent_stats[node._name];
+        }
+        stack.pop_back();
+    }
+}
+
 static int64_t solve() {
     int N, root;
     std::cin >> N;
@@ -95,7 +132,7 @@ static int64_t solve() {
         }
     U += 2;
 
-    dfs(root);
+    dfs_loop(root);
 
     return hash();
 }
