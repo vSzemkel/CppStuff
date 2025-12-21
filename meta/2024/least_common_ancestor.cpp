@@ -1,44 +1,19 @@
 
 #include <algorithm>
-#include <array>
-#include <bitset>
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <filesystem>
 #include <format>
-#include <fstream>
-#include <functional>
-#include <limits>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <queue>
-#include <random>
-#include <set>
 #include <string>
-#include <string_view>
 #include <unordered_map>
-#include <unordered_set>
-#include <tuple>
-#include <utility>
 #include <vector>
 
 // Least Common Ancestor
 // https://www.facebook.com/codingcompetitions/hacker-cup/2024/round-3/problems/B
 
-struct sort_predicate {
-    bool operator()(const std::pair<const int, int>& s1, const std::pair<const int, int>& s2) const {
-        return s1.second < s2.second || (s1.second == s2.second && s1.first < s2.first);
-    }
+constexpr auto sort_predicate = [](const std::pair<const int, int>& s1, const std::pair<const int, int>& s2){
+    return s1.second < s2.second || (s1.second == s2.second && s1.first < s2.first);
 };
 
-using stats_t = std::map<int, int, sort_predicate>; // {name_index, count}
+using stats_t = std::unordered_map<int, int>; // {name_index, count}
 
 struct node_t {
     int _name; // index of a name in sorted list
@@ -48,11 +23,25 @@ struct node_t {
     stats_t _descendants;
 };
 
+int U;
+const int M = 998'244'353;
+std::vector<node_t> tree;
+
 int least_common(const stats_t& stats) {
     if (stats.empty())
         return 0;
 
-    return 1 + stats.begin()->first;
+    return 1 + std::min_element(stats.begin(), stats.end(), sort_predicate)->first;
+}
+
+int64_t hash() {
+    int64_t ret{};
+    for (const auto& node : tree) {
+        ret = (ret * U + least_common(node._ancestors)) % M;
+        ret = (ret * U + least_common(node._descendants)) % M;
+    }
+
+    return ret;
 }
 
 stats_t dfs(int node_idx) {
@@ -79,7 +68,7 @@ static int64_t solve() {
     int N, root;
     std::cin >> N;
     std::vector<std::pair<std::string, int>> names;
-    std::vector<node_t> tree(N);
+    tree.resize(N);
     for (int i = 0; i < N; ++i) {
         int p;
         std::string n;
@@ -94,20 +83,20 @@ static int64_t solve() {
     }
 
     std::sort(names.begin(), names.end());
-    int ord{};
+    U = 0;
     std::string prev = names.front().first;
     for (const auto& [name, node_idx] : names)
         if (name == prev)
-            tree[node_idx]._name = ord;
+            tree[node_idx]._name = U;
         else {
-            tree[node_idx]._name = ++ord;
+            tree[node_idx]._name = ++U;
             prev = name;
         }
+    U += 2;
 
-    tree[root]._descendants = dfs(root);
+    dfs(root);
 
-    int64_t hash{0};
-    return hash;
+    return hash();
 }
 
 int main(int, char**)
