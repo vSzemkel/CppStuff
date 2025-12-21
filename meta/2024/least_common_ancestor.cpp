@@ -18,14 +18,15 @@ using stats_t = std::unordered_map<int, int>; // {name_index, count}
 struct node_t {
     int _name; // index of a name in sorted list
     int _parent;
+    int _least_common_ancestor;
+    int _least_common_descendant;
     std::vector<int> _childs;
-    stats_t _ancestors;
-    stats_t _descendants;
 };
 
 int U;
 const int M = 998'244'353;
 std::vector<node_t> tree;
+stats_t root_path;
 
 int least_common(const stats_t& stats) {
     if (stats.empty())
@@ -37,8 +38,8 @@ int least_common(const stats_t& stats) {
 int64_t hash() {
     int64_t ret{};
     for (const auto& node : tree) {
-        ret = (ret * U + least_common(node._ancestors)) % M;
-        ret = (ret * U + least_common(node._descendants)) % M;
+        ret = (ret * U + node._least_common_ancestor) % M;
+        ret = (ret * U + node._least_common_descendant) % M;
     }
 
     return ret;
@@ -46,11 +47,8 @@ int64_t hash() {
 
 stats_t dfs(int node_idx) {
     auto& node = tree[node_idx];
-    if (0 <= node._parent) {
-        const auto& parent = tree[node._parent];
-        node._ancestors = parent._ancestors;
-        ++node._ancestors[parent._name];
-    }
+    node._least_common_ancestor = least_common(root_path);
+    ++root_path[node._name];
 
     stats_t ret;
     for (const int c : node._childs) {
@@ -59,7 +57,9 @@ stats_t dfs(int node_idx) {
             ret[name] += size;
     }
 
-    node._descendants = ret;
+    if (--root_path[node._name] == 0)
+        root_path.erase(node._name);
+    node._least_common_descendant = least_common(ret);
     ++ret[node._name];
     return ret;
 }
@@ -68,7 +68,8 @@ static int64_t solve() {
     int N, root;
     std::cin >> N;
     std::vector<std::pair<std::string, int>> names;
-    tree.resize(N);
+    tree.assign(N, {});
+    root_path.clear();
     for (int i = 0; i < N; ++i) {
         int p;
         std::string n;
