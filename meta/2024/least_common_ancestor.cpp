@@ -70,7 +70,9 @@ void dfs_loop(int node_idx) {
         size_t next_child;
         stats_t stats;
     };
-    std::vector<frame_t> stack(1, {node_idx, 0, {}});
+    stats_t empty;
+    empty.reserve(U);
+    std::vector<frame_t> stack(1, {node_idx, 0, empty});
     stack.reserve(1024);
     while (!stack.empty()) {
         auto& cur = stack.back();
@@ -79,7 +81,7 @@ void dfs_loop(int node_idx) {
         if (cur.next_child == 0)
             ++root_path[node._name];
         if (cur.next_child < node._childs.size()) {
-            stack.push_back({node._childs[cur.next_child++], 0, stats_t{}});
+            stack.push_back({node._childs[cur.next_child++], 0, empty});
             continue;
         }
         if (--root_path[node._name] == 0)
@@ -93,6 +95,8 @@ void dfs_loop(int node_idx) {
             while (stack[pid].node_id != node._parent)
                 --pid;
             auto& parent_stats = stack[pid].stats;
+            if (parent_stats.size() < cur.stats.size())
+                std::swap(parent_stats, cur.stats);
             for (const auto& [name, size] : cur.stats)
                 parent_stats[name] += size;
             ++parent_stats[node._name];
