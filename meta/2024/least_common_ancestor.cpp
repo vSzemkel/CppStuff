@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <format>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -9,11 +10,46 @@
 // Least Common Ancestor
 // https://www.facebook.com/codingcompetitions/hacker-cup/2024/round-3/problems/B
 
-constexpr auto sort_predicate = [](const std::pair<const int, int>& s1, const std::pair<const int, int>& s2){
-    return s1.second < s2.second || (s1.second == s2.second && s1.first < s2.first);
-};
+struct stats_t {
+    int update(int name, int delta) {
+        const auto found = _stat.find(name);
+        if (found != _stat.end()) {
+            int base = found->second;
+            _ord.erase({base, name});
+            _ord.emplace(base + delta, name);
+            return found->second += delta;
+        }
 
-using stats_t = std::unordered_map<int, int>; // {name_index, count}
+        _ord.emplace(delta, name);
+        return _stat[name] = delta;
+    }
+
+    int least_common() {
+        if (_ord.empty())
+            return 0;
+        return 1 + _ord.begin()->second;
+    };
+
+    size_t size() { return _stat.size(); }
+
+    void erase(int name) {
+        const auto found = _stat.find(name);
+        if (found != _stat.end()) {
+            _ord.erase({found->second, name});
+            _stat.erase(found);
+        }
+    };
+
+    void clear() {
+        _ord.clear();
+        _stat.clear();
+    }
+
+    std::unordered_map<int, int> _stat; // {name_index, count}
+
+  private:
+    std::set<std::pair<int, int>> _ord; // {count, name_index}
+};
 
 struct node_t {
     int _name; // index of a name in sorted list
@@ -28,24 +64,7 @@ const int M = 998'244'353;
 std::vector<node_t> tree;
 stats_t root_path;
 
-int least_common(const stats_t& stats) {
-    if (stats.empty())
-        return 0;
-
-    return 1 + std::min_element(stats.begin(), stats.end(), sort_predicate)->first;
-}
-
-int64_t hash() {
-    int64_t ret{};
-    for (const auto& node : tree) {
-        ret = (ret * U + node._least_common_ancestor) % M;
-        ret = (ret * U + node._least_common_descendant) % M;
-    }
-
-    return ret;
-}
-
-stats_t dfs(int node_idx) {
+/*stats_t dfs(int node_idx) {
     auto& node = tree[node_idx];
     node._least_common_ancestor = least_common(root_path);
     ++root_path[node._name];
@@ -62,7 +81,7 @@ stats_t dfs(int node_idx) {
     node._least_common_descendant = least_common(ret);
     ++ret[node._name];
     return ret;
-}
+}*/
 
 void dfs_loop(int node_idx) {
     struct frame_t {
@@ -70,25 +89,23 @@ void dfs_loop(int node_idx) {
         size_t next_child;
         stats_t stats;
     };
-    stats_t empty;
-    empty.reserve(U);
-    std::vector<frame_t> stack(1, {node_idx, 0, empty});
-    stack.reserve(1024);
+    std::vector<frame_t> stack(1, {node_idx, 0, stats_t{}});
+    stack.reserve(U);
     while (!stack.empty()) {
         auto& cur = stack.back();
         auto& node = tree[cur.node_id];
 
         if (cur.next_child == 0)
-            ++root_path[node._name];
+            root_path.update(node._name, 1);
         if (cur.next_child < node._childs.size()) {
-            stack.push_back({node._childs[cur.next_child++], 0, empty});
+            stack.push_back({node._childs[cur.next_child++], 0, {}});
             continue;
         }
-        if (--root_path[node._name] == 0)
+        if (root_path.update(node._name, -1) == 0)
             root_path.erase(node._name);
 
-        node._least_common_ancestor = least_common(root_path);
-        node._least_common_descendant = least_common(cur.stats);
+        node._least_common_ancestor = root_path.least_common();
+        node._least_common_descendant = cur.stats.least_common();
 
         if (0 <= node._parent) {
             size_t pid = stack.size() - 1;
@@ -97,9 +114,9 @@ void dfs_loop(int node_idx) {
             auto& parent_stats = stack[pid].stats;
             if (parent_stats.size() < cur.stats.size())
                 std::swap(parent_stats, cur.stats);
-            for (const auto& [name, size] : cur.stats)
-                parent_stats[name] += size;
-            ++parent_stats[node._name];
+            for (const auto& [name, size] : cur.stats._stat)
+                parent_stats.update(name, size);
+            parent_stats.update(node._name, 1);
         }
         stack.pop_back();
     }
@@ -138,7 +155,13 @@ static int64_t solve() {
 
     dfs_loop(root);
 
-    return hash();
+    int64_t hash{};
+    for (const auto& node : tree) {
+        hash = (hash * U + node._least_common_ancestor) % M;
+        hash = (hash * U + node._least_common_descendant) % M;
+    }
+
+    return hash;
 }
 
 int main(int, char**)
@@ -170,8 +193,35 @@ a.exe < least_common_ancestor.in
 
 Input:
 
+3
+2
+-1 alice
+1 bob
+8
+-1 alice
+1 alice
+2 bob
+3 carl
+3 anna
+1 bob
+6 alice
+7 anna
+10
+-1 alice
+1 bob
+1 emily
+2 alice
+3 alice
+3 abby
+4 carl
+5 abby
+7 dan
+7 emily
 
 Output:
 
+Case #1: 21
+Case #2: 243150762
+Case #3: 255661373
 
 */
