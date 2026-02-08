@@ -1,66 +1,102 @@
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <iostream>
 #include <format>
+#include <memory>
+#include <numeric>
 #include <random>
+#include <span>
 #include <vector>
 
 // Wavelet Tree
 // Subrange query series of k-th largest element
-// Kudos: bqi343
 
 struct wavelet_tree_t
 {
-    wavelet_tree_t(const std::vector<int>& input)
+    wavelet_tree_t(const std::span<int> input, int min_value = -1, int max_value = -1)
     {
-        _size = int(input.size());
-        _left.resize(_size + 1);
-        _right.resize(_size + 1);
-        build(input, 1, 0, _size - 1);
+        if (min_value == -1 && max_value == -1) {
+            const auto [m, M] = std::minmax_element(input.begin(), input.end());
+            _min_value = *m;
+            _max_value = *M;
+        } else {
+            _min_value = min_value;
+            _max_value = max_value;
+        }
+
+        if (_min_value < _max_value)
+            build(input);
     }
 
-    // Find index of k-th largest in subrange [lo..hi] of range [begin..end]
-    int index_of_kth(int lo, int hi, int k, int index = 1, int begin = 0, int end = _size - 1)
+    // Find k-th largest in subrange [lo..hi] of values in range [min_value..max_value]
+    int kth(int lo, int hi, int k)
     {
-        if (begin == end)
-            return begin;
-        const int mid = begin + (end - begin) / 2;
-        const int left_size = _left[index][hi] - _left[index][lo];
-        if (k <= left_size)
-            return index_of_kth(_left[index][lo], _left[index][hi], k, begin, mid);
+        if (hi < lo)
+            return -1;
+        if (_min_value == _max_value)
+            return _min_value;
 
-        return index_of_kth(_right[index][lo], _right[index][hi], k - left_size, mid + 1, end);
+        const int ll = _next_left[lo - 1];
+        const int hh = _next_left[hi];
+        const int left_size = hh - ll;
+        if (0 < left_size && k <= left_size)
+            return _left->kth(ll + 1, hh, k);
+
+        // lo - 1 - ll : this many out of first lo-1 numbers goes to the right
+        // hi - hh : this many out of first hi numbers goes to the right
+        return _right->kth(lo - ll, hi - hh, k - left_size);
     }
 
   private:
-    void build(const std::vector<int>& input, int index, int begin, int end) // [begin..end]
+    void build(const std::span<int> input)
     {
-        if (end <= begin)
-            return;
-
-        auto& next_left = _left[index];
-        auto& next_right = _right[index];
         std::vector<int> child[2];
-        const int mid = begin + (end - begin) / 2;
+        _next_left.reserve(input.size() + 1);
+        _next_left.push_back(0);
+        const int mid = _min_value + (_max_value - _min_value) / 2;
         for (const int v : input) {
             child[mid < v].push_back(v);
-            next_left.push_back(child[0].size());
-            next_right.push_back(child[1].size());
+            _next_left.push_back(child[0].size());
         }
 
-        build(child[0], 2 * index, begin, mid);
-        build(child[1], 2 * index + 1, mid + 1, end);
+        _left = std::make_unique<wavelet_tree_t>(child[0], _min_value, mid);
+        _right = std::make_unique<wavelet_tree_t>(child[1], mid + 1, _max_value);
     }
 
-    static int _size;
-    std::vector<std::vector<int>> _left, _right;
+    int _min_value, _max_value;
+    std::vector<int> _next_left;
+    std::unique_ptr<wavelet_tree_t> _left, _right;
 };
+
+constinit const int size = 1000;
+static std::mt19937 _gen{std::random_device{}()};
+const auto rand_in_range = [](const int ubound){ std::uniform_int_distribution<int> dist(0, ubound - 1); return dist(_gen); };
 
 int main(int, char**)
 {
-}
+    std::array<int, size> a{};
+    std::iota(a.begin(), a.end(), 1);
+    std::shuffle(a.begin(), a.end(), _gen);
 
+    int m = rand_in_range(size);
+    int M = rand_in_range(size) + 1;
+    if (M < m) std::swap(m, M);
+    int k = rand_in_range(M - m + 1);
+
+
+m = 100; M = 101; k = 0;
+
+    std::vector<int> subrange{a.begin() + m, a.begin() + M + 1};
+    std::sort(subrange.begin(), subrange.end());
+
+    wavelet_tree_t wt(a);
+    const int kth = wt.kth(m, M, k);
+    std::cout << std::format("Bruteforce: {}, wavelet: {}\n", subrange[k], kth);
+    assert(subrange[k] == kth);
+    std::cout << "Passed\n";
+}
 /*
 
 Format:
