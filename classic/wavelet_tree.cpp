@@ -30,21 +30,22 @@ struct wavelet_tree_t
             build(input);
     }
 
-    // Find k-th largest in subrange [lo..hi] of values in range [min_value..max_value]
+    // Find k-th largest in subrange [lo..hi]
     int kth(int lo, int hi, int k)
     {
+        assert(0 < k && k <= hi - lo + 1);
         if (hi < lo)
             return -1;
         if (_min_value == _max_value)
             return _min_value;
 
-        const int ll = _next_left[lo - 1];
-        const int hh = _next_left[hi];
+        const int ll = _next_left[lo];
+        const int hh = _next_left[hi + 1];
         const int left_size = hh - ll;
-        if (0 < left_size && k <= left_size)
-            return _left->kth(ll + 1, hh, k);
+        if (k <= left_size)
+            return _left->kth(ll, hh - 1, k);
 
-        // lo - 1 - ll : this many out of first lo-1 numbers goes to the right
+        // lo - ll : this many out of first lo-1 numbers goes to the right
         // hi - hh : this many out of first hi numbers goes to the right
         return _right->kth(lo - ll, hi - hh, k - left_size);
     }
@@ -70,7 +71,8 @@ struct wavelet_tree_t
     std::unique_ptr<wavelet_tree_t> _left, _right;
 };
 
-constinit const int size = 1000;
+constinit const int size = 10000;
+constinit const int checks = 500;
 static std::mt19937 _gen{std::random_device{}()};
 const auto rand_in_range = [](const int ubound){ std::uniform_int_distribution<int> dist(0, ubound - 1); return dist(_gen); };
 
@@ -78,23 +80,27 @@ int main(int, char**)
 {
     std::array<int, size> a{};
     std::iota(a.begin(), a.end(), 1);
-    std::shuffle(a.begin(), a.end(), _gen);
 
-    int m = rand_in_range(size);
-    int M = rand_in_range(size) + 1;
-    if (M < m) std::swap(m, M);
-    int k = rand_in_range(M - m + 1);
+    for (int z = checks; z; --z) {
+        std::shuffle(a.begin(), a.end(), _gen);
+        wavelet_tree_t wt(a);
 
+        for (int zz = 5; zz; --zz) {
+            int m = rand_in_range(size);
+            int M = rand_in_range(size) + 1;
+            if (M < m) std::swap(m, M);
+            int k = rand_in_range(M - m + 1) + 1;
 
-m = 100; M = 101; k = 0;
+            std::vector<int> subrange{a.begin() + m, a.begin() + M + 1};
+            std::sort(subrange.begin(), subrange.end());
 
-    std::vector<int> subrange{a.begin() + m, a.begin() + M + 1};
-    std::sort(subrange.begin(), subrange.end());
+            std::cout << std::format("[m={};M={};k={}] ", m, M, k);
+            const int kth = wt.kth(m, M, k);
+            std::cout << std::format("Bruteforce: {}, wavelet: {}\n", subrange[k - 1], kth);
+            assert(subrange[k - 1] == kth);
+        }
+    }
 
-    wavelet_tree_t wt(a);
-    const int kth = wt.kth(m, M, k);
-    std::cout << std::format("Bruteforce: {}, wavelet: {}\n", subrange[k], kth);
-    assert(subrange[k] == kth);
     std::cout << "Passed\n";
 }
 /*
