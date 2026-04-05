@@ -6,7 +6,7 @@
 
 // Equity swap
 // Given two arrays of integers, find a pair of values (one value from each array)
-// that you can swap making the two arrays of equal sums
+// that you can swap making the two arrays to have equal sums of their elements
 
 std::vector<int> g_a, g_b;
 

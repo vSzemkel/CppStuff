@@ -53,6 +53,7 @@
 ### Describe Lower Bound algorithm
 
 - is there any difference between using it with std::vector ans std::set?
+- is there any difference between sort predicates used in lower_bound and upper_bound?
 
 ### Describe Heap datastructure
 
@@ -152,6 +153,11 @@ hex(1<<42)  =>  0x40000000000
 9 + 4 + 3 != 8 + 5 + 1\
 9 + 5 + 1 == 8 + 4 + 3
 
+### Why it is discouraged to throw exception in a destructor
+
+When implicitly noexcept(true) it calls std::terminate()
+When explicitly noexcept(false) a destructor throwing while stack unwinding is already in progress also calls std::terminate()
+
 ### Given an array of K numbers, write out all the subsets, line by line
 
 ### Ship game: given a board, identify number of ships off all size
@@ -208,5 +214,5 @@ const auto lb = std::lower_bound(bound_test.begin(), bound_test.end(), 1);
 const auto ub = std::upper_bound(bound_test.begin(), bound_test.end(), 1);
 ```
 
-assert(lb - bound_test.begin() == 2);\
+assert(lb - bound_test.begin() == 2);
 assert(ub - bound_test.begin() == 5);

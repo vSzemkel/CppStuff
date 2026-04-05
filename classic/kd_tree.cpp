@@ -9,7 +9,7 @@
 // Naive KDTree implementation with single point leaves
 
 struct point_t {
-    point_t(std::initializer_list<double> init) {
+    point_t(std::initializer_list<double> init) { // init can be empty
         std::copy(init.begin(), init.end(), _coords.begin());
     }
     std::array<double, 2> _coords;

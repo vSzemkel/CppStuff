@@ -33,9 +33,8 @@ struct wavelet_tree_t
     // Find k-th largest in subrange [lo..hi]
     int kth(int lo, int hi, int k)
     {
-        assert(0 < k && k <= hi - lo + 1);
-        if (hi < lo)
-            return -1;
+        assert(0 < k && k <= hi - lo + 1 && lo <= hi);
+
         if (_min_value == _max_value)
             return _min_value;
 
