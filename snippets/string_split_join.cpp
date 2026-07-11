@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <charconv>
 #include <iterator>
 #include <sstream>
 #include <string>
@@ -46,6 +47,22 @@ std::string join(const C& container, const S& separator) {
     return ret.str();
 }
 
+std::vector<int> parse_ints(std::string_view _sv) {
+    int value;
+    std::vector<int> result;
+    const auto end = _sv.data() + _sv.size();
+
+    for (auto p = _sv.data(); p < end; ++p) {
+        const auto [p2, ec] = std::from_chars(p, end, value);
+        if (ec == std::errc()) {
+            result.push_back(value);
+            p = p2;
+        }
+    }
+
+    return result;
+}
+
 int main(int, char**)
 {
     const char text[] = "aaa bbb ccc";
@@ -60,11 +77,13 @@ int main(int, char**)
     assert(join(std::vector<std::string>{}, "sep").empty());
     assert(join(std::vector<std::string>{"abcde","01234","q","ppp"}, "*").size() + 1 == sizeof("abcde*01234*q*ppp"));
     assert(join(std::unordered_set<std::string>{"abcde","01234","q","ppp"}, "*").size() + 1 == sizeof("abcde*01234*q*ppp"));
+
+    assert((parse_ints(",23.76,45,,&67,") == std::vector<int>{23,76,45,67}));
 }
 
 /*
 
 Compile:
-clang++.exe -Wall -Wextra -g -O0 -std=c++20 string_split_join.cpp -o string_split_join.exe
+clang++.exe -Wall -Wextra -g -O0 -std=c++20 string_split_join.cpp
 
 */
