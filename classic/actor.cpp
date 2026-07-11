@@ -7,6 +7,7 @@
 #include <iostream>
 #include <latch>
 #include <mutex>
+#include <stop_token>
 #include <thread>
 #include <vector>
 
@@ -30,7 +31,8 @@ class actor_t
     /*
      * Pushes a job request to the active work queue
      */
-    void push(const T& work) {
+    void push(const T& work)
+    {
         std::unique_lock lock{_mutex};
         _receiving_queue.push_back(work);
         lock.unlock();
@@ -38,22 +40,21 @@ class actor_t
     }
 
     /*
-     * Terminates worker thread and completes unfinished work on callers thread
-     */
-    void finish_join() {
-        _stop_requested = true;
-        _condv.notify_one();
+    * Terminates worker thread possibly having unfinished jobs
+    */
+    void join()
+    {
+        _worker.request_stop();
         _worker.join();
-        run();
     }
 
     /*
-     * Terminates worker thread possibly having unfinished jobs
+     * Terminates worker thread and completes unfinished work on callers thread
      */
-    void join() {
-        _stop_requested = true;
-        _condv.notify_one();
-        _worker.join();
+    void finish_join()
+    {
+        join();
+        run(_worker.get_stop_token());
     }
 
     /*
@@ -62,17 +63,18 @@ class actor_t
     size_t get_processed_count() { return _counter; }
 
   private:
-    void run_loop() {
-        while (!_stop_requested)
-            run();
+    void run_loop(std::stop_token st)
+    {
+        while (!st.stop_requested())
+            run(st);
 
-std::cerr << std::format("Actor {:0>5} terminates after completing {} jobs.\n", std::this_thread::get_id(), size_t(_counter));
+        std::cerr << std::format("Actor {:0>5} terminates after completing {} jobs.\n", std::this_thread::get_id(), size_t(_counter));
     }
 
-    void run() {
+    void run(std::stop_token st)
+    {
         std::unique_lock lock{_mutex};
-        while (_receiving_queue.empty() && !_stop_requested)
-            _condv.wait(lock);
+        _condv.wait(lock, st, [this] { return !_receiving_queue.empty(); });
 
         std::swap(_receiving_queue, _processed_queue);
         lock.unlock();
@@ -80,18 +82,17 @@ std::cerr << std::format("Actor {:0>5} terminates after completing {} jobs.\n", 
         for (const auto& w : _processed_queue)
             _process_work(w);
 
-std::cerr << std::format("Actor {:0>5} next jobs chunk of size {}.\n", std::this_thread::get_id(), _processed_queue.size());
+        std::cerr << std::format("Actor {:0>5} next jobs chunk of size {}.\n", std::this_thread::get_id(), _processed_queue.size());
         _counter += _processed_queue.size();
         _processed_queue.clear();
     }
 
     std::vector<T> _receiving_queue, _processed_queue;
     std::function<void(T)> _process_work;
-    std::jthread _worker;
+    std::condition_variable_any _condv;
     std::atomic<size_t> _counter{};
+    std::jthread _worker;
     std::mutex _mutex;
-    std::condition_variable _condv;
-    std::atomic<bool> _stop_requested{};
 };
 
 /***************************** TESTING ************************** */
@@ -104,13 +105,15 @@ std::vector<std::jthread> type1_workers(350);
 std::vector<std::jthread> type2_workers(150);
 std::latch job_scheduling_latch{static_cast<ptrdiff_t>(type1_workers.size() + type2_workers.size())};
 
-struct work_t {
+struct work_t
+{
     std::thread::id thread_id{std::this_thread::get_id()};
     hr_clock_t::time_point created{hr_clock_t::now()};
     int message_id;
 };
 
-void work(const work_t& w) {
+void work(const work_t& w)
+{
     // std::this_thread::sleep_for(duration_t{0.01});
     const duration_t duration = hr_clock_t::now() - w.created;
     std::cout << std::format("Executor {:0>5}, job {:0>2} from thread {:0>5} processed in {}.", std::this_thread::get_id(), w.message_id, w.thread_id, duration);
@@ -119,7 +122,8 @@ void work(const work_t& w) {
 
 actor_t<work_t> superstar{work};
 
-void type1_worker() {
+void type1_worker()
+{
     const int local_jobs_count = 7;
     total_jobs_count += local_jobs_count;
 
@@ -133,7 +137,8 @@ void type1_worker() {
     job_scheduling_latch.count_down();
 }
 
-void type2_worker() {
+void type2_worker()
+{
     const int local_jobs_count = 16;
     total_jobs_count += local_jobs_count;
 
@@ -149,8 +154,10 @@ void type2_worker() {
 
 int main(int, char**)
 {
-    for (auto& t : type1_workers) t = std::jthread{type1_worker};
-    for (auto& t : type2_workers) t = std::jthread{type2_worker};
+    for (auto& t : type1_workers)
+        t = std::jthread{type1_worker};
+    for (auto& t : type2_workers)
+        t = std::jthread{type2_worker};
 
     // do something useful instead
     std::this_thread::sleep_for(duration_t{500});
