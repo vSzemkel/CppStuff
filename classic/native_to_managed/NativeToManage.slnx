@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="Host/Host.csproj">
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="ManagedBridge/ManagedBridge.vcxproj" Type="bc8a1ffa-bee3-4634-8014-f334798102b3" Id="a9d630a7-d455-4b03-93f8-9b83a4d803b2" />
+  <Project Path="NativeWorker/NativeWorker.vcxproj" Type="bc8a1ffa-bee3-4634-8014-f334798102b3" Id="865985df-e82f-4e5d-92db-7819c75963c3" />
+</Solution>

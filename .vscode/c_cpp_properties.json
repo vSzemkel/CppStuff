@@ -42,13 +42,13 @@
         {
             "name": "Windows",
             "includePath": [
-                "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.40.33807/"
+                "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.50.35717/"
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": "",
                 "path": [
-                    "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools//MSVC/14.40.33807/",
+                    "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.50.35717/",
                     "${workspaceRoot}"
                 ]
             },
